@@ -216,6 +216,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        })();
 	                    }
 	                }
+	                if (options && options.filter) {
+	                    if (typeof options.filter === "function") {
+	                        items = items.filter(options.filter);
+	                    } else if (options.filter instanceof Object) {
+	                        var filter = function (item) {
+	                            for (var key in options.filter) {
+	                                if (item[key] != options.filter[key]) return false;
+	                            }
+	                            return true;
+	                        };
+
+	                        items = items.filter(filter);
+	                    }
+	                }
 	                return items;
 	            }
 	        },

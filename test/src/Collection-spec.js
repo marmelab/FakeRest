@@ -64,9 +64,38 @@
                 it('should not affect the sort of further requests', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     collection.getAll({sort: 'name'});
-                    var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ]
+                    var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ];
                     expect(collection.getAll()).toEqual(expected)
                 });
+            });
+
+            describe('filter option', function() {
+
+                it('should filter by filter function option', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    var expected = [ { name : 'c', id : 0 }, { name : 'b', id : 2 } ];
+                    function filter(item) {
+                      return item.name !== 'a';
+                    }
+                    expect(collection.getAll({filter: filter})).toEqual(expected)
+                });
+
+                it('should filter by filter object option', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    var expected = [{ name : 'b', id : 2 } ];
+                    expect(collection.getAll({filter: { name: 'b'} })).toEqual(expected)
+                });
+
+                it('should not affect the filter of further requests', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    function filter(item) {
+                      return item.name !== 'a';
+                    }
+                    collection.getAll({filter: filter});
+                    var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ];
+                    expect(collection.getAll()).toEqual(expected)
+                });
+
             })
 
         });
