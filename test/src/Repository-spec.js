@@ -36,8 +36,17 @@
 
             it('should support a query', function() {
                 var repository = new Repository();
-                repository.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
-                expect(repository.getAll('foo', {filter: {name: 'foo'}})).toEqual([{id: 1, name: 'foo'}]);
+                repository.addCollection('foo', new Collection([
+                    {id: 0, name: 'c', arg: false },
+                    {id: 1, name: 'b', arg: true },
+                    {id: 2, name: 'a', arg: true}
+                ]));
+                var queryString = 'filter={"arg":true}&sort=name&slice=[0,10]';
+                var expected = [
+                    {id: 2, name: 'a', arg: true},
+                    {id: 1, name: 'b', arg: true }
+                ];
+                expect(repository.getAll('foo', queryString)).toEqual(expected);
             });
         });
 
