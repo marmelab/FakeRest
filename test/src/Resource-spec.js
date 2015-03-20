@@ -54,6 +54,12 @@
                 expect(r.name).toEqual('foo');
             });
 
+            it('should add the item', function() {
+                var resource = new Resource();
+                resource.addOne({name: 'foo'});
+                expect(resource.getOne(0)).toEqual({id: 0, name: 'foo'});
+            });
+
             it('should incement the sequence at each insertion', function() {
                 var resource = new Resource();
                 expect(resource.sequence).toEqual(0)
@@ -82,6 +88,57 @@
                 resource.addOne({id: 12, name: 'bar'});
                 expect(resource.sequence).toEqual(12);
             });
+        });
+
+        describe('updateOne', function() {
+            it('should throw an exception when trying to update a non-existing item', function() {
+                var resource = new Resource();
+                expect(function() { resource.updateOne(0, {id: 0, name: 'bar'}) }).toThrow(new Error('No item with identifier 0'));
+            });
+
+            it('should return the updated item', function() {
+                var resource = new Resource([{name: 'foo'}]);
+                expect(resource.updateOne(0, {id: 0, name: 'bar'})).toEqual({id: 0, name: 'bar'});
+            });
+
+            it('should update the item', function() {
+                var resource = new Resource([{name: 'foo'}, {name: 'baz'}]);
+                resource.updateOne(0, {id: 0, name: 'bar'});
+                expect(resource.getOne(0)).toEqual({id: 0, name: 'bar'});
+                expect(resource.getOne(1)).toEqual({id: 1, name: 'baz'});
+            });
+        });
+
+        describe('removeOne', function() {
+            it('should throw an exception when trying to remove a non-existing item', function() {
+                var resource = new Resource();
+                expect(function() { resource.removeOne(0) }).toThrow(new Error('No item with identifier 0'));
+            });
+
+            it('should remove the item', function() {
+                var resource = new Resource();
+                var item = resource.addOne({name: 'foo'});
+                resource.removeOne(item.id);
+                expect(resource.getOne(item.id)).toBe(undefined);
+            });
+
+            it('should return the removed item', function() {
+                var resource = new Resource();
+                var item = resource.addOne({name: 'foo'});
+                var r = resource.removeOne(item.id);
+                expect(r).toEqual(item);
+            });
+
+            it('should decrement the sequence only if the removed item is the last', function() {
+                var resource = new Resource([{id: 0}, {id: 1}, {id: 2}]);
+                expect(resource.sequence).toEqual(2);
+                resource.removeOne(2);
+                expect(resource.sequence).toEqual(1);
+                resource.removeOne(0);
+                expect(resource.sequence).toEqual(1);
+                resource.addOne({})
+            });
+
         })
     });
 })();
