@@ -8,10 +8,12 @@
     describe('Collection', function() {
 
         describe('constructor', function() {
+
             it('should set the initial set of data', function() {
                 var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 expect(collection.getAll()).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
             });            
+
             it('should set identifier name to id by default', function() {
                 var collection = new Collection();
                 expect(collection.identifierName).toEqual('id');
@@ -19,6 +21,7 @@
         })
 
         describe('getCount', function() {
+
             it('should return an integer', function() {
                 expect(new Collection().getCount()).toEqual(0);
             });
@@ -43,6 +46,7 @@
         });
 
         describe('getAll', function() {
+
             it('should return an array', function() {
                 expect(new Collection().getAll()).toEqual([]);
             });
@@ -53,6 +57,11 @@
             });
 
             describe('sort query', function() {
+
+                it('should throw an error if passed an unsupported sort argument', function() {
+                    var collection = new Collection();
+                    expect(function() { collection.getAll({sort: 23}) }).toThrow(new Error('Unsupported sort type'));
+                });
 
                 it('should sort by sort function', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
@@ -95,6 +104,11 @@
 
             describe('filter query', function() {
 
+                it('should throw an error if passed an unsupported filter argument', function() {
+                    var collection = new Collection();
+                    expect(function() { collection.getAll({filter: 23}) }).toThrow(new Error('Unsupported filter type'));
+                });
+
                 it('should filter by filter function', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected = [ { name : 'c', id : 0 }, { name : 'b', id : 2 } ];
@@ -119,10 +133,15 @@
                     var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ];
                     expect(collection.getAll()).toEqual(expected)
                 });
-
             });
 
             describe('slice query', function() {
+
+                it('should throw an error if passed an unsupported slice argument', function() {
+                    var collection = new Collection();
+                    expect(function() { collection.getAll({slice: 23}) }).toThrow(new Error('Unsupported slice type'));
+                });
+
                 var collection = new Collection([{id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ]);
 
                 it('should return sliced collection', function() {
@@ -147,6 +166,7 @@
         });
 
         describe('getOne', function() {
+
             it('should return undefined when no collection match the identifier', function() {
                 expect(new Collection().getOne(12)).toBe(undefined);
             });
@@ -165,6 +185,7 @@
         });
 
         describe('addOne', function() {
+
             it('should return the item inserted', function() {
                 var collection = new Collection();
                 var r = collection.addOne({name: 'foo'});
@@ -208,6 +229,7 @@
         });
 
         describe('updateOne', function() {
+
             it('should throw an exception when trying to update a non-existing item', function() {
                 var collection = new Collection();
                 expect(function() { collection.updateOne(0, {id: 0, name: 'bar'}) }).toThrow(new Error('No item with identifier 0'));
@@ -227,6 +249,7 @@
         });
 
         describe('removeOne', function() {
+
             it('should throw an exception when trying to remove a non-existing item', function() {
                 var collection = new Collection();
                 expect(function() { collection.removeOne(0) }).toThrow(new Error('No item with identifier 0'));
@@ -255,7 +278,6 @@
                 expect(collection.sequence).toEqual(1);
                 collection.addOne({})
             });
-
         })
     });
 })();

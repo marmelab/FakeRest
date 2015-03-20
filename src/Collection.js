@@ -1,5 +1,58 @@
 import 'babel-core/polyfill';
 
+function filterItems(items, filter) {
+    if (typeof filter === 'function') {
+        return items.filter(filter);
+    }
+    if (filter instanceof Object) {
+        return items.filter(item => {
+            for (let key in filter) {
+                if (item[key] != filter[key]) return false;
+            }
+            return true;
+        });
+    }
+    throw new Error('Unsupported filter type');
+}
+
+function sortItems(items, sort) {
+    if (typeof sort === 'function') {
+        return items.sort(sort);
+    }
+    if (typeof sort === 'string') {
+        return items.sort(function(a, b) {
+          if (a[sort] > b[sort]) {
+            return 1;
+          }
+          if (a[sort] < b[sort]) {
+            return -1;
+          }
+          return 0;
+        });
+    }
+    if (Array.isArray(sort)) {
+        let key = sort[0];
+        let direction = sort[1].toLowerCase() == 'asc' ? 1 : -1;
+        return items.sort(function(a, b) {
+          if (a[key] > b[key]) {
+            return direction;
+          }
+          if (a[key] < b[key]) {
+            return -1 * direction ;
+          }
+          return 0;
+        });
+    }
+    throw new Error('Unsupported sort type');
+}
+
+function sliceItems(items, slice) {
+    if (Array.isArray(slice)) {
+        return items.slice(slice[0], slice[1]);
+    }
+    throw new Error('Unsupported slice type');
+}
+
 export default class Collection {
 
     constructor(items=[], identifierName='id') {
@@ -20,48 +73,13 @@ export default class Collection {
         var items = this.items.map(item => item);
         if (query) {
             if (query.sort) {
-                if (typeof query.sort === 'function') {
-                    items = items.sort(query.sort);
-                } else if (typeof query.sort === 'string') {
-                    let key = query.sort;
-                    items = items.sort(function(a, b) {
-                      if (a[key] > b[key]) {
-                        return 1;
-                      }
-                      if (a[key] < b[key]) {
-                        return -1;
-                      }
-                      return 0;
-                    });
-                } else if (Array.isArray(query.sort)) {
-                    let key = query.sort[0];
-                    let direction = query.sort[1].toLowerCase() == 'asc' ? 1 : -1;
-                    items = items.sort(function(a, b) {
-                      if (a[key] > b[key]) {
-                        return direction;
-                      }
-                      if (a[key] < b[key]) {
-                        return -1 * direction ;
-                      }
-                      return 0;
-                    });
-                }
+                items = sortItems(items, query.sort);
             }
             if (query.filter) {
-                if (typeof query.filter === 'function') {
-                    items = items.filter(query.filter);
-                } else if (query.filter instanceof Object) {
-                    function filter(item) {
-                        for (let key in query.filter) {
-                            if (item[key] != query.filter[key]) return false;
-                        }
-                        return true;
-                    }
-                    items = items.filter(filter);
-                }
+                items = filterItems(items, query.filter);
             }
             if (query.slice) {
-                items = items.slice(query.slice[0], query.slice[1]);
+                items = sliceItems(items, query.slice);
             }
         }
         return items;

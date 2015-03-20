@@ -162,6 +162,67 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	__webpack_require__(3);
 
+	function filterItems(items, filter) {
+	    if (typeof filter === "function") {
+	        return items.filter(filter);
+	    }
+	    if (filter instanceof Object) {
+	        return items.filter(function (item) {
+	            for (var key in filter) {
+	                if (item[key] != filter[key]) return false;
+	            }
+	            return true;
+	        });
+	    }
+	    throw new Error("Unsupported filter type");
+	}
+
+	function sortItems(items, sort) {
+	    if (typeof sort === "function") {
+	        return items.sort(sort);
+	    }
+	    if (typeof sort === "string") {
+	        return items.sort(function (a, b) {
+	            if (a[sort] > b[sort]) {
+	                return 1;
+	            }
+	            if (a[sort] < b[sort]) {
+	                return -1;
+	            }
+	            return 0;
+	        });
+	    }
+	    if (Array.isArray(sort)) {
+	        var _ret = (function () {
+	            var key = sort[0];
+	            var direction = sort[1].toLowerCase() == "asc" ? 1 : -1;
+	            return {
+	                v: items.sort(function (a, b) {
+	                    if (a[key] > b[key]) {
+	                        return direction;
+	                    }
+	                    if (a[key] < b[key]) {
+	                        return -1 * direction;
+	                    }
+	                    return 0;
+	                })
+	            };
+	        })();
+
+	        if (typeof _ret === "object") {
+	            return _ret.v;
+	        }
+	    }
+	    throw new Error("Unsupported sort type");
+	}
+
+	function sliceItems(items, slice) {
+	    if (Array.isArray(slice)) {
+	        return items.slice(slice[0], slice[1]);
+	    }
+	    throw new Error("Unsupported slice type");
+	}
+
 	var Collection = (function () {
 	    function Collection() {
 	        var items = arguments[0] === undefined ? [] : arguments[0];
@@ -191,53 +252,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                });
 	                if (query) {
 	                    if (query.sort) {
-	                        if (typeof query.sort === "function") {
-	                            items = items.sort(query.sort);
-	                        } else if (typeof query.sort === "string") {
-	                            (function () {
-	                                var key = query.sort;
-	                                items = items.sort(function (a, b) {
-	                                    if (a[key] > b[key]) {
-	                                        return 1;
-	                                    }
-	                                    if (a[key] < b[key]) {
-	                                        return -1;
-	                                    }
-	                                    return 0;
-	                                });
-	                            })();
-	                        } else if (Array.isArray(query.sort)) {
-	                            (function () {
-	                                var key = query.sort[0];
-	                                var direction = query.sort[1].toLowerCase() == "asc" ? 1 : -1;
-	                                items = items.sort(function (a, b) {
-	                                    if (a[key] > b[key]) {
-	                                        return direction;
-	                                    }
-	                                    if (a[key] < b[key]) {
-	                                        return -1 * direction;
-	                                    }
-	                                    return 0;
-	                                });
-	                            })();
-	                        }
+	                        items = sortItems(items, query.sort);
 	                    }
 	                    if (query.filter) {
-	                        if (typeof query.filter === "function") {
-	                            items = items.filter(query.filter);
-	                        } else if (query.filter instanceof Object) {
-	                            var filter = function (item) {
-	                                for (var key in query.filter) {
-	                                    if (item[key] != query.filter[key]) return false;
-	                                }
-	                                return true;
-	                            };
-
-	                            items = items.filter(filter);
-	                        }
+	                        items = filterItems(items, query.filter);
 	                    }
 	                    if (query.slice) {
-	                        items = items.slice(query.slice[0], query.slice[1]);
+	                        items = sliceItems(items, query.slice);
 	                    }
 	                }
 	                return items;
