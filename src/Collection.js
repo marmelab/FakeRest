@@ -12,8 +12,37 @@ export default class Collection {
         items.map(this.addOne.bind(this));
     }
 
-    getAll() {
-        return this.items;
+    getAll(options) {
+        var items = this.items.map(item => item);
+        if (options && options.sort) {
+            if (typeof options.sort === 'function') {
+                items = items.sort(options.sort);
+            } else if (typeof options.sort === 'string') {
+                let key = options.sort;
+                items = items.sort(function(a, b) {
+                  if (a[key] > b[key]) {
+                    return 1;
+                  }
+                  if (a[key] < b[key]) {
+                    return -1;
+                  }
+                  return 0;
+                });
+            } else if (Array.isArray(options.sort)) {
+                let key = options.sort[0];
+                let direction = options.sort[1].toLowerCase() == 'asc' ? 1 : -1;
+                items = items.sort(function(a, b) {
+                  if (a[key] > b[key]) {
+                    return direction;
+                  }
+                  if (a[key] < b[key]) {
+                    return -1 * direction ;
+                  }
+                  return 0;
+                });
+            }
+        }
+        return items;
     }
 
     getIndex(identifier) {

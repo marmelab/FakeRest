@@ -27,6 +27,48 @@
                 var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 expect(collection.getAll()).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
             });
+
+            describe('sort option', function() {
+
+                it('should sort by sort function option', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    var expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
+                    function sort(a, b) {
+                      if (a.name > b.name) {
+                        return 1;
+                      }
+                      if (a.name < b.name) {
+                        return -1;
+                      }
+                      // a must be equal to b
+                      return 0;
+                    }
+                    expect(collection.getAll({sort: sort})).toEqual(expected)
+                });
+
+                it('should sort by sort name option', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    var expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
+                    expect(collection.getAll({sort: 'name'})).toEqual(expected)
+                });
+
+                it('should sort by sort name and direction option', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    var expected
+                    expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
+                    expect(collection.getAll({sort: ['name', 'asc']})).toEqual(expected)
+                    expected = [{ name : 'c', id : 0 }, { name : 'b', id : 2 }, { name : 'a', id : 1 }]
+                    expect(collection.getAll({sort: ['name', 'desc']})).toEqual(expected)
+                });
+
+                it('should not affect the sort of further requests', function() {
+                    var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
+                    collection.getAll({sort: 'name'});
+                    var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ]
+                    expect(collection.getAll()).toEqual(expected)
+                });
+            })
+
         });
 
         describe('getOne', function() {
