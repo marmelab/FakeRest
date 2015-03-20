@@ -11,16 +11,20 @@ export default class FakeRest {
         this.identifierNames[name] = identifierName;
     }
 
+    inspect() {
+        return [this.resources, this.identifierNames];
+    }
+
     getAll(name) {
         if (!this.resources[name]) {
-            throw new Error(`Unknown resource ${ name }`)
+            throw new Error(`Unknown resource "${ name }"`)
         }
         return this.resources[name];
     }
 
     getOne(name, identifier) {
         if (!this.resources[name]) {
-            throw new Error(`Unknown resource ${ name }`)
+            throw new Error(`Unknown resource "${ name }"`)
         }
         let resources = this.resources[name].filter(resource => resource[this.identifierNames[name]] == identifier);
         if (resources.length === 0) {
