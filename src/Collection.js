@@ -12,47 +12,56 @@ export default class Collection {
         items.map(this.addOne.bind(this));
     }
 
-    getAll(options) {
+    getCount(query) {
+        return this.getAll(query).length;
+    }
+
+    getAll(query) {
         var items = this.items.map(item => item);
-        if (options && options.sort) {
-            if (typeof options.sort === 'function') {
-                items = items.sort(options.sort);
-            } else if (typeof options.sort === 'string') {
-                let key = options.sort;
-                items = items.sort(function(a, b) {
-                  if (a[key] > b[key]) {
-                    return 1;
-                  }
-                  if (a[key] < b[key]) {
-                    return -1;
-                  }
-                  return 0;
-                });
-            } else if (Array.isArray(options.sort)) {
-                let key = options.sort[0];
-                let direction = options.sort[1].toLowerCase() == 'asc' ? 1 : -1;
-                items = items.sort(function(a, b) {
-                  if (a[key] > b[key]) {
-                    return direction;
-                  }
-                  if (a[key] < b[key]) {
-                    return -1 * direction ;
-                  }
-                  return 0;
-                });
-            }
-        }
-        if (options && options.filter) {
-            if (typeof options.filter === 'function') {
-                items = items.filter(options.filter);
-            } else if (options.filter instanceof Object) {
-                function filter(item) {
-                    for (let key in options.filter) {
-                        if (item[key] != options.filter[key]) return false;
-                    }
-                    return true;
+        if (query) {
+            if (query.sort) {
+                if (typeof query.sort === 'function') {
+                    items = items.sort(query.sort);
+                } else if (typeof query.sort === 'string') {
+                    let key = query.sort;
+                    items = items.sort(function(a, b) {
+                      if (a[key] > b[key]) {
+                        return 1;
+                      }
+                      if (a[key] < b[key]) {
+                        return -1;
+                      }
+                      return 0;
+                    });
+                } else if (Array.isArray(query.sort)) {
+                    let key = query.sort[0];
+                    let direction = query.sort[1].toLowerCase() == 'asc' ? 1 : -1;
+                    items = items.sort(function(a, b) {
+                      if (a[key] > b[key]) {
+                        return direction;
+                      }
+                      if (a[key] < b[key]) {
+                        return -1 * direction ;
+                      }
+                      return 0;
+                    });
                 }
-                items = items.filter(filter);
+            }
+            if (query.filter) {
+                if (typeof query.filter === 'function') {
+                    items = items.filter(query.filter);
+                } else if (query.filter instanceof Object) {
+                    function filter(item) {
+                        for (let key in query.filter) {
+                            if (item[key] != query.filter[key]) return false;
+                        }
+                        return true;
+                    }
+                    items = items.filter(filter);
+                }
+            }
+            if (query.slice) {
+                items = items.slice(query.slice[0], query.slice[1]);
             }
         }
         return items;

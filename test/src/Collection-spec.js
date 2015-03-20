@@ -18,6 +18,30 @@
             });            
         })
 
+        describe('getCount', function() {
+            it('should return an integer', function() {
+                expect(new Collection().getCount()).toEqual(0);
+            });
+
+            it('should return the collection size', function() {
+                expect(new Collection([{}, {}]).getCount()).toEqual(2);
+            });
+
+            it('should return the correct collection size, even when items were removed', function() {
+                var collection = new Collection([{}, {}, {}]);
+                collection.removeOne(1);
+                expect(collection.getCount()).toEqual(2);
+            });
+
+            it('should accept a query object', function() {
+                var collection = new Collection([{}, {name: 'a'}, {name:'b'}]);
+                function filter(item) {
+                    return item.name == 'a' || item.name == 'b';
+                }
+                expect(collection.getCount({filter: filter})).toEqual(2);
+            });
+        });
+
         describe('getAll', function() {
             it('should return an array', function() {
                 expect(new Collection().getAll()).toEqual([]);
@@ -28,9 +52,9 @@
                 expect(collection.getAll()).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
             });
 
-            describe('sort option', function() {
+            describe('sort query', function() {
 
-                it('should sort by sort function option', function() {
+                it('should sort by sort function', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
                     function sort(a, b) {
@@ -46,13 +70,13 @@
                     expect(collection.getAll({sort: sort})).toEqual(expected)
                 });
 
-                it('should sort by sort name option', function() {
+                it('should sort by sort name', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
                     expect(collection.getAll({sort: 'name'})).toEqual(expected)
                 });
 
-                it('should sort by sort name and direction option', function() {
+                it('should sort by sort name and direction', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected
                     expected = [{ name : 'a', id : 1 }, { name : 'b', id : 2 }, { name : 'c', id : 0 }]
@@ -61,7 +85,7 @@
                     expect(collection.getAll({sort: ['name', 'desc']})).toEqual(expected)
                 });
 
-                it('should not affect the sort of further requests', function() {
+                it('should not affect further requests', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     collection.getAll({sort: 'name'});
                     var expected  = [ { name : 'c', id : 0 }, { name : 'a', id : 1 }, { name : 'b', id : 2 } ];
@@ -69,9 +93,9 @@
                 });
             });
 
-            describe('filter option', function() {
+            describe('filter query', function() {
 
-                it('should filter by filter function option', function() {
+                it('should filter by filter function', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected = [ { name : 'c', id : 0 }, { name : 'b', id : 2 } ];
                     function filter(item) {
@@ -80,13 +104,13 @@
                     expect(collection.getAll({filter: filter})).toEqual(expected)
                 });
 
-                it('should filter by filter object option', function() {
+                it('should filter by filter object', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     var expected = [{ name : 'b', id : 2 } ];
                     expect(collection.getAll({filter: { name: 'b'} })).toEqual(expected)
                 });
 
-                it('should not affect the filter of further requests', function() {
+                it('should not affect further requests', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
                     function filter(item) {
                       return item.name !== 'a';
@@ -96,7 +120,29 @@
                     expect(collection.getAll()).toEqual(expected)
                 });
 
-            })
+            });
+
+            describe('slice query', function() {
+                var collection = new Collection([{id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ]);
+
+                it('should return sliced collection', function() {
+                    var expected;
+
+                    expected = [ {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ];
+                    expect(collection.getAll({ slice: [1] })).toEqual(expected);
+
+                    expected = [ {id: 2, name: 'c'}, {id: 3, name: 'd'} ];
+                    expect(collection.getAll({ slice: [2, 4] })).toEqual(expected);
+                });
+
+                it('should not affect further requests', function() {
+                    var collection = new Collection([{id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'}]);
+                    collection.getAll({slice: [1]});
+                    var expected  = [ {id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'} ];
+                    expect(collection.getAll()).toEqual(expected)
+                });
+
+            });
 
         });
 

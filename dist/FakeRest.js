@@ -179,55 +179,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    _createClass(Collection, {
+	        getCount: {
+	            value: function getCount(query) {
+	                return this.getAll(query).length;
+	            }
+	        },
 	        getAll: {
-	            value: function getAll(options) {
+	            value: function getAll(query) {
 	                var items = this.items.map(function (item) {
 	                    return item;
 	                });
-	                if (options && options.sort) {
-	                    if (typeof options.sort === "function") {
-	                        items = items.sort(options.sort);
-	                    } else if (typeof options.sort === "string") {
-	                        (function () {
-	                            var key = options.sort;
-	                            items = items.sort(function (a, b) {
-	                                if (a[key] > b[key]) {
-	                                    return 1;
-	                                }
-	                                if (a[key] < b[key]) {
-	                                    return -1;
-	                                }
-	                                return 0;
-	                            });
-	                        })();
-	                    } else if (Array.isArray(options.sort)) {
-	                        (function () {
-	                            var key = options.sort[0];
-	                            var direction = options.sort[1].toLowerCase() == "asc" ? 1 : -1;
-	                            items = items.sort(function (a, b) {
-	                                if (a[key] > b[key]) {
-	                                    return direction;
-	                                }
-	                                if (a[key] < b[key]) {
-	                                    return -1 * direction;
-	                                }
-	                                return 0;
-	                            });
-	                        })();
+	                if (query) {
+	                    if (query.sort) {
+	                        if (typeof query.sort === "function") {
+	                            items = items.sort(query.sort);
+	                        } else if (typeof query.sort === "string") {
+	                            (function () {
+	                                var key = query.sort;
+	                                items = items.sort(function (a, b) {
+	                                    if (a[key] > b[key]) {
+	                                        return 1;
+	                                    }
+	                                    if (a[key] < b[key]) {
+	                                        return -1;
+	                                    }
+	                                    return 0;
+	                                });
+	                            })();
+	                        } else if (Array.isArray(query.sort)) {
+	                            (function () {
+	                                var key = query.sort[0];
+	                                var direction = query.sort[1].toLowerCase() == "asc" ? 1 : -1;
+	                                items = items.sort(function (a, b) {
+	                                    if (a[key] > b[key]) {
+	                                        return direction;
+	                                    }
+	                                    if (a[key] < b[key]) {
+	                                        return -1 * direction;
+	                                    }
+	                                    return 0;
+	                                });
+	                            })();
+	                        }
 	                    }
-	                }
-	                if (options && options.filter) {
-	                    if (typeof options.filter === "function") {
-	                        items = items.filter(options.filter);
-	                    } else if (options.filter instanceof Object) {
-	                        var filter = function (item) {
-	                            for (var key in options.filter) {
-	                                if (item[key] != options.filter[key]) return false;
-	                            }
-	                            return true;
-	                        };
+	                    if (query.filter) {
+	                        if (typeof query.filter === "function") {
+	                            items = items.filter(query.filter);
+	                        } else if (query.filter instanceof Object) {
+	                            var filter = function (item) {
+	                                for (var key in query.filter) {
+	                                    if (item[key] != query.filter[key]) return false;
+	                                }
+	                                return true;
+	                            };
 
-	                        items = items.filter(filter);
+	                            items = items.filter(filter);
+	                        }
+	                    }
+	                    if (query.slice) {
+	                        items = items.slice(query.slice[0], query.slice[1]);
 	                    }
 	                }
 	                return items;
