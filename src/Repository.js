@@ -1,35 +1,30 @@
 import 'babel-core/polyfill';
+import Resource from 'Resource';
 
 export default class Repository {
     constructor() {
         this.resources = {};
-        this.identifierNames = {};
     }
 
-    setResource(name, dataObject, identifierName='id') {
-        this.resources[name] = dataObject;
-        this.identifierNames[name] = identifierName;
+    addResource(name, resource) {
+        this.resources[name] = resource;
     }
 
-    inspect() {
-        return [this.resources, this.identifierNames];
+    getResource(name) {
+        return this.resources[name];
     }
 
     getAll(name) {
         if (!this.resources[name]) {
             throw new Error(`Unknown resource "${ name }"`)
         }
-        return this.resources[name];
+        return this.resources[name].getAll();
     }
 
     getOne(name, identifier) {
         if (!this.resources[name]) {
             throw new Error(`Unknown resource "${ name }"`)
         }
-        let resources = this.resources[name].filter(resource => resource[this.identifierNames[name]] == identifier);
-        if (resources.length === 0) {
-            return;
-        }
-        return resources[0];
+        return this.resources[name].getOne(identifier);
     }
 }
