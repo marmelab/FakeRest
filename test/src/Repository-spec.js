@@ -9,6 +9,7 @@
     describe('Repository', function() {
 
         describe('addCollection', function() {
+
             it('should add a collection and index it by name', function() {
                 var repository = new Repository();
                 var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}])
@@ -19,17 +20,24 @@
         })
 
         describe('getAll', function() {
+
             it('should throw an error for unknown collections', function() {
                 var repository = new Repository();
                 expect(function() { repository.getAll('foo') }).toThrow(new Error('Unknown collection "foo"'));
             });
 
-            it('should return all collections for a given name', function() {
+            it('should return all items for a given name', function() {
                 var repository = new Repository();
                 repository.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 repository.addCollection('baz', new Collection([{id: 1, name: 'baz'}]));
                 expect(repository.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 expect(repository.getAll('baz')).toEqual([{id: 1, name: 'baz'}]);
+            });
+
+            it('should support a query', function() {
+                var repository = new Repository();
+                repository.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
+                expect(repository.getAll('foo', {filter: {name: 'foo'}})).toEqual([{id: 1, name: 'foo'}]);
             });
         });
 

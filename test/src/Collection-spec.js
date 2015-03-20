@@ -160,8 +160,27 @@
                     var expected  = [ {id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'} ];
                     expect(collection.getAll()).toEqual(expected)
                 });
-
             });
+
+            describe('composite query', function() {
+
+                it('should execute all commands of the query object', function() {
+                    var collection = new Collection([
+                        {id: 0, name: 'c', arg: false },
+                        {id: 1, name: 'b', arg: true },
+                        {id: 2, name: 'a', arg: true}
+                    ]);
+                    var query = {
+                        filter: { arg: true },
+                        sort: 'name'
+                    };
+                    var expected = [
+                        {id: 2, name: 'a', arg: true},
+                        {id: 1, name: 'b', arg: true }
+                    ];
+                    expect(collection.getAll(query)).toEqual(expected);
+                });
+            })
 
         });
 

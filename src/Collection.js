@@ -72,11 +72,11 @@ export default class Collection {
     getAll(query) {
         var items = this.items.map(item => item);
         if (query) {
-            if (query.sort) {
-                items = sortItems(items, query.sort);
-            }
             if (query.filter) {
                 items = filterItems(items, query.filter);
+            }
+            if (query.sort) {
+                items = sortItems(items, query.sort);
             }
             if (query.slice) {
                 items = sliceItems(items, query.slice);

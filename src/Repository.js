@@ -14,11 +14,11 @@ export default class Repository {
         return this.collections[name];
     }
 
-    getAll(name) {
+    getAll(name, query) {
         if (!this.collections[name]) {
             throw new Error(`Unknown collection "${ name }"`)
         }
-        return this.collections[name].getAll();
+        return this.collections[name].getAll(query);
     }
 
     getOne(name, identifier) {
