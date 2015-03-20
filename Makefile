@@ -5,7 +5,7 @@ install:
 	bower install
 
 build:
-	${CURDIR}/node_modules/.bin/webpack --optimize-minimize --output-file=fakerest.min.js
+	${CURDIR}/node_modules/.bin/webpack --optimize-minimize --output-file=FakeRest.min.js
 
 watch:
 	${CURDIR}/node_modules/.bin/webpack --watch

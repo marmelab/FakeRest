@@ -1,6 +1,6 @@
 module.exports = {
     entry: {
-        fakerest: './src/fakerest.js',
+        FakeRest: './src/FakeRest.js',
     },
     resolve:{
         modulesDirectories: [

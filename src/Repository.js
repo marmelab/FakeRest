@@ -1,6 +1,6 @@
 import 'babel-core/polyfill';
 
-export default class FakeRest {
+export default class Repository {
     constructor() {
         this.resources = {};
         this.identifierNames = {};
