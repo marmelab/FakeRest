@@ -5,7 +5,7 @@ module.exports = function (config) {
         basePath: '../',
         browsers: [process.env.CI ? 'PhantomJS' : 'Chrome'],
         files: [
-            {pattern: 'dist/FakeRest.min.js', included: true},
+            {pattern: 'dist/FakeRest.js', included: true},
 
             // test files
             {pattern: 'test/src/**/*.js', included: true},

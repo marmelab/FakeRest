@@ -45,8 +45,43 @@
                 expect(resource.getOne(1)).toEqual({_id: 1, name: 'foo'});
                 expect(resource.getOne(2)).toEqual({_id: 2, name: 'bar'});
             });
-
         });
 
+        describe('addOne', function() {
+            it('should return the item inserted', function() {
+                var resource = new Resource();
+                var r = resource.addOne({name: 'foo'});
+                expect(r.name).toEqual('foo');
+            });
+
+            it('should incement the sequence at each insertion', function() {
+                var resource = new Resource();
+                expect(resource.sequence).toEqual(0)
+                resource.addOne({name: 'foo'});
+                expect(resource.sequence).toEqual(1)
+                resource.addOne({name: 'foo'});
+                expect(resource.sequence).toEqual(2)
+            });
+
+            it('should set identifier if not provided', function() {
+                var resource = new Resource();
+                var r1 = resource.addOne({name: 'foo'});
+                expect(r1.id).toEqual(0);
+                var r2 = resource.addOne({name: 'bar'});
+                expect(r2.id).toEqual(1);
+            });
+
+            it('should refuse insertion with existing identifier', function() {
+                var resource = new Resource([{name: 'foo'}]);
+                expect(function() { resource.addOne({id: 0, name: 'bar'}) }).toThrow(new Error('An item with the identifier 0 already exists'));
+            });
+
+            it('should accept insertion with non-existing identifier and move sequence accordingly', function() {
+                var resource = new Resource();
+                resource.addOne({name: 'foo'});
+                resource.addOne({id: 12, name: 'bar'});
+                expect(resource.sequence).toEqual(12);
+            });
+        })
     });
 })();
