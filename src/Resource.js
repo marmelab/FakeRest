@@ -11,15 +11,18 @@ export default class Resource {
         return this.items;
     }
 
+    getIndex(identifier) {
+        return this.items.findIndex(item => item[this.identifierName] == identifier);
+    }
+
     getOne(identifier) {
-        let items = this.items.filter(item => item[this.identifierName] == identifier);
-        if (items.length === 0) {
+        let index = this.getIndex(identifier);
+        if (index === -1) {
             return;
         }
-        return items[0];
+        return this.items[index];
     }
 
     removeOne(identifier) {
-        
     }
 }
