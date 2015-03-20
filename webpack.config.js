@@ -18,7 +18,7 @@ module.exports = {
     output: {
         path: './dist',
         filename: '[name].js',
-        library: 'fakerest',
+        library: 'FakeRest',
         libraryTarget: 'umd'
     }
 }
