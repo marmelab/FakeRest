@@ -1,10 +1,10 @@
 import 'babel-core/polyfill';
 
-export default class Resource {
+export default class Collection {
 
     constructor(items=[], identifierName='id') {
         if (!Array.isArray(items)) {
-            throw new Error('Can\'t initialize a Resource with anything else than an array of items');
+            throw new Error('Can\'t initialize a Collection with anything else than an array of items');
         }
         this.sequence = 0;
         this.identifierName = identifierName;

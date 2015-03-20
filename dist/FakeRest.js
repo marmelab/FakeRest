@@ -66,7 +66,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Repository = _interopRequire(__webpack_require__(1));
 
-	var Resource = _interopRequire(__webpack_require__(2));
+	var Collection = _interopRequire(__webpack_require__(2));
 
 	var FakeRest = (function () {
 	    function FakeRest() {
@@ -81,8 +81,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            value: function getClass(name) {
 	                if (name == "Repository") {
 	                    return Repository;
-	                }if (name == "Resource") {
-	                    return Resource;
+	                }if (name == "Collection") {
+	                    return Collection;
 	                }
 	            }
 	        }
@@ -107,40 +107,40 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	__webpack_require__(3);
 
-	var Resource = _interopRequire(__webpack_require__(2));
+	var Collection = _interopRequire(__webpack_require__(2));
 
 	var Repository = (function () {
 	    function Repository() {
 	        _classCallCheck(this, Repository);
 
-	        this.resources = {};
+	        this.collections = {};
 	    }
 
 	    _createClass(Repository, {
-	        addResource: {
-	            value: function addResource(name, resource) {
-	                this.resources[name] = resource;
+	        addCollection: {
+	            value: function addCollection(name, resource) {
+	                this.collections[name] = resource;
 	            }
 	        },
-	        getResource: {
-	            value: function getResource(name) {
-	                return this.resources[name];
+	        getCollection: {
+	            value: function getCollection(name) {
+	                return this.collections[name];
 	            }
 	        },
 	        getAll: {
 	            value: function getAll(name) {
-	                if (!this.resources[name]) {
-	                    throw new Error("Unknown resource \"" + name + "\"");
+	                if (!this.collections[name]) {
+	                    throw new Error("Unknown collection \"" + name + "\"");
 	                }
-	                return this.resources[name].getAll();
+	                return this.collections[name].getAll();
 	            }
 	        },
 	        getOne: {
 	            value: function getOne(name, identifier) {
-	                if (!this.resources[name]) {
-	                    throw new Error("Unknown resource \"" + name + "\"");
+	                if (!this.collections[name]) {
+	                    throw new Error("Unknown collection \"" + name + "\"");
 	                }
-	                return this.resources[name].getOne(identifier);
+	                return this.collections[name].getOne(identifier);
 	            }
 	        }
 	    });
@@ -162,15 +162,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	__webpack_require__(3);
 
-	var Resource = (function () {
-	    function Resource() {
+	var Collection = (function () {
+	    function Collection() {
 	        var items = arguments[0] === undefined ? [] : arguments[0];
 	        var identifierName = arguments[1] === undefined ? "id" : arguments[1];
 
-	        _classCallCheck(this, Resource);
+	        _classCallCheck(this, Collection);
 
 	        if (!Array.isArray(items)) {
-	            throw new Error("Can't initialize a Resource with anything else than an array of items");
+	            throw new Error("Can't initialize a Collection with anything else than an array of items");
 	        }
 	        this.sequence = 0;
 	        this.identifierName = identifierName;
@@ -178,7 +178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        items.map(this.addOne.bind(this));
 	    }
 
-	    _createClass(Resource, {
+	    _createClass(Collection, {
 	        getAll: {
 	            value: function getAll() {
 	                return this.items;
@@ -244,10 +244,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    });
 
-	    return Resource;
+	    return Collection;
 	})();
 
-	module.exports = Resource;
+	module.exports = Collection;
 
 /***/ },
 /* 3 */
