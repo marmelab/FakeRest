@@ -3,7 +3,7 @@
 (function() {
     'use strict';
 
-    var Collection = FakeRest.getClass('Collection');
+    var Collection = FakeRest.Collection;
     
     describe('Collection', function() {
 
