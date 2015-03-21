@@ -186,8 +186,9 @@
 
         describe('getOne', function() {
 
-            it('should return undefined when no collection match the identifier', function() {
-                expect(new Collection().getOne(12)).toBe(undefined);
+            it('should throw an exception when trying to get a non-existing item', function() {
+                var collection = new Collection();
+                expect(function() { collection.getOne(0) }).toThrow(new Error('No item with identifier 0'));
             });
 
             it('should return the first collection matching the identifier', function() {
@@ -280,7 +281,7 @@
                 var collection = new Collection();
                 var item = collection.addOne({name: 'foo'});
                 collection.removeOne(item.id);
-                expect(collection.getOne(item.id)).toBe(undefined);
+                expect(collection.getAll()).toEqual([]);
             });
 
             it('should return the removed item', function() {

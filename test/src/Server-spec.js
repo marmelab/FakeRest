@@ -47,10 +47,10 @@
 
         describe('getOne', function() {
 
-            it('should return undefined when no collection match the identifier', function() {
+            it('should return an error when no collection match the identifier', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}]));
-                expect(server.getOne('foo', 2)).toBe(undefined);
+                expect(function() { server.getOne('foo', 2); }).toThrow(new Error('No item with identifier 2'));
             });
 
             it('should return the first collection matching the identifier', function() {
@@ -84,16 +84,24 @@
                 return request;
             }
 
-            it('should pass GET /foo to getAll(\'foo\')', function() {
+            it('should respond to GET /whatever on non existing collection with a 404', function() {
+                var server = new Server();
+                var request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request)
+                expect(request.status).toEqual(404);
+            });
+
+            it('should respond to GET /foo by sending all items in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('GET', '/foo');
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
             });
 
-            it('should pass GET /foo?queryString to getAll(\'foo\', params)', function() {
+            it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([
                     {id: 0, name: 'c', arg: false },
@@ -101,48 +109,86 @@
                     {id: 2, name: 'a', arg: true}
                 ]));
                 var request = getFakeXMLHTTPRequest('GET', '/foo?filter={"arg":true}&sort=name&slice=[0,10]');
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[{"id":2,"name":"a","arg":true},{"id":1,"name":"b","arg":true}]');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
             });
 
-            it('should pass POST /foo to addOne(\'foo\')', function() {
+            it('should respond to GET /foo on an empty collection with a []', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection());
+                var request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request)
+                expect(request.status).toEqual(200);
+                expect(request.responseText).toEqual('[]');
+            });
+
+            it('should respond to POST /foo by adding an item to collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('POST', '/foo', JSON.stringify({name: 'baz'}));
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('{"name":"baz","id":3}');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
                 expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}, {id: 3, name: 'baz'}]);
             });
 
-            it('should pass GET /foo/:id to getOne(\'foo\', id)', function() {
+            it('should respond to GET /foo/:id by sending element of identifier id in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('GET', '/foo/2');
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
             });
 
-            it('should pass PUT /foo/:id to updateOne(\'foo\', id)', function() {
+            it('should respond to GET /foo/:id on a non-existing id with a 404', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection());
+                var request = getFakeXMLHTTPRequest('GET', '/foo/3');
+                server.handle(request)
+                expect(request.status).toEqual(404);
+            });
+
+            it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('PUT', '/foo/2', JSON.stringify({name: 'baz'}));
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
                 expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'baz'}]);
             });
 
-            it('should pass DELETE /foo/:id to removeOne(\'foo\', id)', function() {
+            it('should respond to PUT /foo/:id on a non-existing id with a 404', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([]));
+                var request = getFakeXMLHTTPRequest('PUT', '/foo/3', JSON.stringify({name: 'baz'}));
+                server.handle(request)
+                expect(request.status).toEqual(404);
+            });
+
+            it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('DELETE', '/foo/2');
-                server.handle(request)
+                server.handle(request);
+                expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
                 expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}]);
+            });
+
+            it('should respond to DELETE /foo/:id on a non-existing id with a 404', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([]));
+                var request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
+                server.handle(request)
+                expect(request.status).toEqual(404);
             });
 
         })

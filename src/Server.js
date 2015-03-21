@@ -94,14 +94,14 @@ export default class Server {
         // FIXME: add request interceptors
     }
 
-    respond(status, headers, body, request) {
+    respond(body, headers, request) {
         if (!headers) {
             headers = {};
         }
         if (!headers['Content-Type']) {
             headers['Content-Type'] = 'application/json';
         }
-        return request.respond(status, headers, JSON.stringify(body))
+        return request.respond(200, headers, JSON.stringify(body))
         // FIXME : add response interceptors
     }
 
@@ -127,21 +127,37 @@ export default class Server {
             if (!matches[2]) {
                 if (request.method == 'GET') {
                     let params = matches[5] ? parseQueryString(matches[5]) : {};
-                    return this.respond(200, null, this.getAll(name, params), request);
+                    return this.respond(this.getAll(name, params), null, request);
                 }                
                 if (request.method == 'POST') {
-                    return this.respond(200, null, this.addOne(name, request.json), request);
+                    return this.respond(this.addOne(name, request.json), null, request);
                 }
             } else {
                 let id = matches[3];
                 if (request.method == 'GET') {
-                    return this.respond(200, null, this.getOne(name, id), request);
+                    try {
+                        let item = this.getOne(name, id);
+                        return this.respond(item, null, request);
+                    } catch (error) {
+                        return request.respond(404);
+                    }
+                    
                 }
                 if (request.method == 'PUT') {
-                    return this.respond(200, null, this.updateOne(name, id, request.json), request);
+                    try {
+                        let item = this.updateOne(name, id, request.json);
+                        return this.respond(item, null, request);    
+                    } catch (error) {
+                        return request.respond(404);
+                    }
                 }
                 if (request.method == 'DELETE') {
-                    return this.respond(200, null, this.removeOne(name, id), request);
+                    try {
+                        let item = this.removeOne(name, id);
+                        return this.respond(item, null, request);
+                    } catch (error) {
+                        return request.respond(404);
+                    }
                 }
             }
         }

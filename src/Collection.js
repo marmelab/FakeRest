@@ -92,7 +92,7 @@ export default class Collection {
     getOne(identifier) {
         let index = this.getIndex(identifier);
         if (index === -1) {
-            return;
+            throw new Error(`No item with identifier ${ identifier }`);
         }
         return this.items[index];
     }
