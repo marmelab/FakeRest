@@ -243,7 +243,9 @@
                 var collection = new Collection();
                 collection.addOne({name: 'foo'});
                 collection.addOne({id: 12, name: 'bar'});
-                expect(collection.sequence).toEqual(12);
+                expect(collection.sequence).toEqual(13);
+                var r = collection.addOne({name: 'bar'});
+                expect(r.id).toEqual(13);
             });
         });
 
@@ -283,19 +285,20 @@
 
             it('should return the removed item', function() {
                 var collection = new Collection();
-                var item = collection.addOne({name: 'foo'});
+                var item = collection.addOne({});
                 var r = collection.removeOne(item.id);
                 expect(r).toEqual(item);
             });
 
             it('should decrement the sequence only if the removed item is the last', function() {
                 var collection = new Collection([{id: 0}, {id: 1}, {id: 2}]);
-                expect(collection.sequence).toEqual(2);
+                expect(collection.sequence).toEqual(3);
                 collection.removeOne(2);
-                expect(collection.sequence).toEqual(1);
+                expect(collection.sequence).toEqual(2);
                 collection.removeOne(0);
-                expect(collection.sequence).toEqual(1);
-                collection.addOne({})
+                expect(collection.sequence).toEqual(2);
+                var r = collection.addOne({});
+                expect(r.id).toEqual(2);
             });
         })
     });

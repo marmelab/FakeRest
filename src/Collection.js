@@ -59,7 +59,7 @@ export default class Collection {
         if (!Array.isArray(items)) {
             throw new Error('Can\'t initialize a Collection with anything else than an array of items');
         }
-        this.sequence = 0;
+        this.sequence = 0; // id of the next item
         this.identifierName = identifierName;
         this.items = [];
         items.map(this.addOne.bind(this));
@@ -103,7 +103,7 @@ export default class Collection {
             if (this.getIndex(identifier) !== -1) {
                 throw new Error(`An item with the identifier ${ identifier } already exists`);
             } else {
-                this.sequence = Math.max(this.sequence, identifier)
+                this.sequence = Math.max(this.sequence, identifier) + 1;
             }
         } else {
             item[this.identifierName] = this.sequence++;
@@ -117,8 +117,10 @@ export default class Collection {
         if (index === -1) {
             throw new Error(`No item with identifier ${ identifier }`);
         }
-        this.items[index] = item;
-        return item;
+        for (let key in item) {
+            this.items[index][key] = item[key];
+        }
+        return this.items[index];
     }
 
     removeOne(identifier) {
@@ -128,7 +130,7 @@ export default class Collection {
         }
         var item = this.items[index];
         this.items.splice(index, 1);
-        if (identifier == this.sequence) {
+        if (identifier == (this.sequence - 1)) {
             this.sequence--;
         }
         return item;

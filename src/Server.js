@@ -49,48 +49,60 @@ export default class Server {
         return Object.keys(this.collections);
     }
 
-    checkName(name) {
-        if (!this.collections[name]) {
-            throw new Error(`Unknown collection "${ name }"`)
-        }
+    /**
+     * @param {string} name
+     * @param {string} params As decoded from the query string, e.g. { sort: "name", filter: {enabled:true}, slice: [10, 20] }
+     */
+    getCount(name, params) {
+        this.checkName(name);
+        return this.collections[name].getCount(params);
     }
 
     /**
      * @param {string} name
-     * @param {string} queryString As decoded from the query string, e.g. sort=name&filter={enabled:true}&slice=[10, 20]
+     * @param {string} params As decoded from the query string, e.g. { sort: "name", filter: {enabled:true}, slice: [10, 20] }
      */
-    getCount(name, queryString) {
-        this.checkName(name);
-        return this.collections[name].getCount(parseQueryString(queryString));
-    }
-
-    /**
-     * @param {string} name
-     * @param {string} queryString As decoded from the query string, e.g. sort=name&filter={enabled:true}&slice=[10, 20]
-     */
-    getAll(name, queryString) {
-        this.checkName(name);
-        return this.collections[name].getAll(parseQueryString(queryString));
+    getAll(name, params) {
+        return this.collections[name].getAll(params);
     }
 
     getOne(name, identifier) {
-        this.checkName(name);
         return this.collections[name].getOne(identifier);
     }
 
     addOne(name, item) {
-        this.checkName(name);
         return this.collections[name].addOne(item);
     }
 
     updateOne(name, identifier, item) {
-        this.checkName(name);
         return this.collections[name].updateOne(identifier, item);
     }
 
     removeOne(name, identifier) {
-        this.checkName(name);
         return this.collections[name].removeOne(identifier);
+    }
+
+    decode(request) {
+        var decodedUrl = decodeURIComponent(request.url);
+        if (request.requestBody) {
+            try {
+                request.json = JSON.parse(request.requestBody);    
+            } catch(error) {
+                // body isn't JSON, skipping
+            }
+        }
+        // FIXME: add request interceptors
+    }
+
+    respond(status, headers, body, request) {
+        if (!headers) {
+            headers = {};
+        }
+        if (!headers['Content-Type']) {
+            headers['Content-Type'] = 'application/json';
+        }
+        return request.respond(status, headers, JSON.stringify(body))
+        // FIXME : add response interceptors
     }
 
     /**
@@ -108,29 +120,31 @@ export default class Server {
      * String request.password Password, if any.
      */
     handle(request) {
+        this.decode(request);
         for (let name of this.getCollectionNames()) {
-            let match = new RegExp(this.baseUrl + '/' + name).test(request.url);
-            if (match) {
-                if (request.method == 'POST') {
-                    return request.respond(200, [], this.addOne(name, JSON.parse(request.requestBody)));
-                }
+            let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?(.*))?$' ));
+            if (!matches) continue;
+            if (!matches[2]) {
                 if (request.method == 'GET') {
-                    return request.respond(200, { "Content-Type": "application/json" }, JSON.stringify(this.getAll(name)));
+                    let params = matches[5] ? parseQueryString(matches[5]) : {};
+                    return this.respond(200, null, this.getAll(name, params), request);
+                }                
+                if (request.method == 'POST') {
+                    return this.respond(200, null, this.addOne(name, request.json), request);
                 }
-            }
-            let matches = request.url.match(new RegExp(this.baseUrl + '/' + name + '/(d+)' ));
-            if (matches) {
+            } else {
+                let id = matches[3];
+                if (request.method == 'GET') {
+                    return this.respond(200, null, this.getOne(name, id), request);
+                }
                 if (request.method == 'PUT') {
-                    return request.respond(200, [], this.updateOne(name, matches[0], JSON.parse(request.requestBody)));
+                    return this.respond(200, null, this.updateOne(name, id, request.json), request);
                 }
                 if (request.method == 'DELETE') {
-                    return request.respond(200, [], this.removeOne(name, matches[0]));
+                    return this.respond(200, null, this.removeOne(name, id), request);
                 }
-                if (request.method == 'GET') {
-                    return request.respond(200, [], this.getOne(name, matches[0]));
-                }
-
             }
         }
+        return request.respond(404);
     }
 }
