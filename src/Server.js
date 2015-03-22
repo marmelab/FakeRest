@@ -182,4 +182,8 @@ export default class Server {
             }
         }
     }
+
+    getHandler() {
+        return this.handle.bind(this);
+    }
 }

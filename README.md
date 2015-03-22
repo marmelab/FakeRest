@@ -24,7 +24,7 @@ restServer.init({
 });
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
-server.respondWith(restServer.handle.bind(restServer));
+server.respondWith(restServer.getHandler());
 
 // Now query the fake REST server
 var req = new XMLHttpRequest();
@@ -115,8 +115,8 @@ var restServer = new FakeRest.Server('http://my.custom.domain');
 // you can create more than one fake server to listen to several domains
 var restServer2 = new FakeRest.Server('http://my.other.domain');
 var server = sinon.fakeServer.create();
-server.respondWith(restServer.handle.bind(restServer));
-server.respondWith(restServer2.handle.bind(restServer2));
+server.respondWith(restServer.getHandler());
+server.respondWith(restServer2.getHandler());
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
 // Set data collection by collection - allows to customize the identifier name
@@ -126,6 +126,9 @@ authorsCollection.addOne({ first_name: 'Jane', last_name: 'Austen' }); // { _id:
 // collections have autoincremented identifier but accept identifiers already set
 authorsCollection.addOne({ _id: 3, first_name: 'Marcel', last_name: 'Proust' }); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
 restServer.addCollection('books', authorsCollection);
+// collections are mutable
+authorsCollection.updateOne(1, { last_name: 'Doe' }); // { _id: 1, first_name: 'Jane', last_name: 'Doe' }
+authorsCollection.removeOne(3); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
 ```
 
 ## Development

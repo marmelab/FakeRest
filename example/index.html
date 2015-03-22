@@ -37,7 +37,7 @@ restServer.init({
 });
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
-server.respondWith(restServer.handle.bind(restServer));
+server.respondWith(restServer.getHandler());
 
 // Now query the fake REST server
 var req = new XMLHttpRequest();
