@@ -19,7 +19,7 @@ restServer.init({
         { id: 0, author_id: 0, title: 'Anna Karenina' },
         { id: 1, author_id: 0, title: 'War and Peace' },
         { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 2, author_id: 1, title: 'Sense and Sensibility' }
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
     ]
 });
 // use sinon.js to monkey-patch XmlHttpRequest
@@ -63,6 +63,49 @@ bower install fakerest --save-dev
 # If you use npm
 npm install fakerest --save-dev
 ```
+
+## REST Flavor
+
+FakeRest uses a standard REST flavor, described below.
+
+* `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The reponse contains a mention of the total count in the `Content-Range` header.
+
+```
+GET /books?filter={author_id:1}&sort=['title','desc']&range=[0-9]
+
+HTTP 1.1 200 OK
+Content-Range: items 0-1/2
+Content-Type: application/json
+[
+  { id: 3, author_id: 1, title: 'Sense and Sensibility' },
+  { id: 2, author_id: 1, title: 'Pride and Prejudice' }
+]
+```
+
+* `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
+
+```
+POST /books
+{ author_id: 1, title: 'Emma' }
+
+HTTP 1.1 201 Created
+Location: /books/4
+Content-Type: application/json
+{ "author_id": 1, "title": "Emma", "id": 4 }
+```
+
+* `GET /foo/:id` returns a JSON object, and a status 200, unless the resource doesn't exist
+
+```
+GET /books/2
+
+HTTP 1.1 200 OK
+Content-Type: application/json
+{ id: 2, author_id: 1, title: 'Pride and Prejudice' }
+```
+
+* `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
+* `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist
 
 ## Development
 
