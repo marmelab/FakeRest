@@ -33,7 +33,7 @@ export default class Server {
      */
     init(data) {
         for (let name in data) {
-            this.addCollection(name, new Collection(data));
+            this.addCollection(name, new Collection(data[name]));
         }
     }
 

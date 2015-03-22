@@ -8,6 +8,18 @@
 
     describe('Server', function() {
 
+        describe('init', function() {
+            it('should populate several collections', function() {
+                var server = new Server();
+                server.init({
+                    foo: [{a:1}, {a:2}, {a:3}],
+                    bar: [{b: true}, {b: false}]
+                });
+                expect(server.getAll('foo')).toEqual([{ id: 0, a:1 }, { id: 1, a:2 }, { id: 2, a:3 }]);
+                expect(server.getAll('bar')).toEqual([{ id: 0, b: true }, { id: 1, b: false }]);
+            });
+        });
+
         describe('addCollection', function() {
 
             it('should add a collection and index it by name', function() {
