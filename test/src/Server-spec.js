@@ -129,9 +129,10 @@
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request = getFakeXMLHTTPRequest('POST', '/foo', JSON.stringify({name: 'baz'}));
                 server.handle(request);
-                expect(request.status).toEqual(200);
+                expect(request.status).toEqual(201);
                 expect(request.responseText).toEqual('{"name":"baz","id":3}');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(request.getResponseHeader('Location')).toEqual('/foo/3');
                 expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}, {id: 3, name: 'baz'}]);
             });
 

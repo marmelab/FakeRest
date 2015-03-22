@@ -94,14 +94,14 @@ export default class Server {
         // FIXME: add request interceptors
     }
 
-    respond(body, headers, request) {
+    respond(body, headers, request, status=200) {
         if (!headers) {
             headers = {};
         }
         if (!headers['Content-Type']) {
             headers['Content-Type'] = 'application/json';
         }
-        return request.respond(200, headers, JSON.stringify(body))
+        return request.respond(status, headers, JSON.stringify(body))
         // FIXME : add response interceptors
     }
 
@@ -130,7 +130,9 @@ export default class Server {
                     return this.respond(this.getAll(name, params), null, request);
                 }                
                 if (request.method == 'POST') {
-                    return this.respond(this.addOne(name, request.json), null, request);
+                    let newResource = this.addOne(name, request.json);
+                    let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
+                    return this.respond(newResource, { Location: newResourceURI }, request, 201);
                 }
             } else {
                 let id = matches[3];
