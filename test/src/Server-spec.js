@@ -96,11 +96,11 @@
                 return request;
             }
 
-            it('should respond to GET /whatever on non existing collection with a 404', function() {
+            it('should not respond to GET /whatever on non existing collection', function() {
                 var server = new Server();
                 var request = getFakeXMLHTTPRequest('GET', '/foo');
                 server.handle(request)
-                expect(request.status).toEqual(404);
+                expect(request.status).toEqual(0); // not responded
             });
 
             it('should respond to GET /foo by sending all items in collection foo', function() {

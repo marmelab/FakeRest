@@ -181,6 +181,5 @@ export default class Server {
                 }
             }
         }
-        return request.respond(404);
     }
 }

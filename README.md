@@ -107,6 +107,27 @@ Content-Type: application/json
 * `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
 * `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist
 
+## Configuration
+
+```js
+// initialize a rest server with a custom base URL
+var restServer = new FakeRest.Server('http://my.custom.domain'); 
+// you can create more than one fake server to listen to several domains
+var restServer2 = new FakeRest.Server('http://my.other.domain');
+var server = sinon.fakeServer.create();
+server.respondWith(restServer.handle.bind(restServer));
+server.respondWith(restServer2.handle.bind(restServer2));
+// Set all JSON data at once - only if identifier name is 'id'
+restServer.init(json);
+// Set data collection by collection - allows to customize the identifier name
+var authorsCollection = new RestServer.Collection([], '_id');
+authorsCollection.addOne({ first_name: 'Leo', last_name: 'Tolstoi' }); // { _id: 0, first_name: 'Leo', last_name: 'Tolstoi' }
+authorsCollection.addOne({ first_name: 'Jane', last_name: 'Austen' }); // { _id: 1, first_name: 'Jane', last_name: 'Austen' }
+// collections have autoincremented identifier but accept identifiers already set
+authorsCollection.addOne({ _id: 3, first_name: 'Marcel', last_name: 'Proust' }); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
+restServer.addCollection('books', authorsCollection);
+```
+
 ## Development
 
 ```sh
