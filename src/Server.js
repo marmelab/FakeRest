@@ -54,7 +54,6 @@ export default class Server {
      * @param {string} params As decoded from the query string, e.g. { sort: "name", filter: {enabled:true}, slice: [10, 20] }
      */
     getCount(name, params) {
-        this.checkName(name);
         return this.collections[name].getCount(params);
     }
 
@@ -127,7 +126,26 @@ export default class Server {
             if (!matches[2]) {
                 if (request.method == 'GET') {
                     let params = matches[5] ? parseQueryString(matches[5]) : {};
-                    return this.respond(this.getAll(name, params), null, request);
+                    let countParams = {};
+                    for (let key in params) {
+                        if (key !== 'range') {
+                            countParams[key] = params[key];
+                        }
+                    }
+                    let count = this.getCount(name, countParams);
+                    let items, contentRange, status;
+                    if (count > 0) {
+                        items = this.getAll(name, params);
+                        let first = params.range ? params.range[0] : 0;
+                        let last = params.range ? Math.min(items.length - 1 + first, params.range[1]) : (items.length - 1);
+                        contentRange = 'items ' + first + '-' + last + '/' + count;
+                        status = (items.length == count) ? 200 : 206;
+                    } else {
+                        items = [];
+                        contentRange = 'items */0';
+                        status = 200
+                    }
+                    return this.respond(items, { 'Content-Range': contentRange }, request, status);
                 }                
                 if (request.method == 'POST') {
                     let newResource = this.addOne(name, request.json);

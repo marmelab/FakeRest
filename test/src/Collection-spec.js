@@ -135,28 +135,28 @@
                 });
             });
 
-            describe('slice query', function() {
+            describe('range query', function() {
 
-                it('should throw an error if passed an unsupported slice argument', function() {
+                it('should throw an error if passed an unsupported range argument', function() {
                     var collection = new Collection();
-                    expect(function() { collection.getAll({slice: 23}) }).toThrow(new Error('Unsupported slice type'));
+                    expect(function() { collection.getAll({range: 23}) }).toThrow(new Error('Unsupported range type'));
                 });
 
                 var collection = new Collection([{id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ]);
 
-                it('should return sliced collection', function() {
+                it('should return a range in the collection', function() {
                     var expected;
 
                     expected = [ {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ];
-                    expect(collection.getAll({ slice: [1] })).toEqual(expected);
+                    expect(collection.getAll({ range: [1] })).toEqual(expected);
 
                     expected = [ {id: 2, name: 'c'}, {id: 3, name: 'd'} ];
-                    expect(collection.getAll({ slice: [2, 4] })).toEqual(expected);
+                    expect(collection.getAll({ range: [2, 3] })).toEqual(expected);
                 });
 
                 it('should not affect further requests', function() {
                     var collection = new Collection([{id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'}]);
-                    collection.getAll({slice: [1]});
+                    collection.getAll({range: [1]});
                     var expected  = [ {id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'} ];
                     expect(collection.getAll()).toEqual(expected)
                 });

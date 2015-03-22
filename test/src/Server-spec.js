@@ -99,6 +99,7 @@
                 expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-1/2');
             });
 
             it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', function() {
@@ -113,6 +114,28 @@
                 expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[{"id":2,"name":"a","arg":true},{"id":1,"name":"b","arg":true}]');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-1/2');
+            });
+
+            it('should respond to GET /foo?queryString with pagination by sending the corrent content-range header', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])); // 11 items
+                var request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request);
+                expect(request.status).toEqual(200);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-10/11');
+                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-4/11');
+                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 5-9/11');
+                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 10-10/11');
             });
 
             it('should respond to GET /foo on an empty collection with a []', function() {
@@ -122,6 +145,7 @@
                 server.handle(request)
                 expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[]');
+                expect(request.getResponseHeader('Content-Range')).toEqual('items */0');
             });
 
             it('should respond to POST /foo by adding an item to collection foo', function() {

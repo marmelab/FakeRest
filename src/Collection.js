@@ -46,11 +46,11 @@ function sortItems(items, sort) {
     throw new Error('Unsupported sort type');
 }
 
-function sliceItems(items, slice) {
-    if (Array.isArray(slice)) {
-        return items.slice(slice[0], slice[1]);
+function rangeItems(items, range) {
+    if (Array.isArray(range)) {
+        return items.slice(range[0], range[1] ? range[1] + 1 : undefined);
     }
-    throw new Error('Unsupported slice type');
+    throw new Error('Unsupported range type');
 }
 
 export default class Collection {
@@ -78,8 +78,8 @@ export default class Collection {
             if (query.sort) {
                 items = sortItems(items, query.sort);
             }
-            if (query.slice) {
-                items = sliceItems(items, query.slice);
+            if (query.range) {
+                items = rangeItems(items, query.range);
             }
         }
         return items;
