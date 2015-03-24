@@ -6,6 +6,19 @@
     var Server = FakeRest.Server;
     var Collection = FakeRest.Collection;
 
+    function getFakeXMLHTTPRequest(method, url, data) {
+        var xhr = sinon.useFakeXMLHttpRequest();
+        var request;
+        xhr.onCreate = function (xhr) {
+            request = xhr;
+        };
+        var myRequest = new XMLHttpRequest();
+        myRequest.open(method, url, false);
+        myRequest.send(data);
+        xhr.restore();
+        return request;
+    }
+
     describe('Server', function() {
 
         describe('init', function() {
@@ -81,20 +94,51 @@
 
         });
 
-        describe('handle', function() {
-
-            function getFakeXMLHTTPRequest(method, url, data) {
-                var xhr = sinon.useFakeXMLHttpRequest();
+        describe('addRequestInterceptor', function() {
+            it('should allow request transformation', function() {
+                var server = new Server();
+                server.addRequestInterceptor(function(request) {
+                    var start = (request.params._start - 1) || 0;
+                    var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
+                    request.params.range = [start, end];
+                    return request;
+                });
+                server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
                 var request;
-                xhr.onCreate = function (xhr) {
-                    request = xhr;
-                };
-                var myRequest = new XMLHttpRequest();
-                myRequest.open(method, url, false);
-                myRequest.send(data);
-                xhr.restore();
-                return request;
-            }
+                request = getFakeXMLHTTPRequest('GET', '/foo?_start=1&_end=1');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.responseText).toEqual('[{"id":1,"name":"foo"}]');
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-0/2');
+                request = getFakeXMLHTTPRequest('GET', '/foo?_start=2&_end=2');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.responseText).toEqual('[{"id":2,"name":"bar"}]');
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 1-1/2');
+            });
+        });
+
+        describe('addResponseInterceptor', function() {
+            it('should allow response transformation', function() {
+                var server = new Server();
+                server.addResponseInterceptor(function(response) {
+                    response.body = { data: response.body, status: response.status };
+                    return response;
+                });
+                server.addResponseInterceptor(function(response) {
+                    response.status = 418;
+                    return response;
+                });
+                server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
+                var request;
+                request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request);
+                expect(request.status).toEqual(418);
+                expect(request.responseText).toEqual('{"data":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}],"status":200}');
+            });
+        });
+
+        describe('handle', function() {
 
             it('should not respond to GET /whatever on non existing collection', function() {
                 var server = new Server();
@@ -132,19 +176,20 @@
             it('should respond to GET /foo?queryString with pagination by sending the corrent content-range header', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])); // 11 items
-                var request = getFakeXMLHTTPRequest('GET', '/foo');
+                var request;
+                request = getFakeXMLHTTPRequest('GET', '/foo');
                 server.handle(request);
                 expect(request.status).toEqual(200);
                 expect(request.getResponseHeader('Content-Range')).toEqual('items 0-10/11');
-                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
+                request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
                 server.handle(request);
                 expect(request.status).toEqual(206);
                 expect(request.getResponseHeader('Content-Range')).toEqual('items 0-4/11');
-                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
+                request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
                 server.handle(request);
                 expect(request.status).toEqual(206);
                 expect(request.getResponseHeader('Content-Range')).toEqual('items 5-9/11');
-                var request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
+                request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
                 server.handle(request);
                 expect(request.status).toEqual(206);
                 expect(request.getResponseHeader('Content-Range')).toEqual('items 10-10/11');

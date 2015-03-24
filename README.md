@@ -120,25 +120,39 @@ Content-Type: application/json
 ```js
 // initialize a rest server with a custom base URL
 var restServer = new FakeRest.Server('http://my.custom.domain'); 
-restServer.toggleLogging(); // received requests are logged by default. toggleLogging() disabled logging.
-// you can create more than one fake server to listen to several domains
-var restServer2 = new FakeRest.Server('http://my.other.domain');
-var server = sinon.fakeServer.create();
-server.autoRespond = true;
-server.respondWith(restServer.getHandler());
-server.respondWith(restServer2.getHandler());
+restServer.toggleLogging(); // logging is off by default, enable it
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
+// modify the request before FakeRest handles it, using a request interceptor
+restServer.addRequestInterceptor(function(request) {
+    var start = (request.params._start - 1) || 0;
+    var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
+    request.params.range = [start, end];
+    return request; // always return the modified input
+});
+// modify the response before FakeRest sends it, using a response interceptor
+restServer.addResponseInterceptor(function(response) {
+    response.body = { data: response.body, status: response.status };
+    return response; // always return the modified input
+});
+
+// you can create more than one fake server to listen to several domains
+var restServer2 = new FakeRest.Server('http://my.other.domain');
 // Set data collection by collection - allows to customize the identifier name
 var authorsCollection = new RestServer.Collection([], '_id');
 authorsCollection.addOne({ first_name: 'Leo', last_name: 'Tolstoi' }); // { _id: 0, first_name: 'Leo', last_name: 'Tolstoi' }
 authorsCollection.addOne({ first_name: 'Jane', last_name: 'Austen' }); // { _id: 1, first_name: 'Jane', last_name: 'Austen' }
 // collections have autoincremented identifier but accept identifiers already set
 authorsCollection.addOne({ _id: 3, first_name: 'Marcel', last_name: 'Proust' }); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
-restServer.addCollection('books', authorsCollection);
+restServer2.addCollection('books', authorsCollection);
 // collections are mutable
 authorsCollection.updateOne(1, { last_name: 'Doe' }); // { _id: 1, first_name: 'Jane', last_name: 'Doe' }
 authorsCollection.removeOne(3); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
+
+var server = sinon.fakeServer.create();
+server.autoRespond = true;
+server.respondWith(restServer.getHandler());
+server.respondWith(restServer2.getHandler());
 ```
 
 ## Development

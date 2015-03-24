@@ -26,7 +26,9 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.collections = {};
-        this.loggingEnabled = true;
+        this.loggingEnabled = false;
+        this.requestInterceptors = [];
+        this.responseInterceptors = [];
     }
 
     /**
@@ -52,6 +54,14 @@ export default class Server {
 
     getCollectionNames() {
         return Object.keys(this.collections);
+    }
+
+    addRequestInterceptor(interceptor) {
+        this.requestInterceptors.push(interceptor);
+    }
+
+    addResponseInterceptor(interceptor) {
+        this.responseInterceptors.push(interceptor);
     }
 
     /**
@@ -87,7 +97,8 @@ export default class Server {
     }
 
     decode(request) {
-        request.decodedUrl = decodeURIComponent(request.url);
+        request.queryString = decodeURIComponent(request.url.slice(request.url.indexOf('?') + 1));
+        request.params = parseQueryString(request.queryString);
         if (request.requestBody) {
             try {
                 request.json = JSON.parse(request.requestBody);    
@@ -95,7 +106,9 @@ export default class Server {
                 // body isn't JSON, skipping
             }
         }
-        // FIXME: add request interceptors
+        return this.requestInterceptors.reduce(function(previous, current) {
+            return current(previous);
+        }, request);
     }
 
     respond(body, headers, request, status=200) {
@@ -105,6 +118,10 @@ export default class Server {
         if (!headers['Content-Type']) {
             headers['Content-Type'] = 'application/json';
         }
+        let response = { status: status, headers: headers, body: body };
+        response = this.responseInterceptors.reduce(function(previous, current) {
+            return current(previous);
+        }, response);
         if (this.loggingEnabled) {
             if (console.group) {
                 // Better logging in Chrome
@@ -114,18 +131,17 @@ export default class Server {
                 console.log('headers', request.requestHeaders)
                 console.log('body', request.requestBody);
                 console.groupEnd()
-                console.group('response', status);
-                console.log('headers', headers)
-                console.log('body', body);
+                console.group('response', response.status);
+                console.log('headers', response.headers)
+                console.log('body', response.body);
                 console.groupEnd()
                 console.groupEnd();
             } else {
                 console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
-                console.log('FakeRest response', status, 'headers', headers, 'body', body);
+                console.log('FakeRest response', response.status, 'headers', response.headers, 'body', response.body);
             }
         }
-        return request.respond(status, headers, JSON.stringify(body))
-        // FIXME : add response interceptors
+        return request.respond(response.status, response.headers, JSON.stringify(response.body))
     }
 
     /**
@@ -143,13 +159,13 @@ export default class Server {
      * String request.password Password, if any.
      */
     handle(request) {
-        this.decode(request);
+        request = this.decode(request);
         for (let name of this.getCollectionNames()) {
-            let matches = request.decodedUrl.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?(.*))?$' ));
+            let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;
             if (!matches[2]) {
                 if (request.method == 'GET') {
-                    let params = matches[5] ? parseQueryString(matches[5]) : {};
+                    let params = request.params;
                     let countParams = {};
                     for (let key in params) {
                         if (key !== 'range') {

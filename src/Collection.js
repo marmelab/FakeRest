@@ -48,7 +48,7 @@ function sortItems(items, sort) {
 
 function rangeItems(items, range) {
     if (Array.isArray(range)) {
-        return items.slice(range[0], range[1] ? range[1] + 1 : undefined);
+        return items.slice(range[0], range[1] !== undefined ? range[1] + 1 : undefined);
     }
     throw new Error('Unsupported range type');
 }

@@ -147,6 +147,9 @@
                 it('should return a range in the collection', function() {
                     var expected;
 
+                    expected = [ {id: 0, name: 'a'} ];
+                    expect(collection.getAll({ range: [0, 0] })).toEqual(expected);
+
                     expected = [ {id: 1, name: 'b'}, {id: 2, name: 'c'}, {id: 3, name: 'd'}, {id: 4, name: 'e'} ];
                     expect(collection.getAll({ range: [1] })).toEqual(expected);
 
