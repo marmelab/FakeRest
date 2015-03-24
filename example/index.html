@@ -52,6 +52,9 @@ restServer.init({
 });
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
+// all requests are blocking in this example, so the following is not necessary
+// however this is required when doing asynchronous XmlHttpRequest
+// server.autoRespond = true;
 server.respondWith(restServer.getHandler());
 
 // Now query the fake REST server
