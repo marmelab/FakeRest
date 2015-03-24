@@ -53,6 +53,14 @@ server.restore();
 </script>
 ```
 
+*Tip*: The `fakerServer` provided by Sinon.js is [available as a standalone library](http://sinonjs.org/docs/#server), without the entire stubbing framework. Simply add the following bower dependency:
+
+```
+devDependencies: {
+  "sinon-server": "http://sinonjs.org/releases/sinon-server-1.14.1.js"
+}
+```
+
 ## Installation
 
 FakeRest is available through npm and Bower:
@@ -112,9 +120,11 @@ Content-Type: application/json
 ```js
 // initialize a rest server with a custom base URL
 var restServer = new FakeRest.Server('http://my.custom.domain'); 
+restServer.toggleLogging(); // received requests are logged by default. toggleLogging() disabled logging.
 // you can create more than one fake server to listen to several domains
 var restServer2 = new FakeRest.Server('http://my.other.domain');
 var server = sinon.fakeServer.create();
+server.autoRespond = true;
 server.respondWith(restServer.getHandler());
 server.respondWith(restServer2.getHandler());
 // Set all JSON data at once - only if identifier name is 'id'

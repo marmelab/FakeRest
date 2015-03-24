@@ -26,6 +26,7 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.collections = {};
+        this.loggingEnabled = true;
     }
 
     /**
@@ -35,6 +36,10 @@ export default class Server {
         for (let name in data) {
             this.addCollection(name, new Collection(data[name]));
         }
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
     }
 
     addCollection(name, collection) {
@@ -82,7 +87,7 @@ export default class Server {
     }
 
     decode(request) {
-        var decodedUrl = decodeURIComponent(request.url);
+        request.decodedUrl = decodeURIComponent(request.url);
         if (request.requestBody) {
             try {
                 request.json = JSON.parse(request.requestBody);    
@@ -99,6 +104,25 @@ export default class Server {
         }
         if (!headers['Content-Type']) {
             headers['Content-Type'] = 'application/json';
+        }
+        if (this.loggingEnabled) {
+            if (console.group) {
+                // Better logging in Chrome
+                console.groupCollapsed(request.method, request.url, '(FakeRest)');
+                console.group('request');
+                console.log(request.method, request.url);
+                console.log('headers', request.requestHeaders)
+                console.log('body', request.requestBody);
+                console.groupEnd()
+                console.group('response', status);
+                console.log('headers', headers)
+                console.log('body', body);
+                console.groupEnd()
+                console.groupEnd();
+            } else {
+                console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
+                console.log('FakeRest response', status, 'headers', headers, 'body', body);
+            }
         }
         return request.respond(status, headers, JSON.stringify(body))
         // FIXME : add response interceptors
@@ -121,7 +145,7 @@ export default class Server {
     handle(request) {
         this.decode(request);
         for (let name of this.getCollectionNames()) {
-            let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?(.*))?$' ));
+            let matches = request.decodedUrl.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?(.*))?$' ));
             if (!matches) continue;
             if (!matches[2]) {
                 if (request.method == 'GET') {
