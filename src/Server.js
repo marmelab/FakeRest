@@ -122,26 +122,29 @@ export default class Server {
         response = this.responseInterceptors.reduce(function(previous, current) {
             return current(previous);
         }, response);
-        if (this.loggingEnabled) {
-            if (console.group) {
-                // Better logging in Chrome
-                console.groupCollapsed(request.method, request.url, '(FakeRest)');
-                console.group('request');
-                console.log(request.method, request.url);
-                console.log('headers', request.requestHeaders)
-                console.log('body', request.requestBody);
-                console.groupEnd()
-                console.group('response', response.status);
-                console.log('headers', response.headers)
-                console.log('body', response.body);
-                console.groupEnd()
-                console.groupEnd();
-            } else {
-                console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
-                console.log('FakeRest response', response.status, 'headers', response.headers, 'body', response.body);
-            }
-        }
+        this.log(request, response);
         return request.respond(response.status, response.headers, JSON.stringify(response.body))
+    }
+
+    log(request, response) {
+        if (!this.loggingEnabled) return;
+        if (console.group) {
+            // Better logging in Chrome
+            console.groupCollapsed(request.method, request.url, '(FakeRest)');
+            console.group('request');
+            console.log(request.method, request.url);
+            console.log('headers', request.requestHeaders)
+            console.log('body   ', request.requestBody);
+            console.groupEnd()
+            console.group('response', response.status);
+            console.log('headers', response.headers)
+            console.log('body   ', response.body);
+            console.groupEnd()
+            console.groupEnd();
+        } else {
+            console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
+            console.log('FakeRest response', response.status, 'headers', response.headers, 'body', response.body);
+        }
     }
 
     /**

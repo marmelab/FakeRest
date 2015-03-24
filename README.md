@@ -124,6 +124,14 @@ restServer.toggleLogging(); // logging is off by default, enable it
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
 // modify the request before FakeRest handles it, using a request interceptor
+// request is {
+//     url: '...',
+//     headers: [...],
+//     requestBody: '...',
+//     json: ..., // parsed JSON body
+//     queryString: '...',
+//     params: {...} // parsed query string
+// }
 restServer.addRequestInterceptor(function(request) {
     var start = (request.params._start - 1) || 0;
     var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
@@ -131,6 +139,11 @@ restServer.addRequestInterceptor(function(request) {
     return request; // always return the modified input
 });
 // modify the response before FakeRest sends it, using a response interceptor
+// response is {
+//     status: ...,
+//     headers: [...],
+//     body: {...}
+// }
 restServer.addResponseInterceptor(function(response) {
     response.body = { data: response.body, status: response.status };
     return response; // always return the modified input
