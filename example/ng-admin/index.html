@@ -12,6 +12,7 @@
             // setup fake server
             var restServer = new FakeRest.Server('http://foo.bar.baz');
             restServer.init(data);
+            restServer.toggleLogging(); // logging is off by default, enable it
             // use sinon.js to monkey-patch XmlHttpRequest
             var server = sinon.fakeServer.create();
             server.autoRespond = true;
