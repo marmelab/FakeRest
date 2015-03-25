@@ -7,6 +7,7 @@ module.exports = function (config) {
         files: [
             {pattern: 'node_modules/sinon/pkg/sinon.js', included: true},
             {pattern: 'dist/FakeRest.js', included: true},
+            {pattern: 'test/function.bind.shim.js', included: true},
 
             // test files
             {pattern: 'test/src/**/*.js', included: true},
