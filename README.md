@@ -1,4 +1,4 @@
-# FakeRest
+# FakeRest [![Build Status](https://travis-ci.org/marmelab/FakeRest.svg?branch=master)](https://travis-ci.org/marmelab/FakeRest)
 
 Intercept XMLHttpRequest to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
 
