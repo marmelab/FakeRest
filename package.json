@@ -2,11 +2,11 @@
   "name": "fakerest",
   "version": "1.0.0",
   "repository": "https://github.com/marmelab/FakeRest",
-  "description": "",
+  "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {
     "test": "make test"
   },
-  "main": "dist/fakerest.min.js",
+  "main": "dist/FakeRest.min.js",
   "author": "François Zaninotto <fzaninotto@gmail.com>",
   "license": "MIT",
   "devDependencies": {

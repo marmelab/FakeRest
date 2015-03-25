@@ -5,7 +5,7 @@
   "authors": [
     "François Zaninotto <fzaninotto@gmail.com>"
   ],
-  "description": "",
+  "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "main": "dist/FakeRest.min.js",
   "keywords": [
     "rest",
