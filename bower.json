@@ -1,6 +1,6 @@
 {
   "name": "fakerest",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "homepage": "https://github.com/marmelab/fakerest",
   "authors": [
     "François Zaninotto <fzaninotto@gmail.com>"

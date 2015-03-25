@@ -76,7 +76,7 @@ npm install fakerest --save-dev
 
 FakeRest uses a standard REST flavor, described below.
 
-* `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The reponse contains a mention of the total count in the `Content-Range` header.
+* `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response contains a mention of the total count in the `Content-Range` header.
 
 ```
 GET /books?filter={author_id:1}&sort=['title','desc']&range=[0-9]
@@ -115,7 +115,9 @@ Content-Type: application/json
 * `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
 * `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist
 
-## Configuration
+If the REST flavor you want to simulate differs from the one chosen for FakeRest, no problem: request and response interceptors will do the conversion (see below).
+
+## Usage and Configuration
 
 ```js
 // initialize a rest server with a custom base URL
@@ -183,4 +185,4 @@ make build
 
 ## License
 
-FakeRest is licensed under the [MIT Licence](LICENSE), courtesy of [marmelab](http://marmelab.com).
+FakeRest is licensed under the [MIT Licence](LICENSE), sponsored by [marmelab](http://marmelab.com).
