@@ -1,7 +1,7 @@
 {
   "name": "fakerest",
   "version": "1.0.0",
-  "repository": "https://github.com/marmelab/fakerest",
+  "repository": "https://github.com/marmelab/FakeRest",
   "description": "",
   "scripts": {
     "test": "make test"
