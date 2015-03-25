@@ -1,6 +1,6 @@
 {
   "name": "fakerest",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/marmelab/FakeRest",
   "authors": [
     "François Zaninotto <fzaninotto@gmail.com>"
@@ -24,6 +24,10 @@
     "example",
     "test",
     "src",
-    "package.json"
+    "package.json",
+    ".travis.yml",
+    "webpack.config.js",
+    ".gitignore",
+    "Makefile"
   ]
 }
