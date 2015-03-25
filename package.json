@@ -10,7 +10,6 @@
   "author": "François Zaninotto <fzaninotto@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "axios": "^0.4.2",
     "babel-core": "^4.7.16",
     "babel-loader": "^4.0.0",
     "karma": "0.12.14",
@@ -20,7 +19,6 @@
     "karma-spec-reporter": "0.0.16",
     "karma-traceur-preprocessor": "^0.4.0",
     "sinon": "^1.14.1",
-    "traceur": "0.0.87",
     "webpack": "^1.7.1"
   }
 }
