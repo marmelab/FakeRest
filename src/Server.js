@@ -26,6 +26,7 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.collections = {};
+		this.collectionsInterceptors = {};
         this.loggingEnabled = false;
         this.requestInterceptors = [];
         this.responseInterceptors = [];
@@ -39,6 +40,12 @@ export default class Server {
             this.addCollection(name, new Collection(data[name]));
         }
     }
+	
+	initInterceptor(data) {
+        for (let name in data) {
+            this.addCollectionInterceptor(name, data[name]);
+        }
+    }
 
     toggleLogging() {
         this.loggingEnabled = !this.loggingEnabled;
@@ -47,6 +54,17 @@ export default class Server {
     addCollection(name, collection) {
         this.collections[name] = collection;
     }
+	
+	addCollectionInterceptor(name, interceptors){
+		name = name.toLowerCase();
+		if(!this.collectionsInterceptors[name]){
+			this.collectionsInterceptors[name] = {};
+		}
+		for (let action in interceptors) {
+			var bigAction = action.toUpperCase();
+			this.collectionsInterceptors[name][bigAction]= interceptors[action];
+        }
+	}
 
     getCollection(name) {
         return this.collections[name];
@@ -147,6 +165,23 @@ export default class Server {
         }
     }
 
+	getCollectionInterceptor(method,collection){
+		var lowerCollection = collection.toLowerCase();
+		var bigAction = method.toUpperCase();
+		if(!this.collectionsInterceptors[lowerCollection]){
+			return null;
+		}
+		if(!this.collectionsInterceptors[lowerCollection][bigAction]){
+			return null;
+		}
+		return this.collectionsInterceptors[lowerCollection][bigAction];
+	}
+	
+	runCollectionInterceptor(method,collection,request,id){
+		if(this.getCollectionInterceptor(method,collection)==null) return null;
+		return this.getCollectionInterceptor(method,collection)(request,id);
+	}
+	
     /**
      * @param {FakeXMLHttpRequest} request
      *
@@ -168,6 +203,12 @@ export default class Server {
             if (!matches) continue;
             if (!matches[2]) {
                 if (request.method == 'GET') {
+					
+					var result = this.runCollectionInterceptor("LIST",name,request,null);
+					if(result!=null){
+						return result;
+					}
+					
                     let params = request.params;
                     let countParams = {};
                     for (let key in params) {
@@ -191,6 +232,11 @@ export default class Server {
                     return this.respond(items, { 'Content-Range': contentRange }, request, status);
                 }                
                 if (request.method == 'POST') {
+					var result = this.runCollectionInterceptor(request.method,name,request,null);
+					if(result!=null){
+						return result;
+					}
+					
                     let newResource = this.addOne(name, request.json);
                     let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
                     return this.respond(newResource, { Location: newResourceURI }, request, 201);
@@ -199,6 +245,10 @@ export default class Server {
                 let id = matches[3];
                 if (request.method == 'GET') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return result;
+						}
                         let item = this.getOne(name, id);
                         return this.respond(item, null, request);
                     } catch (error) {
@@ -208,6 +258,10 @@ export default class Server {
                 }
                 if (request.method == 'PUT') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return result;
+						}
                         let item = this.updateOne(name, id, request.json);
                         return this.respond(item, null, request);    
                     } catch (error) {
@@ -216,6 +270,10 @@ export default class Server {
                 }
                 if (request.method == 'DELETE') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return result;
+						}
                         let item = this.removeOne(name, id);
                         return this.respond(item, null, request);
                     } catch (error) {
