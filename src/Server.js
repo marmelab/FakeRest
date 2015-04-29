@@ -41,7 +41,12 @@ export default class Server {
         }
     }
 	
-	initInterceptor(data) {
+	interceptorResponse(request,status,headers,body){	
+		if (!status) status = 200;	
+		return {data: body,status:status,headers: headers}
+	}
+	
+	initInterceptors(data) {
         for (let name in data) {
             this.addCollectionInterceptor(name, data[name]);
         }
@@ -61,8 +66,8 @@ export default class Server {
 			this.collectionsInterceptors[name] = {};
 		}
 		for (let action in interceptors) {
-			var bigAction = action.toUpperCase();
-			this.collectionsInterceptors[name][bigAction]= interceptors[action];
+			var lowerMethod = action.toLowerCase();
+			this.collectionsInterceptors[name][lowerMethod]= interceptors[action];
         }
 	}
 
@@ -167,14 +172,14 @@ export default class Server {
 
 	getCollectionInterceptor(method,collection){
 		var lowerCollection = collection.toLowerCase();
-		var bigAction = method.toUpperCase();
+		var lowerMethod = method.toLowerCase();
 		if(!this.collectionsInterceptors[lowerCollection]){
 			return null;
 		}
-		if(!this.collectionsInterceptors[lowerCollection][bigAction]){
+		if(!this.collectionsInterceptors[lowerCollection][lowerMethod]){
 			return null;
 		}
-		return this.collectionsInterceptors[lowerCollection][bigAction];
+		return this.collectionsInterceptors[lowerCollection][lowerMethod];
 	}
 	
 	runCollectionInterceptor(method,collection,request,id){
@@ -198,15 +203,16 @@ export default class Server {
      */
     handle(request) {
         request = this.decode(request);
+		var lowerMethod = request.method.toLowerCase();
         for (let name of this.getCollectionNames()) {
             let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;
             if (!matches[2]) {
-                if (request.method == 'GET') {
+                if (lowerMethod == 'get') {
 					
-					var result = this.runCollectionInterceptor("LIST",name,request,null);
+					var result = this.runCollectionInterceptor("list",name,request,null);
 					if(result!=null){
-						return result;
+						return this.respond(result.data,result.headers,request,result.status);
 					}
 					
                     let params = request.params;
@@ -231,10 +237,10 @@ export default class Server {
                     }
                     return this.respond(items, { 'Content-Range': contentRange }, request, status);
                 }                
-                if (request.method == 'POST') {
+                if (lowerMethod == 'post') {
 					var result = this.runCollectionInterceptor(request.method,name,request,null);
 					if(result!=null){
-						return result;
+						return this.respond(result.data,result.headers,request,result.status);
 					}
 					
                     let newResource = this.addOne(name, request.json);
@@ -243,11 +249,11 @@ export default class Server {
                 }
             } else {
                 let id = matches[3];
-                if (request.method == 'GET') {
+                if (lowerMethod == 'get') {
                     try {
 						var result = this.runCollectionInterceptor(request.method,name,request,id);
 						if(result!=null){
-							return result;
+							return this.respond(result.data,result.headers,request,result.status);
 						}
                         let item = this.getOne(name, id);
                         return this.respond(item, null, request);
@@ -256,11 +262,11 @@ export default class Server {
                     }
                     
                 }
-                if (request.method == 'PUT') {
+                if (lowerMethod == 'put') {
                     try {
 						var result = this.runCollectionInterceptor(request.method,name,request,id);
 						if(result!=null){
-							return result;
+							return this.respond(result.data,result.headers,request,result.status);
 						}
                         let item = this.updateOne(name, id, request.json);
                         return this.respond(item, null, request);    
@@ -268,7 +274,7 @@ export default class Server {
                         return request.respond(404);
                     }
                 }
-                if (request.method == 'DELETE') {
+                if (lowerMethod == 'delete') {
                     try {
 						var result = this.runCollectionInterceptor(request.method,name,request,id);
 						if(result!=null){

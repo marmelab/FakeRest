@@ -151,6 +151,23 @@ restServer.addResponseInterceptor(function(response) {
     return response; // always return the modified input
 });
 
+// validate the requests using a collection interceptor
+// do not return when everything is working
+// the parameters are
+//      request
+//      return code
+//      headers
+//      object to return
+restServer.addCollectionInterceptor(
+	'customers',{
+		post: function(request,id){ 
+			if(parseInt(id)>9999){
+				return restServer.interceptorResponse(request,500,null, {message:'Maximum id is 9999'});
+			}
+		}
+	}
+);
+
 // you can create more than one fake server to listen to several domains
 var restServer2 = new FakeRest.Server('http://my.other.domain');
 // Set data collection by collection - allows to customize the identifier name
@@ -169,44 +186,6 @@ server.autoRespond = true;
 server.respondWith(restServer.getHandler());
 server.respondWith(restServer2.getHandler());
 ```
-
-## Interceptors
-
-Can be used to validate the requests.
-
-```html
-<script src="/path/to/FakeRest.min.js"></script>
-<script src="/path/to/sinon.js"></script>
-<script type="text/javascript">
-// initialize fake REST server and data
-var restServer = new FakeRest.Server();
-restServer.init({
-    'autors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ]
-});
-
-restServer.addCollectionInterceptor('autors',
-	{
-		LIST: function(request){ 
-			return request.respond(405,null, JSON.stringify({message:'Method not allowed'}));
-		},
-		GET: function(request,id){ 
-			console.log(id);
-			if(id==-1){
-				return request.respond(500,null, JSON.stringify({message:'Wrong Id'}));
-			}
-		},
-		POST: function(request){ 
-			var body = JSON.parse(request.requestBody);
-			if(!body.last_name || !body.first_name){
-				return request.respond(400,null, JSON.stringify({message:'All fields are mandatory!'}));
-			}
-		}
-	}
-);
-
 
 ## Development
 
