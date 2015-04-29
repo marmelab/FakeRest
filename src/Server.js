@@ -26,6 +26,7 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.collections = {};
+		this.collectionsInterceptors = {};
         this.loggingEnabled = false;
         this.requestInterceptors = [];
         this.responseInterceptors = [];
@@ -39,6 +40,17 @@ export default class Server {
             this.addCollection(name, new Collection(data[name]));
         }
     }
+	
+	interceptorResponse(request,status,headers,body){	
+		if (!status) status = 200;	
+		return {data: body,status:status,headers: headers}
+	}
+	
+	initInterceptors(data) {
+        for (let name in data) {
+            this.addCollectionInterceptor(name, data[name]);
+        }
+    }
 
     toggleLogging() {
         this.loggingEnabled = !this.loggingEnabled;
@@ -47,6 +59,17 @@ export default class Server {
     addCollection(name, collection) {
         this.collections[name] = collection;
     }
+	
+	addCollectionInterceptor(name, interceptors){
+		name = name.toLowerCase();
+		if(!this.collectionsInterceptors[name]){
+			this.collectionsInterceptors[name] = {};
+		}
+		for (let action in interceptors) {
+			var lowerMethod = action.toLowerCase();
+			this.collectionsInterceptors[name][lowerMethod]= interceptors[action];
+        }
+	}
 
     getCollection(name) {
         return this.collections[name];
@@ -147,6 +170,23 @@ export default class Server {
         }
     }
 
+	getCollectionInterceptor(method,collection){
+		var lowerCollection = collection.toLowerCase();
+		var lowerMethod = method.toLowerCase();
+		if(!this.collectionsInterceptors[lowerCollection]){
+			return null;
+		}
+		if(!this.collectionsInterceptors[lowerCollection][lowerMethod]){
+			return null;
+		}
+		return this.collectionsInterceptors[lowerCollection][lowerMethod];
+	}
+	
+	runCollectionInterceptor(method,collection,request,id){
+		if(this.getCollectionInterceptor(method,collection)==null) return null;
+		return this.getCollectionInterceptor(method,collection)(request,id);
+	}
+	
     /**
      * @param {FakeXMLHttpRequest} request
      *
@@ -163,11 +203,18 @@ export default class Server {
      */
     handle(request) {
         request = this.decode(request);
+		var lowerMethod = request.method.toLowerCase();
         for (let name of this.getCollectionNames()) {
             let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;
             if (!matches[2]) {
-                if (request.method == 'GET') {
+                if (lowerMethod == 'get') {
+					
+					var result = this.runCollectionInterceptor("list",name,request,null);
+					if(result!=null){
+						return this.respond(result.data,result.headers,request,result.status);
+					}
+					
                     let params = request.params;
                     let countParams = {};
                     for (let key in params) {
@@ -190,15 +237,24 @@ export default class Server {
                     }
                     return this.respond(items, { 'Content-Range': contentRange }, request, status);
                 }                
-                if (request.method == 'POST') {
+                if (lowerMethod == 'post') {
+					var result = this.runCollectionInterceptor(request.method,name,request,null);
+					if(result!=null){
+						return this.respond(result.data,result.headers,request,result.status);
+					}
+					
                     let newResource = this.addOne(name, request.json);
                     let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
                     return this.respond(newResource, { Location: newResourceURI }, request, 201);
                 }
             } else {
                 let id = matches[3];
-                if (request.method == 'GET') {
+                if (lowerMethod == 'get') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return this.respond(result.data,result.headers,request,result.status);
+						}
                         let item = this.getOne(name, id);
                         return this.respond(item, null, request);
                     } catch (error) {
@@ -206,16 +262,24 @@ export default class Server {
                     }
                     
                 }
-                if (request.method == 'PUT') {
+                if (lowerMethod == 'put') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return this.respond(result.data,result.headers,request,result.status);
+						}
                         let item = this.updateOne(name, id, request.json);
                         return this.respond(item, null, request);    
                     } catch (error) {
                         return request.respond(404);
                     }
                 }
-                if (request.method == 'DELETE') {
+                if (lowerMethod == 'delete') {
                     try {
+						var result = this.runCollectionInterceptor(request.method,name,request,id);
+						if(result!=null){
+							return result;
+						}
                         let item = this.removeOne(name, id);
                         return this.respond(item, null, request);
                     } catch (error) {
