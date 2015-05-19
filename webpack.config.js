@@ -1,6 +1,6 @@
 module.exports = {
     entry: {
-        FakeRest: './src/FakeRest.js',
+        FakeRest: './src/FakeRest.js'
     },
     resolve:{
         modulesDirectories: [
@@ -12,8 +12,8 @@ module.exports = {
         loaders: [{
             test: /\.js$/,
             exclude: /node_modules/,
-            loader: 'babel-loader',
-        }],
+            loader: 'babel-loader?stage=1&optional[]=runtime'
+        }]
     },
     output: {
         path: './dist',
@@ -21,4 +21,4 @@ module.exports = {
         library: 'FakeRest',
         libraryTarget: 'umd'
     }
-}
+};
