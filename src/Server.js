@@ -1,4 +1,3 @@
-import 'babel-core/polyfill';
 import Collection from 'Collection';
 
 function parseQueryString(queryString) {

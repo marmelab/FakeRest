@@ -1,4 +1,3 @@
-import 'babel-core/polyfill';
 import Server from 'Server';
 import Collection from 'Collection';
 

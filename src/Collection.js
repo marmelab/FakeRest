@@ -1,4 +1,4 @@
-import 'babel-core/polyfill';
+import 'array.prototype.findindex';
 
 function filterItems(items, filter) {
     if (typeof filter === 'function') {
