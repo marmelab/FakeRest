@@ -12,7 +12,7 @@ module.exports = {
         loaders: [{
             test: /\.js$/,
             exclude: /node_modules/,
-            loader: 'babel-loader'
+            loader: 'babel?optional[]=runtime&stage=0'
         }]
     },
     output: {
