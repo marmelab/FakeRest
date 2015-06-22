@@ -119,7 +119,7 @@ export default class Server {
         }
         let response = { status: status, headers: headers, body: body };
         response = this.responseInterceptors.reduce(function(previous, current) {
-            return current(previous);
+            return current(previous, request);
         }, response);
         this.log(request, response);
         return request.respond(response.status, response.headers, JSON.stringify(response.body))
