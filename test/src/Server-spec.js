@@ -136,6 +136,22 @@
                 expect(request.status).toEqual(418);
                 expect(request.responseText).toEqual('{"data":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}],"status":200}');
             });
+
+            it('should pass request in response interceptor', function() {
+                var server = new Server();
+                var requestUrl;
+                server.addResponseInterceptor(function(response, request) {
+                    requestUrl = request.url;
+                    return response;
+                });
+                server.addCollection('foo', new Collection());
+
+                var request;
+                request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request);
+
+                expect(requestUrl).toEqual('/foo');
+            });
         });
 
         describe('handle', function() {
