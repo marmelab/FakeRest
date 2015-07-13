@@ -7,6 +7,14 @@ function filterItems(items, filter) {
     if (filter instanceof Object) {
         return items.filter(item => {
             for (let key in filter) {
+                if (key === 'q') {
+                    // full-text filter
+                    for (let itemKey in item) {
+                        if (item[itemKey].indexOf && item[itemKey].indexOf(filter.q) !== -1) return true;
+                    }
+                    return false;
+                }
+                // simple filter
                 if (item[key] != filter[key]) return false;
             }
             return true;
