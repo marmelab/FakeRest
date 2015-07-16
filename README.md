@@ -88,6 +88,18 @@ Content-Type: application/json
   { id: 3, author_id: 1, title: 'Sense and Sensibility' },
   { id: 2, author_id: 1, title: 'Pride and Prejudice' }
 ]
+
+// the special "q" filter makes a full-text search on all text fields
+GET /books?filter={q:'and'}
+
+HTTP 1.1 200 OK
+Content-Range: items 0-2/3
+Content-Type: application/json
+[
+  { id: 1, author_id: 0, title: 'War and Peace' },
+  { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+  { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+]
 ```
 
 * `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
