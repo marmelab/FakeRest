@@ -17,7 +17,8 @@ function parseQueryString(queryString) {
             }
             queryObject[key.trim()] = value;
         }
-    })
+    });
+
     return queryObject;
 }
 
@@ -28,6 +29,7 @@ export default class Server {
         this.loggingEnabled = false;
         this.requestInterceptors = [];
         this.responseInterceptors = [];
+        this.batchUrl = null;
     }
 
     /**
@@ -41,6 +43,10 @@ export default class Server {
 
     toggleLogging() {
         this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    setBatch(url) {
+        this.batchUrl = url;
     }
 
     addCollection(name, collection) {
@@ -100,7 +106,7 @@ export default class Server {
         request.params = parseQueryString(request.queryString);
         if (request.requestBody) {
             try {
-                request.json = JSON.parse(request.requestBody);    
+                request.json = JSON.parse(request.requestBody);
             } catch(error) {
                 // body isn't JSON, skipping
             }
@@ -122,7 +128,8 @@ export default class Server {
             return current(previous, request);
         }, response);
         this.log(request, response);
-        return request.respond(response.status, response.headers, JSON.stringify(response.body))
+
+        return request.respond(response.status, response.headers, JSON.stringify(response.body));
     }
 
     log(request, response) {
@@ -132,18 +139,56 @@ export default class Server {
             console.groupCollapsed(request.method, request.url, '(FakeRest)');
             console.group('request');
             console.log(request.method, request.url);
-            console.log('headers', request.requestHeaders)
+            console.log('headers', request.requestHeaders);
             console.log('body   ', request.requestBody);
-            console.groupEnd()
+            console.groupEnd();
             console.group('response', response.status);
-            console.log('headers', response.headers)
+            console.log('headers', response.headers);
             console.log('body   ', response.body);
-            console.groupEnd()
+            console.groupEnd();
             console.groupEnd();
         } else {
             console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
             console.log('FakeRest response', response.status, 'headers', response.headers, 'body', response.body);
         }
+    }
+
+    batch(request) {
+
+        var json = request.json;
+        var handle = this.handle.bind(this);
+
+        var jsonResponse = Object.keys(json).reduce(function (jsonResponse, requestName) {
+            var subResponse;
+            var sub = {
+                url: json[requestName],
+                method: 'GET',
+                params: {},
+                respond: function (code, headers, body) {
+                    subResponse = {
+                        code: code,
+                        headers: Object.keys(headers || {}).map(function (headerName) {
+                            return {
+                                'name': headerName,
+                                'value': headers[headerName]
+                            };
+                        }),
+                        body: body || {}
+                    };
+                }
+            };
+            handle(sub);
+
+            jsonResponse[requestName] = subResponse || {
+                code: 404,
+                headers: [],
+                body: {}
+            };
+
+            return jsonResponse;
+        }, {});
+
+        return this.respond(jsonResponse, {}, request, 200);
     }
 
     /**
@@ -162,6 +207,11 @@ export default class Server {
      */
     handle(request) {
         request = this.decode(request);
+
+        if (this.batchUrl && this.batchUrl === request.url && request.method === 'POST') {
+            return this.batch(request);
+        }
+
         for (let name of this.getCollectionNames()) {
             let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;
@@ -185,10 +235,10 @@ export default class Server {
                     } else {
                         items = [];
                         contentRange = 'items */0';
-                        status = 200
+                        status = 200;
                     }
                     return this.respond(items, { 'Content-Range': contentRange }, request, status);
-                }                
+                }
                 if (request.method == 'POST') {
                     let newResource = this.addOne(name, request.json);
                     let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
@@ -203,12 +253,12 @@ export default class Server {
                     } catch (error) {
                         return request.respond(404);
                     }
-                    
+
                 }
                 if (request.method == 'PUT') {
                     try {
                         let item = this.updateOne(name, id, request.json);
-                        return this.respond(item, null, request);    
+                        return this.respond(item, null, request);
                     } catch (error) {
                         return request.respond(404);
                     }

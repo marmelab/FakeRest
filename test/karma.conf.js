@@ -10,10 +10,10 @@ module.exports = function (config) {
             {pattern: 'test/function.bind.shim.js', included: true},
 
             // test files
-            {pattern: 'test/src/**/*.js', included: true},
+            {pattern: 'test/src/**/*.js', included: true}
         ],
         frameworks: ['jasmine'],
-        reporters: ["spec"],
+        reporters: ['spec'],
         plugins: ['karma-spec-reporter', 'karma-jasmine', 'karma-chrome-launcher', 'karma-phantomjs-launcher']
     });
 };
