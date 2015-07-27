@@ -37,12 +37,12 @@
 
             it('should add a collection and index it by name', function() {
                 var server = new Server();
-                var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}])
+                var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 server.addCollection('foo', collection);
-                var collection = server.getCollection('foo');
+                collection = server.getCollection('foo');
                 expect(collection).toEqual(collection);
-            });            
-        })
+            });
+        });
 
         describe('getAll', function() {
 
@@ -159,7 +159,7 @@
             it('should not respond to GET /whatever on non existing collection', function() {
                 var server = new Server();
                 var request = getFakeXMLHTTPRequest('GET', '/foo');
-                server.handle(request)
+                server.handle(request);
                 expect(request.status).toEqual(0); // not responded
             });
 
@@ -215,7 +215,7 @@
                 var server = new Server();
                 server.addCollection('foo', new Collection());
                 var request = getFakeXMLHTTPRequest('GET', '/foo');
-                server.handle(request)
+                server.handle(request);
                 expect(request.status).toEqual(200);
                 expect(request.responseText).toEqual('[]');
                 expect(request.getResponseHeader('Content-Range')).toEqual('items */0');
@@ -247,7 +247,7 @@
                 var server = new Server();
                 server.addCollection('foo', new Collection());
                 var request = getFakeXMLHTTPRequest('GET', '/foo/3');
-                server.handle(request)
+                server.handle(request);
                 expect(request.status).toEqual(404);
             });
 
@@ -266,7 +266,7 @@
                 var server = new Server();
                 server.addCollection('foo', new Collection([]));
                 var request = getFakeXMLHTTPRequest('PUT', '/foo/3', JSON.stringify({name: 'baz'}));
-                server.handle(request)
+                server.handle(request);
                 expect(request.status).toEqual(404);
             });
 
@@ -285,11 +285,49 @@
                 var server = new Server();
                 server.addCollection('foo', new Collection([]));
                 var request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
-                server.handle(request)
+                server.handle(request);
                 expect(request.status).toEqual(404);
             });
 
-        })
+        });
+
+        describe('batch', function() {
+            it('should return batch response', function() {
+                var server = new Server();
+                server.init({
+                    foo: [{a:1}, {a:2}, {a:3}],
+                    bar: [{b: true}, {b: false}]
+                });
+                server.setBatch('/batch');
+                var request = getFakeXMLHTTPRequest('POST', '/batch', JSON.stringify({foo0: '/foo/0', allbar: '/bar', baz0: '/baz/0'}));
+                server.handle(request);
+                expect(request.response).toEqual(JSON.stringify({
+                    foo0: {
+                        code: 200,
+                        headers: [
+                            {
+                                name: 'Content-Type',
+                                value: 'application/json'
+                            }
+                        ],
+                        body: '{\"a\":1,\"id\":0}'
+                    },
+                    allbar: {
+                        code: 200,
+                        headers: [
+                            { name: 'Content-Range', value: 'items 0-1/2' },
+                            { name: 'Content-Type', value: 'application/json' }
+                        ],
+                        body: '[{\"b\":true,\"id\":0},{\"b\":false,\"id\":1}]'
+                    },
+                    baz0: {
+                        code: 404,
+                        headers: [],
+                        body: {}
+                    }
+                }));
+            });
+        });
 
     });
 })();
