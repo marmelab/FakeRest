@@ -135,9 +135,6 @@ If the REST flavor you want to simulate differs from the one chosen for FakeRest
 // initialize a rest server with a custom base URL
 var restServer = new FakeRest.Server('http://my.custom.domain');
 restServer.toggleLogging(); // logging is off by default, enable it
-// batch request is the ability for the client to send several request into a single one.
-// [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
-restServer.batchUrl('/batch') // batch is disabled by default to enable it add the batch request url.
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
 // modify the request before FakeRest handles it, using a request interceptor
@@ -165,6 +162,9 @@ restServer.addResponseInterceptor(function(response) {
     response.body = { data: response.body, status: response.status };
     return response; // always return the modified input
 });
+// enable batch request handler, i.e. allow API clients to query several resourecs into a single request
+// see [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
+restServer.batchUrl('/batch');
 
 // you can create more than one fake server to listen to several domains
 var restServer2 = new FakeRest.Server('http://my.other.domain');
