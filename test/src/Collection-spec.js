@@ -126,15 +126,16 @@
 
                 it('should filter by the special q full-text filter', function() {
                     var collection = new Collection([
-                        { a: 'hello', b: 'world' },
+                        { a: 'Hello', b: 'world' },
                         { a: 'helloworld', b: 'bunny'},
                         { a: 'foo', b: 'bar'},
                         { a: '', b: '' },
+                        { a: null, b: null },
                         {}
                     ]);
-                    expect(collection.getAll({filter: { q: 'hello'} })).toEqual([ { id: 0, a: 'hello', b: 'world' }, { id: 1, a: 'helloworld', b: 'bunny'} ])
+                    expect(collection.getAll({filter: { q: 'hello'} })).toEqual([ { id: 0, a: 'Hello', b: 'world' }, { id: 1, a: 'helloworld', b: 'bunny'} ])
                     expect(collection.getAll({filter: { q: 'bar'} })).toEqual([{ id: 2, a: 'foo', b: 'bar'}])
-                })
+                });
 
                 it('should not affect further requests', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
