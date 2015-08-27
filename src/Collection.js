@@ -5,12 +5,13 @@ function filterItems(items, filter) {
         return items.filter(filter);
     }
     if (filter instanceof Object) {
+        let regex = filter.q ? new RegExp(filter.q, 'i') : null;
         return items.filter(item => {
             for (let key in filter) {
                 if (key === 'q') {
                     // full-text filter
                     for (let itemKey in item) {
-                        if (item[itemKey].indexOf && item[itemKey].indexOf(filter.q) !== -1) return true;
+                        if (item[itemKey] && item[itemKey].match && item[itemKey].match(regex) !== null) return true;
                     }
                     return false;
                 }
