@@ -16,7 +16,11 @@ function filterItems(items, filter) {
                     return false;
                 }
                 // simple filter
-                if (item[key] != filter[key]) return false;
+                let value = filter[key];
+                if (typeof item[key] == 'boolean' && typeof filter[key] == 'string') {
+                    value = filter[key] === 'true' ? true : false;
+                }
+                if (item[key] != value) return false;
             }
             return true;
         });

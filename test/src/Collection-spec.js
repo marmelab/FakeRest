@@ -124,6 +124,20 @@
                     expect(collection.getAll({filter: { name: 'b'} })).toEqual(expected)
                 });
 
+                it('should filter boolean values properly', function() {
+                    var collection = new Collection([
+                        { name: 'a', is: true },
+                        { name: 'b', is: false },
+                        { name: 'c', is: true }
+                    ]);
+                    var expectedFalse = [{ name: 'b', id: 1, is: false }];
+                    var expectedTrue =  [{ name: 'a', id: 0, is: true }, { name: 'c', id: 2, is: true }];
+                    expect(collection.getAll({filter: { is: 'false' } })).toEqual(expectedFalse)
+                    expect(collection.getAll({filter: { is: false } })).toEqual(expectedFalse)
+                    expect(collection.getAll({filter: { is: 'true' } })).toEqual(expectedTrue)
+                    expect(collection.getAll({filter: { is: true } })).toEqual(expectedTrue)
+                })
+
                 it('should filter by the special q full-text filter', function() {
                     var collection = new Collection([
                         { a: 'Hello', b: 'world' },
