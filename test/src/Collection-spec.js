@@ -4,7 +4,7 @@
     'use strict';
 
     var Collection = FakeRest.Collection;
-    
+
     describe('Collection', function() {
 
         describe('constructor', function() {
@@ -12,12 +12,12 @@
             it('should set the initial set of data', function() {
                 var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 expect(collection.getAll()).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
-            });            
+            });
 
             it('should set identifier name to id by default', function() {
                 var collection = new Collection();
                 expect(collection.identifierName).toEqual('id');
-            });            
+            });
         })
 
         describe('getCount', function() {
@@ -136,6 +136,20 @@
                     expect(collection.getAll({filter: { is: false } })).toEqual(expectedFalse)
                     expect(collection.getAll({filter: { is: 'true' } })).toEqual(expectedTrue)
                     expect(collection.getAll({filter: { is: true } })).toEqual(expectedTrue)
+                })
+
+                it('should filter array values properly', function() {
+                    var collection = new Collection([
+                        { tags: ['a', 'b', 'c'] },
+                        { tags: ['b', 'c', 'd'] },
+                        { tags: ['c', 'd', 'e'] },
+                    ]);
+                    var expected = [
+                        { id: 0, tags: ['a', 'b', 'c'] },
+                        { id: 1, tags: ['b', 'c', 'd'] },
+                    ];
+                    expect(collection.getAll({filter: { tags: 'b' } })).toEqual(expected)
+                    expect(collection.getAll({filter: { tags: 'f' } })).toEqual([])
                 })
 
                 it('should filter by the special q full-text filter', function() {
