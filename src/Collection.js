@@ -17,6 +17,9 @@ function filterItems(items, filter) {
                 }
                 // simple filter
                 let value = filter[key];
+                if (Object.prototype.toString.call(item[key]) == '[object Array]' && typeof filter[key] == 'string') {
+                    return item[key].indexOf(value) !== -1;
+                }
                 if (typeof item[key] == 'boolean' && typeof filter[key] == 'string') {
                     value = filter[key] === 'true' ? true : false;
                 }
