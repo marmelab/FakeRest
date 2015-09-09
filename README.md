@@ -118,8 +118,8 @@ FakeRest uses a standard REST flavor, described below.
 
     The `range` param defines the number of results by specifying the rank of the first and last result. The first result is #0.
 
-    GET /books?range=[0-9] // return the first 10 books
-    GET /books?range=[10-19] // return the 10 next books
+        GET /books?range=[0-9] // return the first 10 books
+        GET /books?range=[10-19] // return the 10 next books
 
 * `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
