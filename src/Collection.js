@@ -5,28 +5,58 @@ function filterItems(items, filter) {
         return items.filter(filter);
     }
     if (filter instanceof Object) {
-        let regex = filter.q ? new RegExp(filter.q, 'i') : null;
-        return items.filter(item => {
-            for (let key in filter) {
-                if (key === 'q') {
-                    // full-text filter
+        // turn filter properties to functions
+        var filterFunctions = Object.keys(filter).map(key => {
+            if (key === 'q') {
+                let regex = new RegExp(filter.q, 'i');
+                // full-text filter
+                return item => {
                     for (let itemKey in item) {
                         if (item[itemKey] && item[itemKey].match && item[itemKey].match(regex) !== null) return true;
                     }
                     return false;
-                }
-                // simple filter
-                let value = filter[key];
+                };
+            }
+            let value = filter[key];
+            if (key.indexOf('_lte') !== -1) {
+                // less than or equal
+                let realKey = key.replace(/(_lte)$/, '');
+                return item => item[realKey] <= value;
+            }
+            if (key.indexOf('_gte') !== -1) {
+                // less than or equal
+                let realKey = key.replace(/(_gte)$/, '');
+                return item => item[realKey] >= value;
+            }
+            if (key.indexOf('_lt') !== -1) {
+                // less than or equal
+                let realKey = key.replace(/(_lt)$/, '');
+                return item => item[realKey] < value;
+            }
+            if (key.indexOf('_gt') !== -1) {
+                // less than or equal
+                let realKey = key.replace(/(_gt)$/, '');
+                return item => item[realKey] > value;
+            }
+            return item => {
                 if (Object.prototype.toString.call(item[key]) == '[object Array]' && typeof filter[key] == 'string') {
+                    // simple filter but array item value: make that a where ... in
                     return item[key].indexOf(value) !== -1;
                 }
                 if (typeof item[key] == 'boolean' && typeof filter[key] == 'string') {
-                    value = filter[key] === 'true' ? true : false;
+                    // simple filter but boolean item value: make that a boolean where
+                    return item[key] == (value === 'true' ? true : false);
                 }
-                if (item[key] != value) return false;
+                // simple filter
+                return item[key] == value;
             }
-            return true;
         });
+        // only the items matching all filters functions are in (AND logic)
+        return items.filter(item => {
+            return filterFunctions.reduce((selected, filterFunction) => {
+                return selected && filterFunction(item);
+            }, true);
+        })
     }
     throw new Error('Unsupported filter type');
 }
