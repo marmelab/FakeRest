@@ -78,29 +78,39 @@ FakeRest uses a standard REST flavor, described below.
 
 * `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response contains a mention of the total count in the `Content-Range` header.
 
-```
-GET /books?filter={author_id:1}&sort=['title','desc']&range=[0-9]
+        GET /books?filter={author_id:1}&sort=['title','desc']&range=[0-9]
 
-HTTP 1.1 200 OK
-Content-Range: items 0-1/2
-Content-Type: application/json
-[
-  { id: 3, author_id: 1, title: 'Sense and Sensibility' },
-  { id: 2, author_id: 1, title: 'Pride and Prejudice' }
-]
+        HTTP 1.1 200 OK
+        Content-Range: items 0-1/2
+        Content-Type: application/json
+        [
+          { id: 3, author_id: 1, title: 'Sense and Sensibility' },
+          { id: 2, author_id: 1, title: 'Pride and Prejudice' }
+        ]
 
-// the special "q" filter makes a full-text search on all text fields
-GET /books?filter={q:'and'}
+    The `filter` param must be an serialized object litteral describing the criteria to apply to the search query.
 
-HTTP 1.1 200 OK
-Content-Range: items 0-2/3
-Content-Type: application/json
-[
-  { id: 1, author_id: 0, title: 'War and Peace' },
-  { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-  { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-]
-```
+        GET /books?filter={author_id:1} // return books where author_id is equal to 1
+
+        // use _gt, _gte, _lte, or _lt suffix on filter names to make range queries
+        GET /books?filter={price_lte:20} // return books where price is less than or equal to 20
+        GET /books?filter={price_gt:20} // return books where price is greater than 20
+
+        // use the special "q" filter to make a full-text search on all text fields
+        GET /books?filter={q:'and'} // return books where any of the book properties contains the string 'and'
+
+        HTTP 1.1 200 OK
+        Content-Range: items 0-2/3
+        Content-Type: application/json
+        [
+          { id: 1, author_id: 0, title: 'War and Peace' },
+          { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+          { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ]
+
+        // when the filter object contains more than one property, the criteria combine with an AND logic
+        GET /books?filter={published_at_gte:'2015-06-12',published_at_lte:'2015-06-15'} // return books published between two dates
+
 
 * `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 

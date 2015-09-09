@@ -152,6 +152,16 @@
                     expect(collection.getAll({filter: { tags: 'f' } })).toEqual([])
                 })
 
+                it('should filter by range using _gte, _gt, _lte, and _lt', function() {
+                    var collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 } ]);
+                    expect(collection.getAll({filter: { v_gte: 2 } })).toEqual([ {v: 2, id: 1}, {v: 3, id: 2} ])
+                    expect(collection.getAll({filter: { v_gt: 2 } })).toEqual([ {v: 3, id: 2} ])
+                    expect(collection.getAll({filter: { v_gte: 4 } })).toEqual([]);
+                    expect(collection.getAll({filter: { v_lte: 2 } })).toEqual([ {v: 1, id: 0}, {v: 2, id: 1} ])
+                    expect(collection.getAll({filter: { v_lt: 2 } })).toEqual([ {v: 1, id: 0} ])
+                    expect(collection.getAll({filter: { v_lte: 0 } })).toEqual([]);
+                });
+
                 it('should filter by the special q full-text filter', function() {
                     var collection = new Collection([
                         { a: 'Hello', b: 'world' },
@@ -164,6 +174,11 @@
                     expect(collection.getAll({filter: { q: 'hello'} })).toEqual([ { id: 0, a: 'Hello', b: 'world' }, { id: 1, a: 'helloworld', b: 'bunny'} ])
                     expect(collection.getAll({filter: { q: 'bar'} })).toEqual([{ id: 2, a: 'foo', b: 'bar'}])
                 });
+
+                it('should combine all filters with an AND logic', function() {
+                    var collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 } ]);
+                    expect(collection.getAll({filter: { v_gte: 2, v_lte: 2 } })).toEqual([ {v: 2, id: 1} ]);
+                })
 
                 it('should not affect further requests', function() {
                     var collection = new Collection([{name: 'c'}, {name: 'a'}, {name: 'b'}]);
