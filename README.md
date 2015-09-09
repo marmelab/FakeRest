@@ -88,7 +88,7 @@ FakeRest uses a standard REST flavor, described below.
           { id: 2, author_id: 1, title: 'Pride and Prejudice' }
         ]
 
-    The `filter` param must be an serialized object litteral describing the criteria to apply to the search query.
+    The `filter` param must be a serialized object litteral describing the criteria to apply to the search query.
 
         GET /books?filter={author_id:1} // return books where author_id is equal to 1
 
@@ -111,6 +111,15 @@ FakeRest uses a standard REST flavor, described below.
         // when the filter object contains more than one property, the criteria combine with an AND logic
         GET /books?filter={published_at_gte:'2015-06-12',published_at_lte:'2015-06-15'} // return books published between two dates
 
+    The `sort` param must be a serialized array litteral defining first the property used for sorting, then the sorting direction.
+
+        GET /author?sort=['date_of_birth','asc']  // return authors, the oldest first
+        GET /author?sort=['date_of_birth','desc']  // return authors, the youngest first
+
+    The `range` param defines the number of results by specifying the rank of the first and last result. The first result is #0.
+
+    GET /books?range=[0-9] // return the first 10 books
+    GET /books?range=[10-19] // return the 10 next books
 
 * `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
