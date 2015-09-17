@@ -8,9 +8,7 @@ Intercept XMLHttpRequest to fake a REST server based on JSON data. Use it on top
 <script src="/path/to/FakeRest.min.js"></script>
 <script src="/path/to/sinon.js"></script>
 <script type="text/javascript">
-// initialize fake REST server and data
-var restServer = new FakeRest.Server();
-restServer.init({
+var data = {
     'authors': [
         { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
         { id: 1, first_name: 'Jane', last_name: 'Austen' }
@@ -21,12 +19,27 @@ restServer.init({
         { id: 2, author_id: 1, title: 'Pride and Prejudice' },
         { id: 3, author_id: 1, title: 'Sense and Sensibility' }
     ]
-});
+};
+// initialize fake REST server 
+var restServer = new FakeRest.Server();
+restServer.init(data);
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
 server.respondWith(restServer.getHandler());
+```
 
-// Now query the fake REST server
+FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes are:
+
+* GET    /:resource
+* POST   /:resource
+* GET    /:resource/:id
+* PUT    /:resource/:id
+* DELETE /:resource/:id
+
+Let's see an example: 
+
+```js
+// Query the fake REST server
 var req = new XMLHttpRequest();
 req.open("GET", "/authors", false);
 req.send(null);
