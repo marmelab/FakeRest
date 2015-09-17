@@ -36,6 +36,7 @@ GET    /:resource
 POST   /:resource
 GET    /:resource/:id
 PUT    /:resource/:id
+PATCH  /:resource/:id
 DELETE /:resource/:id
 ```
 

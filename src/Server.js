@@ -253,9 +253,16 @@ export default class Server {
                     } catch (error) {
                         return request.respond(404);
                     }
-
                 }
                 if (request.method == 'PUT') {
+                    try {
+                        let item = this.updateOne(name, id, request.json);
+                        return this.respond(item, null, request);
+                    } catch (error) {
+                        return request.respond(404);
+                    }
+                }
+                if (request.method == 'PATCH') {
                     try {
                         let item = this.updateOne(name, id, request.json);
                         return this.respond(item, null, request);

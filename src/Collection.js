@@ -39,16 +39,16 @@ function filterItems(items, filter) {
                 return item => item[realKey] > value;
             }
             if (Array.isArray(value)) {
-                // not strict indexOf
+                // where item in value
                 return item => value.filter(v => v == item[key]).length > 0;
             }
             return item => {
-                if (Object.prototype.toString.call(item[key]) == '[object Array]' && typeof filter[key] == 'string') {
-                    // simple filter but array item value: make that a where ... in
+                if (Array.isArray(item[key]) && typeof value == 'string') {
+                    // simple filter but array item value: where value in item
                     return item[key].indexOf(value) !== -1;
                 }
-                if (typeof item[key] == 'boolean' && typeof filter[key] == 'string') {
-                    // simple filter but boolean item value: make that a boolean where
+                if (typeof item[key] == 'boolean' && typeof value == 'string') {
+                    // simple filter but boolean item value: boolean where
                     return item[key] == (value === 'true' ? true : false);
                 }
                 // simple filter
@@ -56,11 +56,9 @@ function filterItems(items, filter) {
             }
         });
         // only the items matching all filters functions are in (AND logic)
-        return items.filter(item => {
-            return filterFunctions.reduce((selected, filterFunction) => {
-                return selected && filterFunction(item);
-            }, true);
-        })
+        return items.filter(item =>
+            filterFunctions.reduce((selected, filterFunction) => selected && filterFunction(item), true)
+        );
     }
     throw new Error('Unsupported filter type');
 }
