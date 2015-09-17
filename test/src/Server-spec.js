@@ -270,6 +270,25 @@
                 expect(request.status).toEqual(404);
             });
 
+            it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
+                var request = getFakeXMLHTTPRequest('PATCH', '/foo/2', JSON.stringify({name: 'baz'}));
+                server.handle(request);
+                expect(request.status).toEqual(200);
+                expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
+                expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'baz'}]);
+            });
+
+            it('should respond to PATCH /foo/:id on a non-existing id with a 404', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([]));
+                var request = getFakeXMLHTTPRequest('PATCH', '/foo/3', JSON.stringify({name: 'baz'}));
+                server.handle(request);
+                expect(request.status).toEqual(404);
+            });
+
             it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));
