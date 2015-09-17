@@ -26,15 +26,18 @@ restServer.init(data);
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
 server.respondWith(restServer.getHandler());
+</script>
 ```
 
 FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes are:
 
-* GET    /:resource
-* POST   /:resource
-* GET    /:resource/:id
-* PUT    /:resource/:id
-* DELETE /:resource/:id
+```
+GET    /:resource
+POST   /:resource
+GET    /:resource/:id
+PUT    /:resource/:id
+DELETE /:resource/:id
+```
 
 Let's see an example: 
 
@@ -63,7 +66,6 @@ console.log(req.responseText);
 
 // restore native XHR constructor
 server.restore();
-</script>
 ```
 
 *Tip*: The `fakerServer` provided by Sinon.js is [available as a standalone library](http://sinonjs.org/docs/#server), without the entire stubbing framework. Simply add the following bower dependency:
@@ -182,8 +184,8 @@ If the REST flavor you want to simulate differs from the one chosen for FakeRest
 
 ```js
 // initialize a rest server with a custom base URL
-var restServer = new FakeRest.Server('http://my.custom.domain');
-restServer.toggleLogging(); // logging is off by default, enable it
+var restServer = new FakeRest.Server('http://my.custom.domain'); // // only URLs starting wiyj my.custom.domain will be intercepted
+restServer.toggleLogging(); // logging is off by default, enable it to see network calls in the console
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
 // modify the request before FakeRest handles it, using a request interceptor
