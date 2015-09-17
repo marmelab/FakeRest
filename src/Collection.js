@@ -38,6 +38,10 @@ function filterItems(items, filter) {
                 let realKey = key.replace(/(_gt)$/, '');
                 return item => item[realKey] > value;
             }
+            if (Array.isArray(value)) {
+                // not strict indexOf
+                return item => value.filter(v => v == item[key]).length > 0;
+            }
             return item => {
                 if (Object.prototype.toString.call(item[key]) == '[object Array]' && typeof filter[key] == 'string') {
                     // simple filter but array item value: make that a where ... in
