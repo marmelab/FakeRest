@@ -91,10 +91,23 @@ FakeRest uses a standard REST flavor, described below.
     The `filter` param must be a serialized object litteral describing the criteria to apply to the search query.
 
         GET /books?filter={author_id:1} // return books where author_id is equal to 1
+        HTTP 1.1 200 OK
+        Content-Range: items 0-1/2
+        Content-Type: application/json
+        [
+          { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+          { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ]
 
-        // use _gt, _gte, _lte, or _lt suffix on filter names to make range queries
-        GET /books?filter={price_lte:20} // return books where price is less than or equal to 20
-        GET /books?filter={price_gt:20} // return books where price is greater than 20
+        // array values are possible
+        GET /books?filter={id:[2,3]} // return books where id is in [2,3]
+        HTTP 1.1 200 OK
+        Content-Range: items 0-1/2
+        Content-Type: application/json
+        [
+          { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+          { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ]
 
         // use the special "q" filter to make a full-text search on all text fields
         GET /books?filter={q:'and'} // return books where any of the book properties contains the string 'and'
@@ -107,6 +120,10 @@ FakeRest uses a standard REST flavor, described below.
           { id: 2, author_id: 1, title: 'Pride and Prejudice' },
           { id: 3, author_id: 1, title: 'Sense and Sensibility' }
         ]
+
+        // use _gt, _gte, _lte, or _lt suffix on filter names to make range queries
+        GET /books?filter={price_lte:20} // return books where price is less than or equal to 20
+        GET /books?filter={price_gt:20} // return books where price is greater than 20
 
         // when the filter object contains more than one property, the criteria combine with an AND logic
         GET /books?filter={published_at_gte:'2015-06-12',published_at_lte:'2015-06-15'} // return books published between two dates
