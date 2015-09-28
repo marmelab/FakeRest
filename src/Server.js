@@ -25,11 +25,12 @@ function parseQueryString(queryString) {
 export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
-        this.collections = {};
         this.loggingEnabled = false;
+        this.defaultQuery = {};
+        this.batchUrl = null;
+        this.collections = {};
         this.requestInterceptors = [];
         this.responseInterceptors = [];
-        this.batchUrl = null;
     }
 
     /**
@@ -45,7 +46,19 @@ export default class Server {
         this.loggingEnabled = !this.loggingEnabled;
     }
 
+    setDefaultQuery(query) {
+        this.defaultQuery = query;
+    }
+
+    setBatchUrl(batchUrl) {
+        this.batchUrl = batchUrl;
+    }
+
+    /**
+     * @deprecated use setBatchUrl instead
+     */
     setBatch(url) {
+        console.warn('Server.setBatch() is deprecated, use Server.setBatchUrl() instead');
         this.batchUrl = url;
     }
 

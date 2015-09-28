@@ -317,7 +317,7 @@
                     foo: [{a:1}, {a:2}, {a:3}],
                     bar: [{b: true}, {b: false}]
                 });
-                server.setBatch('/batch');
+                server.setBatchUrl('/batch');
                 var request = getFakeXMLHTTPRequest('POST', '/batch', JSON.stringify({foo0: '/foo/0', allbar: '/bar', baz0: '/baz/0'}));
                 server.handle(request);
                 expect(request.responseText).toEqual(JSON.stringify({

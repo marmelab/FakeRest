@@ -20,7 +20,7 @@ var data = {
         { id: 3, author_id: 1, title: 'Sense and Sensibility' }
     ]
 };
-// initialize fake REST server 
+// initialize fake REST server
 var restServer = new FakeRest.Server();
 restServer.init(data);
 // use sinon.js to monkey-patch XmlHttpRequest
@@ -40,7 +40,7 @@ PATCH  /:resource/:id
 DELETE /:resource/:id
 ```
 
-Let's see an example: 
+Let's see an example:
 
 ```js
 // Query the fake REST server
@@ -216,7 +216,7 @@ restServer.addResponseInterceptor(function(response) {
 });
 // enable batch request handler, i.e. allow API clients to query several resourecs into a single request
 // see [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
-restServer.batchUrl('/batch');
+restServer.setBatchUrl('/batch');
 
 // you can create more than one fake server to listen to several domains
 var restServer2 = new FakeRest.Server('http://my.other.domain');
