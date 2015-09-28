@@ -310,6 +310,34 @@
 
         });
 
+        describe('setDefaultQuery', function() {
+            it('should set the default query string', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}])); // 10 items
+                server.setDefaultQuery(function() { return { range: [2,4] } })
+                var request;
+                request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 2-4/10');
+                var expected = [{ id: 2 }, { id: 3 }, { id: 4}];
+                expect(request.responseText).toEqual(JSON.stringify(expected));
+            });
+
+            it('should not override any provided query string', function() {
+                var server = new Server();
+                server.addCollection('foo', new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}])); // 10 items
+                server.setDefaultQuery(function(name) { return { range: [2,4] } })
+                var request;
+                request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
+                server.handle(request);
+                expect(request.status).toEqual(206);
+                expect(request.getResponseHeader('Content-Range')).toEqual('items 0-4/10');
+                var expected = [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }, { id: 4}];
+                expect(request.responseText).toEqual(JSON.stringify(expected));
+            });
+        });
+
         describe('batch', function() {
             it('should return batch response', function() {
                 var server = new Server();
