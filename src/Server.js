@@ -37,7 +37,7 @@ export default class Server {
      */
     init(data) {
         for (let name in data) {
-            this.addCollection(name, new Collection(data[name]));
+            this.addCollection(name, new Collection(data[name], 'id'));
         }
     }
 
@@ -59,6 +59,8 @@ export default class Server {
 
     addCollection(name, collection) {
         this.collections[name] = collection;
+        collection.setServer(this);
+        collection.setName(name);
     }
 
     getCollection(name) {
@@ -93,8 +95,8 @@ export default class Server {
         return this.collections[name].getAll(params);
     }
 
-    getOne(name, identifier) {
-        return this.collections[name].getOne(identifier);
+    getOne(name, identifier, params) {
+        return this.collections[name].getOne(identifier, params);
     }
 
     addOne(name, item) {
@@ -255,8 +257,9 @@ export default class Server {
             } else {
                 let id = matches[3];
                 if (request.method == 'GET') {
+                    let params = request.params;
                     try {
-                        let item = this.getOne(name, id);
+                        let item = this.getOne(name, id, params);
                         return this.respond(item, null, request);
                     } catch (error) {
                         return request.respond(404);

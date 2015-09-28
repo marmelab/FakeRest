@@ -1,4 +1,5 @@
 import 'array.prototype.findindex';
+import 'string.prototype.endswith';
 
 function filterItems(items, filter) {
     if (typeof filter === 'function') {
@@ -53,7 +54,7 @@ function filterItems(items, filter) {
                 }
                 // simple filter
                 return item[key] == value;
-            }
+            };
         });
         // only the items matching all filters functions are in (AND logic)
         return items.filter(item =>
@@ -110,7 +111,87 @@ export default class Collection {
         this.sequence = 0; // id of the next item
         this.identifierName = identifierName;
         this.items = [];
+        this.server = null;
+        this.name = null;
         items.map(this.addOne.bind(this));
+    }
+
+    /**
+     * A Collection may need to access other collections (e.g. for embedding references)
+     * This is done through a reference to the parent server.
+     */
+    setServer(server) {
+        this.server = server;
+    }
+
+    setName(name) {
+        this.name = name;
+    }
+
+    /**
+     * Get a one to many embedder function for a given resource name
+     *
+     * @example embed posts for an author
+     *
+     *     authorsCollection._oneToManyEmbedder('posts')
+     *
+     * @returns Function item => item
+     */
+    _oneToManyEmbedder(resourceName) {
+        const singularResourceName = this.name.slice(0,-1);
+        const referenceName = singularResourceName + '_id';
+        return (item) => {
+            const otherCollection = this.server.collections[resourceName];
+            if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+            if (Array.isArray(item[resourceName])) {
+                // the many to one relationship is carried by an array of ids, e.g. { posts: [1, 2] } in authors
+                item[resourceName] = otherCollection.getAll({
+                    filter: i => item[resourceName].indexOf(i[otherCollection.identifierName]) !== -1
+                });
+            } else {
+                // the many to one relationship is carried by references in the related collection, e.g. { author_id: 1 } in posts
+                item[resourceName] = otherCollection.getAll({
+                    filter: i => i[referenceName] == item[this.identifierName]
+                });
+            }
+            return item;
+        };
+    }
+
+    /**
+     * Get a many to one embedder function for a given resource name
+     *
+     * @example embed author for a post
+     *
+     *     postsCollection._manyToOneEmbedder('author')
+     *
+     * @returns Function item => item
+     */
+    _manyToOneEmbedder(resourceName) {
+        const pluralResourceName = resourceName + 's';
+        const referenceName = resourceName + '_id';
+        return (item) => {
+            const otherCollection = this.server.collections[pluralResourceName];
+            if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+            try {
+                item[resourceName] = otherCollection.getOne(item[referenceName]);
+            } catch (e) {
+                // resource doesn't exist in the related collection - do not embed
+            }
+            return item;
+        };
+    }
+
+    /**
+     * @param String[] An array of resource names, e.g. ['books', 'country']
+     * @returns Function item => item
+     */
+    _itemEmbedder(embed) {
+        const resourceNames = Array.isArray(embed) ? embed : [embed];
+        const resourceEmbedders = resourceNames.map(resourceName =>
+            resourceName.endsWith('s') ? this._oneToManyEmbedder(resourceName) : this._manyToOneEmbedder(resourceName)
+        );
+        return (item) => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds), item);
     }
 
     getCount(query) {
@@ -118,6 +199,7 @@ export default class Collection {
     }
 
     getAll(query) {
+        // copy items
         var items = this.items.map(item => item);
         if (query) {
             if (query.filter) {
@@ -129,6 +211,9 @@ export default class Collection {
             if (query.range) {
                 items = rangeItems(items, query.range);
             }
+            if (query.embed && this.server) {
+                items = items.map(item => this._itemEmbedder(query.embed)(item));
+            }
         }
         return items;
     }
@@ -137,12 +222,16 @@ export default class Collection {
         return this.items.findIndex(item => item[this.identifierName] == identifier);
     }
 
-    getOne(identifier) {
+    getOne(identifier, query) {
         let index = this.getIndex(identifier);
         if (index === -1) {
             throw new Error(`No item with identifier ${ identifier }`);
         }
-        return this.items[index];
+        let item = this.items[index];
+        if (query && query.embed && this.server) {
+            item = this._itemEmbedder(query.embed)(item);
+        }
+        return item;
     }
 
     addOne(item) {

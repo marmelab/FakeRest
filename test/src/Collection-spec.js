@@ -4,6 +4,7 @@
     'use strict';
 
     var Collection = FakeRest.Collection;
+    var Server = FakeRest.Server;
 
     describe('Collection', function() {
 
@@ -230,6 +231,152 @@
                     var expected  = [ {id: 0, name: 'a'}, {id: 1, name: 'b'}, {id: 2, name: 'c'} ];
                     expect(collection.getAll()).toEqual(expected)
                 });
+            });
+
+            describe('embed query', function() {
+                it('should throw an error when trying to embed a non-existing collection', function() {
+                    var foos = new Collection([
+                        { name: 'John', bar_id: 123 }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    expect(function() { foos.getAll({ embed: ['bar'] }); }).toThrow(new Error('Can\'t embed a non-existing collection bar'));
+                })
+
+                it('should return the original object for missing embed one', function() {
+                    var foos = new Collection([
+                        { name: 'John', bar_id: 123 }
+                    ]);
+                    var bars = new Collection([]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [{ id: 0, name: 'John', bar_id: 123 }];
+                    expect(foos.getAll({ embed: ['bar'] })).toEqual(expected);
+                });
+
+                it('should return the object with the reference object for embed one', function() {
+                    var foos = new Collection([
+                        { name: 'John', bar_id: 123 },
+                        { name: 'Jane', bar_id: 456 }
+                    ]);
+                    var bars = new Collection([
+                        { id: 1, bar: 'nobody wants me' },
+                        { id: 123, bar: 'baz' },
+                        { id: 456, bar: 'bazz' }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [
+                        { id: 0, name: 'John', bar_id: 123, bar: { id: 123, bar: 'baz' } },
+                        { id: 1, name: 'Jane', bar_id: 456, bar: { id: 456, bar: 'bazz' } }
+                    ];
+                    expect(foos.getAll({ embed: ['bar'] })).toEqual(expected);
+                });
+
+                it('should throw an error when trying to embed many a non-existing collection', function() {
+                    var foos = new Collection([
+                        { name: 'John', bar_id: 123 }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    expect(function() { foos.getAll({ embed: ['bars'] }); }).toThrow(new Error('Can\'t embed a non-existing collection bars'));
+                })
+
+                it('should return the object with an empty array for missing embed many', function() {
+                    var foos = new Collection([
+                        { name: 'John', bar_id: 123 }
+                    ]);
+                    var bars = new Collection([
+                        { id: 1, bar: 'nobody wants me' }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [{ id: 1, bar: 'nobody wants me', foos: [] }];
+                    expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
+                });
+
+                it('should return the object with an array of references for embed many', function() {
+                    var foos = new Collection([
+                        { id: 1, name: 'John', bar_id: 123 },
+                        { id: 2, name: 'Jane', bar_id: 456 },
+                        { id: 3, name: 'Jules', bar_id: 456 }
+                    ]);
+                    var bars = new Collection([
+                        { id: 1, bar: 'nobody wants me' },
+                        { id: 123, bar: 'baz' },
+                        { id: 456, bar: 'bazz' }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [
+                        { id: 1, bar: 'nobody wants me', foos: [] },
+                        { id: 123, bar: 'baz', foos: [
+                            { id: 1, name: 'John', bar_id: 123 }
+                        ] },
+                        { id: 456, bar: 'bazz', foos: [
+                            { id: 2, name: 'Jane', bar_id: 456 },
+                            { id: 3, name: 'Jules', bar_id: 456 }
+                        ] }
+                    ];
+                    expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
+                });
+
+                it('should return the object with an array of references for embed many using inner array', function() {
+                    var foos = new Collection([
+                        { id: 1, name: 'John' },
+                        { id: 2, name: 'Jane' },
+                        { id: 3, name: 'Jules' }
+                    ]);
+                    var bars = new Collection([
+                        { id: 1, bar: 'nobody wants me' },
+                        { id: 123, bar: 'baz', foos: [1] },
+                        { id: 456, bar: 'bazz', foos: [2, 3] }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [
+                        { id: 1, bar: 'nobody wants me', foos: [] },
+                        { id: 123, bar: 'baz', foos: [
+                            { id: 1, name: 'John' }
+                        ] },
+                        { id: 456, bar: 'bazz', foos: [
+                            { id: 2, name: 'Jane' },
+                            { id: 3, name: 'Jules' }
+                        ] }
+                    ];
+                    expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
+                });
+
+                it('should allow multiple embeds', function() {
+                    var books = new Collection([
+                        { id: 1, title: 'Pride and Prejudice', author_id: 1 },
+                        { id: 2, title: 'Sense and Sensibility', author_id: 1 },
+                        { id: 3, title: 'War and Preace', author_id: 2 }
+                    ]);
+                    var authors = new Collection([
+                        { id: 1, firstName: 'Jane', lastName: 'Austen', country_id: 1 },
+                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', country_id: 2 }
+                    ]);
+                    var countries = new Collection([
+                        { id: 1, name: 'England' },
+                        { id: 2, name: 'Russia' },
+                    ]);
+                    var server = new Server();
+                    server.addCollection('books', books);
+                    server.addCollection('authors', authors);
+                    server.addCollection('countrys', countries); // nevermind the plural
+                    var expected = [
+                        { id: 1, firstName: 'Jane', lastName: 'Austen', country_id: 1, books: [{ id: 1, title: 'Pride and Prejudice', author_id: 1 }, { id: 2, title: 'Sense and Sensibility', author_id: 1 },], country: { id: 1, name: 'England' } },
+                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', country_id: 2, books: [{ id: 3, title: 'War and Preace', author_id: 2 }], country: { id: 2, name: 'Russia' } }
+                    ];
+                    expect(authors.getAll({embed: ['books', 'country']})).toEqual(expected);
+                });
+
             });
 
             describe('composite query', function() {
