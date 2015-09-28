@@ -236,7 +236,7 @@
             describe('embed query', function() {
                 it('should throw an error when trying to embed a non-existing collection', function() {
                     var foos = new Collection([
-                        { name: 'John', barId: 123 }
+                        { name: 'John', bar_id: 123 }
                     ]);
                     var server = new Server();
                     server.addCollection('foos', foos);
@@ -245,20 +245,20 @@
 
                 it('should return the original object for missing embed one', function() {
                     var foos = new Collection([
-                        { name: 'John', barId: 123 }
+                        { name: 'John', bar_id: 123 }
                     ]);
                     var bars = new Collection([]);
                     var server = new Server();
                     server.addCollection('foos', foos);
                     server.addCollection('bars', bars);
-                    var expected = [{ id: 0, name: 'John', barId: 123 }];
+                    var expected = [{ id: 0, name: 'John', bar_id: 123 }];
                     expect(foos.getAll({ embed: ['bar'] })).toEqual(expected);
                 });
 
                 it('should return the object with the reference object for embed one', function() {
                     var foos = new Collection([
-                        { name: 'John', barId: 123 },
-                        { name: 'Jane', barId: 456 }
+                        { name: 'John', bar_id: 123 },
+                        { name: 'Jane', bar_id: 456 }
                     ]);
                     var bars = new Collection([
                         { id: 1, bar: 'nobody wants me' },
@@ -269,15 +269,15 @@
                     server.addCollection('foos', foos);
                     server.addCollection('bars', bars);
                     var expected = [
-                        { id: 0, name: 'John', barId: 123, bar: { id: 123, bar: 'baz' } },
-                        { id: 1, name: 'Jane', barId: 456, bar: { id: 456, bar: 'bazz' } }
+                        { id: 0, name: 'John', bar_id: 123, bar: { id: 123, bar: 'baz' } },
+                        { id: 1, name: 'Jane', bar_id: 456, bar: { id: 456, bar: 'bazz' } }
                     ];
                     expect(foos.getAll({ embed: ['bar'] })).toEqual(expected);
                 });
 
                 it('should throw an error when trying to embed many a non-existing collection', function() {
                     var foos = new Collection([
-                        { name: 'John', barId: 123 }
+                        { name: 'John', bar_id: 123 }
                     ]);
                     var server = new Server();
                     server.addCollection('foos', foos);
@@ -286,7 +286,7 @@
 
                 it('should return the object with an empty array for missing embed many', function() {
                     var foos = new Collection([
-                        { name: 'John', barId: 123 }
+                        { name: 'John', bar_id: 123 }
                     ]);
                     var bars = new Collection([
                         { id: 1, bar: 'nobody wants me' }
@@ -300,9 +300,9 @@
 
                 it('should return the object with an array of references for embed many', function() {
                     var foos = new Collection([
-                        { id: 1, name: 'John', barId: 123 },
-                        { id: 2, name: 'Jane', barId: 456 },
-                        { id: 3, name: 'Jules', barId: 456 }
+                        { id: 1, name: 'John', bar_id: 123 },
+                        { id: 2, name: 'Jane', bar_id: 456 },
+                        { id: 3, name: 'Jules', bar_id: 456 }
                     ]);
                     var bars = new Collection([
                         { id: 1, bar: 'nobody wants me' },
@@ -315,11 +315,11 @@
                     var expected = [
                         { id: 1, bar: 'nobody wants me', foos: [] },
                         { id: 123, bar: 'baz', foos: [
-                            { id: 1, name: 'John', barId: 123 }
+                            { id: 1, name: 'John', bar_id: 123 }
                         ] },
                         { id: 456, bar: 'bazz', foos: [
-                            { id: 2, name: 'Jane', barId: 456 },
-                            { id: 3, name: 'Jules', barId: 456 }
+                            { id: 2, name: 'Jane', bar_id: 456 },
+                            { id: 3, name: 'Jules', bar_id: 456 }
                         ] }
                     ];
                     expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
@@ -327,13 +327,13 @@
 
                 it('should allow multiple embeds', function() {
                     var books = new Collection([
-                        { id: 1, title: 'Pride and Prejudice', authorId: 1 },
-                        { id: 2, title: 'Sense and Sensibility', authorId: 1 },
-                        { id: 3, title: 'War and Preace', authorId: 2 }
+                        { id: 1, title: 'Pride and Prejudice', author_id: 1 },
+                        { id: 2, title: 'Sense and Sensibility', author_id: 1 },
+                        { id: 3, title: 'War and Preace', author_id: 2 }
                     ]);
                     var authors = new Collection([
-                        { id: 1, firstName: 'Jane', lastName: 'Austen', countryId: 1 },
-                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', countryId: 2 }
+                        { id: 1, firstName: 'Jane', lastName: 'Austen', country_id: 1 },
+                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', country_id: 2 }
                     ]);
                     var countries = new Collection([
                         { id: 1, name: 'England' },
@@ -344,8 +344,8 @@
                     server.addCollection('authors', authors);
                     server.addCollection('countrys', countries); // nevermind the plural
                     var expected = [
-                        { id: 1, firstName: 'Jane', lastName: 'Austen', countryId: 1, books: [{ id: 1, title: 'Pride and Prejudice', authorId: 1 }, { id: 2, title: 'Sense and Sensibility', authorId: 1 },], country: { id: 1, name: 'England' } },
-                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', countryId: 2, books: [{ id: 3, title: 'War and Preace', authorId: 2 }], country: { id: 2, name: 'Russia' } }
+                        { id: 1, firstName: 'Jane', lastName: 'Austen', country_id: 1, books: [{ id: 1, title: 'Pride and Prejudice', author_id: 1 }, { id: 2, title: 'Sense and Sensibility', author_id: 1 },], country: { id: 1, name: 'England' } },
+                        { id: 2, firstName: 'Leo', lastName: 'Tosltoi', country_id: 2, books: [{ id: 3, title: 'War and Preace', author_id: 2 }], country: { id: 2, name: 'Russia' } }
                     ];
                     expect(authors.getAll({embed: ['books', 'country']})).toEqual(expected);
                 });

@@ -139,7 +139,7 @@ export default class Collection {
      */
     _oneToManyEmbedder(resourceName) {
         const singularResourceName = this.name.slice(0,-1);
-        const referenceName = singularResourceName + 'Id';
+        const referenceName = singularResourceName + '_id';
         return (item) => {
             const otherCollection = this.server.collections[resourceName];
             if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
@@ -161,7 +161,7 @@ export default class Collection {
      */
     _manyToOneEmbedder(resourceName) {
         const pluralResourceName = resourceName + 's';
-        const referenceName = resourceName + 'Id';
+        const referenceName = resourceName + '_id';
         return (item) => {
             const otherCollection = this.server.collections[pluralResourceName];
             if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
