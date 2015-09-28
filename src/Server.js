@@ -26,7 +26,6 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.loggingEnabled = false;
-        this.defaultQuery = {};
         this.batchUrl = null;
         this.collections = {};
         this.requestInterceptors = [];
@@ -44,10 +43,6 @@ export default class Server {
 
     toggleLogging() {
         this.loggingEnabled = !this.loggingEnabled;
-    }
-
-    setDefaultQuery(query) {
-        this.defaultQuery = query;
     }
 
     setBatchUrl(batchUrl) {
