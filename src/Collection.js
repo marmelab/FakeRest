@@ -53,7 +53,7 @@ function filterItems(items, filter) {
                 }
                 // simple filter
                 return item[key] == value;
-            }
+            };
         });
         // only the items matching all filters functions are in (AND logic)
         return items.filter(item =>
@@ -110,7 +110,55 @@ export default class Collection {
         this.sequence = 0; // id of the next item
         this.identifierName = identifierName;
         this.items = [];
+        this.server = null;
+        this.name = null;
         items.map(this.addOne.bind(this));
+    }
+
+    /**
+     * A Collection may need to access other collections (e.g. for embedding references)
+     * This is done through a reference to the parent server.
+     */
+    setServer(server) {
+        this.server = server;
+    }
+
+    setName(name) {
+        this.name = name;
+    }
+
+    _itemEmbedder(embed) {
+        var resourceNames = Array.isArray(embed) ? embed : [embed];
+        var resourceEmbedders = resourceNames.map(resourceName => {
+            if (resourceName.endsWith('s')) {
+                // one to many, e.g. embed posts for an author
+                let singularResourceName = this.name.slice(0,-1);
+                let referenceName = singularResourceName + 'Id';
+                return (item) => {
+                    let otherCollection = this.server.collections[resourceName];
+                    if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+                    item[resourceName] = otherCollection.getAll({
+                        filter: i => i[referenceName] == item[this.identifierName]
+                    });
+                    return item;
+                };
+            } else {
+                // many to one, e.g embed author for a post
+                let pluralResourceName = resourceName + 's';
+                let referenceName = resourceName + 'Id';
+                return (item) => {
+                    let otherCollection = this.server.collections[pluralResourceName];
+                    if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+                    try {
+                        item[resourceName] = otherCollection.getOne(item[referenceName]);
+                    } catch (e) {
+                        // resource doesn't exist in the related collection - do not embed
+                    }
+                    return item;
+                };
+            }
+        });
+        return (item, otherCollections) => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds, otherCollections), item);
     }
 
     getCount(query) {
@@ -118,6 +166,7 @@ export default class Collection {
     }
 
     getAll(query) {
+        // copy items
         var items = this.items.map(item => item);
         if (query) {
             if (query.filter) {
@@ -129,6 +178,9 @@ export default class Collection {
             if (query.range) {
                 items = rangeItems(items, query.range);
             }
+            if (query.embed && this.server) {
+                items = items.map(item => this._itemEmbedder(query.embed)(item));
+            }
         }
         return items;
     }
@@ -137,12 +189,16 @@ export default class Collection {
         return this.items.findIndex(item => item[this.identifierName] == identifier);
     }
 
-    getOne(identifier) {
+    getOne(identifier, query) {
         let index = this.getIndex(identifier);
         if (index === -1) {
             throw new Error(`No item with identifier ${ identifier }`);
         }
-        return this.items[index];
+        let item = this.items[index];
+        if (query && query.embed && this.server) {
+            item = this._itemEmbedder(query.embed)(item);
+        }
+        return item;
     }
 
     addOne(item) {
