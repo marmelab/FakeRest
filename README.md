@@ -20,7 +20,7 @@ var data = {
         { id: 3, author_id: 1, title: 'Sense and Sensibility' }
     ]
 };
-// initialize fake REST server 
+// initialize fake REST server
 var restServer = new FakeRest.Server();
 restServer.init(data);
 // use sinon.js to monkey-patch XmlHttpRequest
@@ -40,7 +40,7 @@ PATCH  /:resource/:id
 DELETE /:resource/:id
 ```
 
-Let's see an example: 
+Let's see an example:
 
 ```js
 // Query the fake REST server
@@ -94,14 +94,14 @@ FakeRest uses a standard REST flavor, described below.
 
 * `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response contains a mention of the total count in the `Content-Range` header.
 
-        GET /books?filter={author_id:1}&sort=['title','desc']&range=[0-9]
+        GET /books?filter={author_id:1}&embed=['author']&sort=['title','desc']&range=[0-9]
 
         HTTP 1.1 200 OK
         Content-Range: items 0-1/2
         Content-Type: application/json
         [
-          { id: 3, author_id: 1, title: 'Sense and Sensibility' },
-          { id: 2, author_id: 1, title: 'Pride and Prejudice' }
+          { id: 3, author_id: 1, title: 'Sense and Sensibility', author: { id: 1, first_name: 'Jane', last_name: 'Austen' } },
+          { id: 2, author_id: 1, title: 'Pride and Prejudice', author: { id: 1, first_name: 'Jane', last_name: 'Austen' } }
         ]
 
     The `filter` param must be a serialized object litteral describing the criteria to apply to the search query.
@@ -144,7 +144,34 @@ FakeRest uses a standard REST flavor, described below.
         // when the filter object contains more than one property, the criteria combine with an AND logic
         GET /books?filter={published_at_gte:'2015-06-12',published_at_lte:'2015-06-15'} // return books published between two dates
 
-    The `sort` param must be a serialized array litteral defining first the property used for sorting, then the sorting direction.
+    The `embed` param sets the related objects or collections to be embedded in the response.
+
+        // embed author in books
+        GET /books?embed=['author']
+        HTTP 1.1 200 OK
+        Content-Range: items 0-3/4
+        Content-Type: application/json
+        [
+            { id: 0, author_id: 0, title: 'Anna Karenina', author: { id: 0, first_name: 'Leo', last_name: 'Tolstoi' } },
+            { id: 1, author_id: 0, title: 'War and Peace', author: { id: 0, first_name: 'Leo', last_name: 'Tolstoi' } },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice', author: { id: 1, first_name: 'Jane', last_name: 'Austen' } },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility', author: { id: 1, first_name: 'Jane', last_name: 'Austen' } }
+        ]
+
+        // embed books in author
+        GET /authors?embed=['books']
+        HTTP 1.1 200 OK
+        Content-Range: items 0-1/2
+        Content-Type: application/json
+        [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi', books: [{ id: 0, author_id: 0, title: 'Anna Karenina' }, { id: 1, author_id: 0, title: 'War and Peace' }] },
+            { id: 1, first_name: 'Jane', last_name: 'Austen', books: [{ id: 2, author_id: 1, title: 'Pride and Prejudice' }, { id: 3, author_id: 1, title: 'Sense and Sensibility' }] }
+        ]
+
+        // you can embed several objects
+        GET /authors?embed=['books', 'country']
+
+    The `sort` param must be a serialized array literal defining first the property used for sorting, then the sorting direction.
 
         GET /author?sort=['date_of_birth','asc']  // return authors, the oldest first
         GET /author?sort=['date_of_birth','desc']  // return authors, the youngest first
@@ -156,25 +183,29 @@ FakeRest uses a standard REST flavor, described below.
 
 * `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
-```
-POST /books
-{ author_id: 1, title: 'Emma' }
+        POST /books
+        { author_id: 1, title: 'Emma' }
 
-HTTP 1.1 201 Created
-Location: /books/4
-Content-Type: application/json
-{ "author_id": 1, "title": "Emma", "id": 4 }
-```
+        HTTP 1.1 201 Created
+        Location: /books/4
+        Content-Type: application/json
+        { "author_id": 1, "title": "Emma", "id": 4 }
 
 * `GET /foo/:id` returns a JSON object, and a status 200, unless the resource doesn't exist
 
-```
-GET /books/2
+        GET /books/2
 
-HTTP 1.1 200 OK
-Content-Type: application/json
-{ id: 2, author_id: 1, title: 'Pride and Prejudice' }
-```
+        HTTP 1.1 200 OK
+        Content-Type: application/json
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' }
+
+    The `embed` param sets the related objects or collections to be embedded in the response.
+
+        GET /books/2?embed=['author']
+
+        HTTP 1.1 200 OK
+        Content-Type: application/json
+        { id: 2, author_id: 1, title: 'Pride and Prejudice', author: { id: 1, first_name: 'Jane', last_name: 'Austen' } }
 
 * `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
 * `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist

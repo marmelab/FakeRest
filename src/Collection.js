@@ -1,4 +1,5 @@
 import 'array.prototype.findindex';
+import 'string.prototype.endswith';
 
 function filterItems(items, filter) {
     if (typeof filter === 'function') {
@@ -127,38 +128,62 @@ export default class Collection {
         this.name = name;
     }
 
-    _itemEmbedder(embed) {
-        var resourceNames = Array.isArray(embed) ? embed : [embed];
-        var resourceEmbedders = resourceNames.map(resourceName => {
-            if (resourceName.endsWith('s')) {
-                // one to many, e.g. embed posts for an author
-                let singularResourceName = this.name.slice(0,-1);
-                let referenceName = singularResourceName + 'Id';
-                return (item) => {
-                    let otherCollection = this.server.collections[resourceName];
-                    if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
-                    item[resourceName] = otherCollection.getAll({
-                        filter: i => i[referenceName] == item[this.identifierName]
-                    });
-                    return item;
-                };
-            } else {
-                // many to one, e.g embed author for a post
-                let pluralResourceName = resourceName + 's';
-                let referenceName = resourceName + 'Id';
-                return (item) => {
-                    let otherCollection = this.server.collections[pluralResourceName];
-                    if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
-                    try {
-                        item[resourceName] = otherCollection.getOne(item[referenceName]);
-                    } catch (e) {
-                        // resource doesn't exist in the related collection - do not embed
-                    }
-                    return item;
-                };
+    /**
+     * Get a one to many embedder function for a given resource name
+     *
+     * @example embed posts for an author
+     *
+     *     authorsCollection._oneToManyEmbedder('posts')
+     *
+     * @returns Function item => item
+     */
+    _oneToManyEmbedder(resourceName) {
+        const singularResourceName = this.name.slice(0,-1);
+        const referenceName = singularResourceName + 'Id';
+        return (item) => {
+            const otherCollection = this.server.collections[resourceName];
+            if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+            item[resourceName] = otherCollection.getAll({
+                filter: i => i[referenceName] == item[this.identifierName]
+            });
+            return item;
+        };
+    }
+
+    /**
+     * Get a many to one embedder function for a given resource name
+     *
+     * @example embed author for a post
+     *
+     *     postsCollection._manyToOneEmbedder('author')
+     *
+     * @returns Function item => item
+     */
+    _manyToOneEmbedder(resourceName) {
+        const pluralResourceName = resourceName + 's';
+        const referenceName = resourceName + 'Id';
+        return (item) => {
+            const otherCollection = this.server.collections[pluralResourceName];
+            if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
+            try {
+                item[resourceName] = otherCollection.getOne(item[referenceName]);
+            } catch (e) {
+                // resource doesn't exist in the related collection - do not embed
             }
-        });
-        return (item, otherCollections) => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds, otherCollections), item);
+            return item;
+        };
+    }
+
+    /**
+     * @param String[] An array of resource names, e.g. ['books', 'country']
+     * @returns Function item => item
+     */
+    _itemEmbedder(embed) {
+        const resourceNames = Array.isArray(embed) ? embed : [embed];
+        const resourceEmbedders = resourceNames.map(resourceName =>
+            resourceName.endsWith('s') ? this._oneToManyEmbedder(resourceName) : this._manyToOneEmbedder(resourceName)
+        );
+        return (item) => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds), item);
     }
 
     getCount(query) {
