@@ -320,7 +320,7 @@
                 server.setBatch('/batch');
                 var request = getFakeXMLHTTPRequest('POST', '/batch', JSON.stringify({foo0: '/foo/0', allbar: '/bar', baz0: '/baz/0'}));
                 server.handle(request);
-                expect(request.response).toEqual(JSON.stringify({
+                expect(request.responseText).toEqual(JSON.stringify({
                     foo0: {
                         code: 200,
                         headers: [
