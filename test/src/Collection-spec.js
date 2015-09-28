@@ -325,6 +325,33 @@
                     expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
                 });
 
+                it('should return the object with an array of references for embed many using inner array', function() {
+                    var foos = new Collection([
+                        { id: 1, name: 'John' },
+                        { id: 2, name: 'Jane' },
+                        { id: 3, name: 'Jules' }
+                    ]);
+                    var bars = new Collection([
+                        { id: 1, bar: 'nobody wants me' },
+                        { id: 123, bar: 'baz', foos: [1] },
+                        { id: 456, bar: 'bazz', foos: [2, 3] }
+                    ]);
+                    var server = new Server();
+                    server.addCollection('foos', foos);
+                    server.addCollection('bars', bars);
+                    var expected = [
+                        { id: 1, bar: 'nobody wants me', foos: [] },
+                        { id: 123, bar: 'baz', foos: [
+                            { id: 1, name: 'John' }
+                        ] },
+                        { id: 456, bar: 'bazz', foos: [
+                            { id: 2, name: 'Jane' },
+                            { id: 3, name: 'Jules' }
+                        ] }
+                    ];
+                    expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
+                });
+
                 it('should allow multiple embeds', function() {
                     var books = new Collection([
                         { id: 1, title: 'Pride and Prejudice', author_id: 1 },

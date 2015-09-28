@@ -143,9 +143,17 @@ export default class Collection {
         return (item) => {
             const otherCollection = this.server.collections[resourceName];
             if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
-            item[resourceName] = otherCollection.getAll({
-                filter: i => i[referenceName] == item[this.identifierName]
-            });
+            if (Array.isArray(item[resourceName])) {
+                // the many to one relationship is carried by an array of ids, e.g. { posts: [1, 2] } in authors
+                item[resourceName] = otherCollection.getAll({
+                    filter: i => item[resourceName].indexOf(i[otherCollection.identifierName]) !== -1
+                });
+            } else {
+                // the many to one relationship is carried by references in the related collection, e.g. { author_id: 1 } in posts
+                item[resourceName] = otherCollection.getAll({
+                    filter: i => i[referenceName] == item[this.identifierName]
+                });
+            }
             return item;
         };
     }
