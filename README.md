@@ -245,6 +245,12 @@ restServer.addResponseInterceptor(function(response) {
     response.body = { data: response.body, status: response.status };
     return response; // always return the modified input
 });
+// set default query, e.g. to force embeds or filters
+restServer.setDefaultQuery(function(resourceName) {
+    if (resourceName == 'authors') return { embed: ['books'] }
+    if (resourceName == 'books') return { filter: { published: true } }
+    return {};
+})
 // enable batch request handler, i.e. allow API clients to query several resourecs into a single request
 // see [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
 restServer.setBatchUrl('/batch');

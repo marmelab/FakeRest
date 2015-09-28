@@ -1,4 +1,7 @@
+import objectAssign from 'object.assign';
 import Collection from 'Collection';
+
+const assign = objectAssign.getPolyfill();
 
 function parseQueryString(queryString) {
     if (!queryString) {
@@ -26,6 +29,7 @@ export default class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.loggingEnabled = false;
+        this.defaultQuery = () => {};
         this.batchUrl = null;
         this.collections = {};
         this.requestInterceptors = [];
@@ -43,6 +47,13 @@ export default class Server {
 
     toggleLogging() {
         this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    /**
+     * @param Function ResourceName => object
+     */
+    setDefaultQuery(query) {
+        this.defaultQuery = query;
     }
 
     setBatchUrl(batchUrl) {
@@ -225,9 +236,9 @@ export default class Server {
         for (let name of this.getCollectionNames()) {
             let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;
+            let params = assign({}, this.defaultQuery(name), request.params);
             if (!matches[2]) {
                 if (request.method == 'GET') {
-                    let params = request.params;
                     let countParams = {};
                     for (let key in params) {
                         if (key !== 'range') {
@@ -257,7 +268,6 @@ export default class Server {
             } else {
                 let id = matches[3];
                 if (request.method == 'GET') {
-                    let params = request.params;
                     try {
                         let item = this.getOne(name, id, params);
                         return this.respond(item, null, request);

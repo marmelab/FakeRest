@@ -19,6 +19,7 @@
     "karma-jasmine": "0.1.5",
     "karma-phantomjs-launcher": "0.1.4",
     "karma-spec-reporter": "0.0.16",
+    "object.assign": "^4.0.1",
     "sinon": "^1.14.1",
     "string.prototype.endswith": "^0.2.0",
     "webpack": "^1.7.1"
