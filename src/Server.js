@@ -239,19 +239,13 @@ export default class Server {
             let params = assign({}, this.defaultQuery(name), request.params);
             if (!matches[2]) {
                 if (request.method == 'GET') {
-                    let countParams = {};
-                    for (let key in params) {
-                        if (key !== 'range') {
-                            countParams[key] = params[key];
-                        }
-                    }
-                    let count = this.getCount(name, countParams);
+                    let count = this.getCount(name, params.filter ? { filter: params.filter } : {});
                     let items, contentRange, status;
                     if (count > 0) {
                         items = this.getAll(name, params);
                         let first = params.range ? params.range[0] : 0;
                         let last = params.range ? Math.min(items.length - 1 + first, params.range[1]) : (items.length - 1);
-                        contentRange = 'items ' + first + '-' + last + '/' + count;
+                        contentRange = `items ${first}-${last}/${count}`;
                         status = (items.length == count) ? 200 : 206;
                     } else {
                         items = [];

@@ -176,20 +176,23 @@
 
             it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', function() {
                 var server = new Server();
-                server.addCollection('foo', new Collection([
+                server.addCollection('foos', new Collection([
                     {id: 0, name: 'c', arg: false },
                     {id: 1, name: 'b', arg: true },
                     {id: 2, name: 'a', arg: true}
                 ]));
-                var request = getFakeXMLHTTPRequest('GET', '/foo?filter={"arg":true}&sort=name&slice=[0,10]');
+                server.addCollection('bars', new Collection([
+                    {id: 0, name: 'a', foo_id: 1 }
+                ]));
+                var request = getFakeXMLHTTPRequest('GET', '/foos?filter={"arg":true}&sort=name&slice=[0,10]&embed=["bars"]');
                 server.handle(request);
                 expect(request.status).toEqual(200);
-                expect(request.responseText).toEqual('[{"id":2,"name":"a","arg":true},{"id":1,"name":"b","arg":true}]');
+                expect(request.responseText).toEqual('[{"id":2,"name":"a","arg":true,"bars":[]},{"id":1,"name":"b","arg":true,"bars":[{"id":0,"name":"a","foo_id":1}]}]');
                 expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
                 expect(request.getResponseHeader('Content-Range')).toEqual('items 0-1/2');
             });
 
-            it('should respond to GET /foo?queryString with pagination by sending the corrent content-range header', function() {
+            it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])); // 11 items
                 var request;

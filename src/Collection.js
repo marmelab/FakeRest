@@ -191,7 +191,7 @@ export default class Collection {
         const resourceEmbedders = resourceNames.map(resourceName =>
             resourceName.endsWith('s') ? this._oneToManyEmbedder(resourceName) : this._manyToOneEmbedder(resourceName)
         );
-        return (item) => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds), item);
+        return item => resourceEmbedders.reduce((itemWithEmbeds, embedder) => embedder(itemWithEmbeds), item);
     }
 
     getCount(query) {
@@ -212,7 +212,7 @@ export default class Collection {
                 items = rangeItems(items, query.range);
             }
             if (query.embed && this.server) {
-                items = items.map(item => this._itemEmbedder(query.embed)(item));
+                items = items.map(this._itemEmbedder(query.embed));
             }
         }
         return items;
