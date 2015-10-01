@@ -1,3 +1,4 @@
+import objectAssign from 'object.assign';
 import 'array.prototype.findindex';
 import 'string.prototype.endswith';
 
@@ -199,8 +200,7 @@ export default class Collection {
     }
 
     getAll(query) {
-        // copy items
-        var items = this.items.map(item => item);
+        var items = this.items.slice(0); // clone the array to avoid updating the core one
         if (query) {
             if (query.filter) {
                 items = filterItems(items, query.filter);
@@ -212,7 +212,9 @@ export default class Collection {
                 items = rangeItems(items, query.range);
             }
             if (query.embed && this.server) {
-                items = items.map(this._itemEmbedder(query.embed));
+                items = items
+                    .map(item => objectAssign({}, item)) // clone item to avoid updating the original
+                    .map(this._itemEmbedder(query.embed)); // embed reference
             }
         }
         return items;
