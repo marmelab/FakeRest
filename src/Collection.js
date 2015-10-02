@@ -231,7 +231,8 @@ export default class Collection {
         }
         let item = this.items[index];
         if (query && query.embed && this.server) {
-            item = this._itemEmbedder(query.embed)(item);
+            item = objectAssign({}, item); // clone item to avoid updating the original
+            item = this._itemEmbedder(query.embed)(item); // embed reference
         }
         return item;
     }
