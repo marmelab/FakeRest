@@ -1,5 +1,4 @@
 /*global describe,it,expect,beforeEach,jasmine*/
-/*jshint esnext: true*/
 
 (function() {
     'use strict';

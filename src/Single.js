@@ -1,4 +1,3 @@
-/* jshint esnext: true */
 import objectAssign from 'object.assign';
 import 'string.prototype.endswith';
 

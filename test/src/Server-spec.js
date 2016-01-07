@@ -25,7 +25,6 @@
         describe('init', function() {
             it('should populate several collections', function() {
                 var server = new Server();
-                console.log(server);
                 server.init({
                     foo: [{a:1}, {a:2}, {a:3}],
                     bar: [{b: true}, {b: false}],
