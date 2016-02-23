@@ -1,5 +1,6 @@
 import objectAssign from 'object.assign';
 import Collection from 'Collection';
+import Single from 'Single';
 
 const assign = objectAssign.getPolyfill();
 
@@ -32,6 +33,7 @@ export default class Server {
         this.defaultQuery = () => {};
         this.batchUrl = null;
         this.collections = {};
+        this.singles = {};
         this.requestInterceptors = [];
         this.responseInterceptors = [];
     }
@@ -41,7 +43,11 @@ export default class Server {
      */
     init(data) {
         for (let name in data) {
-            this.addCollection(name, new Collection(data[name], 'id'));
+            if (Array.isArray(data[name])) {
+                this.addCollection(name, new Collection(data[name], 'id'));
+            } else {
+                this.addSingle(name, new Single(data[name]));
+            }
         }
     }
 
@@ -80,6 +86,20 @@ export default class Server {
 
     getCollectionNames() {
         return Object.keys(this.collections);
+    }
+
+    addSingle(name, single) {
+        this.singles[name] = single;
+        single.setServer(this);
+        single.setName(name);
+    }
+
+    getSingle(name) {
+        return this.singles[name];
+    }
+
+    getSingleNames() {
+        return Object.keys(this.singles);
     }
 
     addRequestInterceptor(interceptor) {
@@ -121,6 +141,15 @@ export default class Server {
     removeOne(name, identifier) {
         return this.collections[name].removeOne(identifier);
     }
+
+    getOnly(name, params) {
+        return this.singles[name].getOnly();
+    }
+
+    updateOnly(name, item) {
+        return this.singles[name].updateOnly(item);
+    }
+
 
     decode(request) {
         request.queryString = decodeURIComponent(request.url.slice(request.url.indexOf('?') + 1));
@@ -233,6 +262,38 @@ export default class Server {
             return this.batch(request);
         }
 
+        // Handle Single Objects
+        for (let name of this.getSingleNames()) {
+            let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/?.*)?$' ));
+            if (!matches) continue;
+
+            if (request.method == 'GET') {
+                try {
+                    let item = this.getOnly(name);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
+                }
+            }
+            if (request.method == 'PUT') {
+                try {
+                    let item = this.updateOnly(name, request.json);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
+                }
+            }
+            if (request.method == 'PATCH') {
+               try {
+                    let item = this.updateOnly(name, request.json);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
+                }
+            }
+        }
+
+        // Handle collections
         for (let name of this.getCollectionNames()) {
             let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
             if (!matches) continue;

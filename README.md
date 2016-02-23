@@ -18,7 +18,11 @@ var data = {
         { id: 1, author_id: 0, title: 'War and Peace' },
         { id: 2, author_id: 1, title: 'Pride and Prejudice' },
         { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ]
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
 };
 // initialize fake REST server
 var restServer = new FakeRest.Server();
@@ -29,7 +33,7 @@ server.respondWith(restServer.getHandler());
 </script>
 ```
 
-FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes are:
+FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes for collections of items are:
 
 ```
 GET    /:resource
@@ -39,6 +43,15 @@ PUT    /:resource/:id
 PATCH  /:resource/:id
 DELETE /:resource/:id
 ```
+
+The handled routes for single items are:
+
+```
+GET    /:resource
+PUT    /:resource
+PATCH  /:resource
+```
+
 
 Let's see an example:
 
@@ -58,6 +71,12 @@ req.open("GET", "/books/3", false);
 req.send(null);
 console.log(req.responseText);
 // {"id":3,"author_id":1,"title":"Sense and Sensibility"}
+
+var req = new XMLHttpRequest();
+req.open("GET", "/settings", false);
+req.send(null);
+console.log(req.responseText);
+// {"language:"english","preferred_format":"hardback"}
 
 var req = new XMLHttpRequest();
 req.open("POST", "/books", false);
@@ -210,7 +229,9 @@ FakeRest uses a standard REST flavor, described below.
 * `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
 * `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist
 
-If the REST flavor you want to simulate differs from the one chosen for FakeRest, no problem: request and response interceptors will do the conversion (see below).
+If the REST flavor you want to simulate differs from the one chosen for FakeRest, no problem: request and response interceptors will do the conversion (see below).  
+
+Note that all of the above apply only to collections. Single objects respond to `GET /bar`, `PUT /bar` and `PATCH /bar` in a manner identical to those operations for `/foo/:id`, including embedding. `POST /bar` and `DELETE /bar` are not enabled.
 
 ## Usage and Configuration
 

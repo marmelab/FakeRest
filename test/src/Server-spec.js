@@ -4,6 +4,7 @@
     'use strict';
 
     var Server = FakeRest.Server;
+    var Single = FakeRest.Single;
     var Collection = FakeRest.Collection;
 
     function getFakeXMLHTTPRequest(method, url, data) {
@@ -26,10 +27,12 @@
                 var server = new Server();
                 server.init({
                     foo: [{a:1}, {a:2}, {a:3}],
-                    bar: [{b: true}, {b: false}]
+                    bar: [{b: true}, {b: false}],
+                    baz: {name: 'baz'}
                 });
                 expect(server.getAll('foo')).toEqual([{ id: 0, a:1 }, { id: 1, a:2 }, { id: 2, a:3 }]);
                 expect(server.getAll('bar')).toEqual([{ id: 0, b: true }, { id: 1, b: false }]);
+                expect(server.getOnly('baz')).toEqual({name: 'baz'});
             });
         });
 
@@ -39,10 +42,20 @@
                 var server = new Server();
                 var collection = new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]);
                 server.addCollection('foo', collection);
-                collection = server.getCollection('foo');
-                expect(collection).toEqual(collection);
+                var newcollection = server.getCollection('foo');
+                expect(newcollection).toEqual(collection);
             });
         });
+
+        describe('addSingle', function () {
+            it('should add a single object and index it by name', function () {
+                var server = new Server();
+                var single = new Single({name: 'foo', description: 'bar'});
+                server.addSingle('foo', single);
+                expect(server.getSingle('foo')).toEqual(single);
+            });
+        });
+
 
         describe('getAll', function() {
 
@@ -92,6 +105,14 @@
                 expect(server.getOne('foo', 2)).toEqual({_id: 2, name: 'bar'});
             });
 
+        });
+
+        describe('getOnly', function () {
+            it('should return the single matching the identifier', function () {
+                var server = new Server();
+                server.addSingle('foo', new Single({name: 'foo'}));
+                expect(server.getOnly('foo')).toEqual({name: 'foo'});
+            });
         });
 
         describe('addRequestInterceptor', function() {
@@ -311,6 +332,40 @@
                 expect(request.status).toEqual(404);
             });
 
+            it('should respond to GET /foo/ with single item', function () {
+                var server = new Server();
+                server.addSingle('foo', new Single({name: 'foo'}));
+
+                var request = getFakeXMLHTTPRequest('GET', '/foo');
+                server.handle(request);
+                expect(request.status).toEqual(200);
+                expect(request.responseText).toEqual('{"name":"foo"}');
+                expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+            });
+
+            it('should respond to PUT /foo/ by updating the singleton record', function () {
+                var server = new Server();
+                server.addSingle('foo', new Single({name: 'foo'}));
+
+                var request = getFakeXMLHTTPRequest('PUT', '/foo/', JSON.stringify({name: 'baz'}));
+                server.handle(request);
+                expect(request.status).toEqual(200);
+                expect(request.responseText).toEqual('{"name":"baz"}');
+                expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(server.getOnly('foo')).toEqual({ name: 'baz'});
+            });
+
+            it('should respond to PATCH /foo/ by updating the singleton record', function () {
+                var server = new Server();
+                server.addSingle('foo', new Single({name: 'foo'}));
+
+                var request = getFakeXMLHTTPRequest('PATCH', '/foo/', JSON.stringify({name: 'baz'}));
+                server.handle(request);
+                expect(request.status).toEqual(200);
+                expect(request.responseText).toEqual('{"name":"baz"}');
+                expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(server.getOnly('foo')).toEqual({ name: 'baz'});
+            });
         });
 
         describe('setDefaultQuery', function() {
@@ -346,10 +401,11 @@
                 var server = new Server();
                 server.init({
                     foo: [{a:1}, {a:2}, {a:3}],
-                    bar: [{b: true}, {b: false}]
+                    bar: [{b: true}, {b: false}],
+                    biz: {name: 'biz'},
                 });
                 server.setBatchUrl('/batch');
-                var request = getFakeXMLHTTPRequest('POST', '/batch', JSON.stringify({foo0: '/foo/0', allbar: '/bar', baz0: '/baz/0'}));
+                var request = getFakeXMLHTTPRequest('POST', '/batch', JSON.stringify({foo0: '/foo/0', allbar: '/bar', baz0: '/baz/0', biz: '/biz' }));
                 server.handle(request);
                 expect(request.responseText).toEqual(JSON.stringify({
                     foo0: {
@@ -374,6 +430,16 @@
                         code: 404,
                         headers: [],
                         body: {}
+                    },
+                    biz: {
+                        code: 200,
+                        headers: [
+                            {
+                                name: 'Content-Type',
+                                value: 'application/json',
+                            }
+                        ],
+                        body: '{"name":"biz"}'
                     }
                 }));
             });
