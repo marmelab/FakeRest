@@ -7,8 +7,8 @@ import parseQueryString from 'parseQueryString';
 const assign = objectAssign.getPolyfill();
 
 export default class FetchServer extends Server {
-    decode(request) {
-        const req = (typeof request === 'string') ? new Request(request) : request;
+    decode(request, opts) {
+        const req = (typeof request === 'string') ? new Request(request, opts) : request;
         req.queryString = decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1));
         req.params = parseQueryString(req.queryString);
         return req.text()
@@ -63,7 +63,7 @@ export default class FetchServer extends Server {
      *
      */
     handle(req, opts) {
-        return this.decode(req)
+        return this.decode(req, opts)
             .then(request => {
                 const response = {
                     headers: {'Content-Type': 'application/json' },

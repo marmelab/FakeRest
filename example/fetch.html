@@ -56,7 +56,7 @@ restServer.toggleLogging(); // logging is off by default, enable it
 fetchMock.mock('^http://fakeapi', restServer.getHandler())
 
 // Now query the fake REST server
-fetch('http://fakeapi/authors')
+fetch('http://fakeapi/authors?range=%5B0,1%5D')
     .then(res => res.text())
     .then(res => document.getElementById('req1').value = res);
 
@@ -64,11 +64,10 @@ fetch('http://fakeapi/books/3')
     .then(res => res.text())
     .then(res => document.getElementById('req2').value = res);
 
-var postReq = new Request('http://fakeapi/books', {
-    method: 'POST',
-    body: JSON.stringify({ author_id: 1, title: 'Emma' }),
-})
-fetch(postReq)
+fetch('http://fakeapi/books', {
+        method: 'POST',
+        body: JSON.stringify({ author_id: 1, title: 'Emma' })
+    })
     .then(res => res.text())
     .then(res => document.getElementById('req3').value = res);
 
