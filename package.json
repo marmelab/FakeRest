@@ -1,6 +1,6 @@
 {
   "name": "fakerest",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "repository": "https://github.com/marmelab/FakeRest",
   "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {

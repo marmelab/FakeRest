@@ -1,8 +1,10 @@
 # FakeRest [![Build Status](https://travis-ci.org/marmelab/FakeRest.svg?branch=master)](https://travis-ci.org/marmelab/FakeRest)
 
-Intercept XMLHttpRequest to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
+Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHTTPRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
 
 ## Usage
+
+### Fake XMLHTTPRequest
 
 ```html
 <script src="/path/to/FakeRest.min.js"></script>
@@ -27,10 +29,37 @@ var data = {
 // initialize fake REST server
 var restServer = new FakeRest.Server();
 restServer.init(data);
+
 // use sinon.js to monkey-patch XmlHttpRequest
 var server = sinon.fakeServer.create();
 server.respondWith(restServer.getHandler());
 </script>
+```
+
+### Fake fetch
+
+```js
+import fetchMock from 'fetch-mock';
+import FakeRest from 'fakerest';
+var data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+const restServer = new FakeRest.FetchServer('http://localhost:3000');
+restServer.init(data);
+fetchMock.mock('^http://localhost:3000', restServer.getHandler());
 ```
 
 FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes for collections of items are:
