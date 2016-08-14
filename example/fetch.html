@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test FakeRest server</title>
+</head>
+<body>
+<h1>FakeRest example</h1>
+<p>See source for example FakeRest usage.</p>
+<h2>Test data</h2>
+<pre>
+{
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ]
+}
+</pre>
+<div>
+	<h2>GET /authors</h2>
+	<textarea id="req1" cols=80 rows=3></textarea>
+</div>
+<div>
+	<h2>GET /books/3</h2>
+	<textarea id="req2" cols=80 rows=1></textarea>
+</div>
+<div>
+	<h2>POST /books { author_id: 1, title: 'Emma' }</h2>
+	<textarea id="req3" cols=80 rows=1></textarea>
+</div>
+<script src="../dist/FakeRest.js"></script>
+<script src="../node_modules/fetch-mock/es5/client-browserified.js"></script>
+<script type="text/javascript">
+// initialize fake REST server and data
+var restServer = new FakeRest.FetchServer('http://fakeapi');
+restServer.init({
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ]
+});
+restServer.toggleLogging(); // logging is off by default, enable it
+
+// use restServer as fetch mock
+fetchMock.mock('^http://fakeapi', restServer.getHandler())
+
+// Now query the fake REST server
+fetch('http://fakeapi/authors?range=%5B0,1%5D')
+    .then(res => res.text())
+    .then(res => document.getElementById('req1').value = res);
+
+fetch('http://fakeapi/books/3')
+    .then(res => res.text())
+    .then(res => document.getElementById('req2').value = res);
+
+fetch('http://fakeapi/books', {
+        method: 'POST',
+        body: JSON.stringify({ author_id: 1, title: 'Emma' })
+    })
+    .then(res => res.text())
+    .then(res => document.getElementById('req3').value = res);
+
+// restore native fetch
+fetchMock.restore();
+</script>
+</body>
+</html>
