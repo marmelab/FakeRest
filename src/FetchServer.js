@@ -28,6 +28,7 @@ export default class FetchServer extends Server {
             return current(previous, request);
         }, response);
         this.log(request, response);
+        response.headers = new Headers(response.headers)
 
         return response;
     }
@@ -39,7 +40,7 @@ export default class FetchServer extends Server {
             console.groupCollapsed(request.method, request.url, '(FakeRest)');
             console.group('request');
             console.log(request.method, request.url);
-            console.log('headers', request.requestHeaders);
+            console.log('headers', request.headers);
             console.log('body   ', request.requestBody);
             console.groupEnd();
             console.group('response', response.status);
@@ -48,7 +49,7 @@ export default class FetchServer extends Server {
             console.groupEnd();
             console.groupEnd();
         } else {
-            console.log('FakeRest request ', request.method, request.url, 'headers', request.requestHeaders, 'body', request.requestBody);
+            console.log('FakeRest request ', request.method, request.url, 'headers', request.headers, 'body', request.requestBody);
             console.log('FakeRest response', response.status, 'headers', response.headers, 'body', response.body);
         }
     }
