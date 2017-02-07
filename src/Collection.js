@@ -211,10 +211,9 @@ export default class Collection {
             if (query.range) {
                 items = rangeItems(items, query.range);
             }
+            items = items.map(item => objectAssign({}, item)) // clone item to avoid returning the original
             if (query.embed && this.server) {
-                items = items
-                    .map(item => objectAssign({}, item)) // clone item to avoid updating the original
-                    .map(this._itemEmbedder(query.embed)); // embed reference
+                items = items.map(this._itemEmbedder(query.embed)); // embed reference
             }
         }
         return items;
@@ -230,8 +229,8 @@ export default class Collection {
             throw new Error(`No item with identifier ${ identifier }`);
         }
         let item = this.items[index];
+        item = objectAssign({}, item); // clone item to avoid returning the original
         if (query && query.embed && this.server) {
-            item = objectAssign({}, item); // clone item to avoid updating the original
             item = this._itemEmbedder(query.embed)(item); // embed reference
         }
         return item;
@@ -249,7 +248,7 @@ export default class Collection {
             item[this.identifierName] = this.sequence++;
         }
         this.items.push(item);
-        return item;
+        return objectAssign({}, item); // clone item to avoid returning the original;
     }
 
     updateOne(identifier, item) {
@@ -260,7 +259,7 @@ export default class Collection {
         for (let key in item) {
             this.items[index][key] = item[key];
         }
-        return this.items[index];
+        return objectAssign({}, this.items[index]); // clone item to avoid returning the original
     }
 
     removeOne(identifier) {
