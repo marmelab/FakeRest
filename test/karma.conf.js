@@ -5,6 +5,7 @@ module.exports = function (config) {
         basePath: '../',
         browsers: [process.env.CI ? 'PhantomJS' : 'Chrome'],
         files: [
+            {pattern: 'node_modules/babel-polyfill/dist/polyfill.js', included: true},
             {pattern: 'node_modules/sinon/pkg/sinon.js', included: true},
             {pattern: 'dist/FakeRest.js', included: true},
             {pattern: 'test/function.bind.shim.js', included: true},
