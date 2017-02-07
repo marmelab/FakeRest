@@ -4,6 +4,7 @@ node_js:
 cache:
   directories:
     - node_modules
+script: make test
 branches:
   only:
     - master
