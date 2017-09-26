@@ -45,7 +45,14 @@ function filterItems(items, filter) {
                     if (Array.isArray(item[key])) {
                         // array filter and array item value: where all items in values
                         return value
-                            .every(v => item[key].indexOf(v) !== -1);
+                            .every(
+                                    v => item[key].reduce((acc, itemValue) => {
+                                    if (acc) {
+                                        return acc;
+                                    }
+                                    return itemValue == v;
+                                }, false)
+                            );
                     }
                     // where item in values
                     return value.filter(v => v == item[key]).length > 0;
