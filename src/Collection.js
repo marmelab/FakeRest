@@ -40,17 +40,18 @@ function filterItems(items, filter) {
                 let realKey = key.replace(/(_gt)$/, '');
                 return item => item[realKey] > value;
             }
-            return item => {
-                if (Array.isArray(item[key]) && Array.isArray(value)) {
-                    // array filter and array item value: where values in item
-                    return value
-                        .map(v => item[key].indexOf(v) !== -1)
-                        .every(v => !!v);
-                }
-                if (Array.isArray(value)) {
-                    // where item in value
+            if (Array.isArray(value)) {
+                return item => {
+                    if (Array.isArray(item[key])) {
+                        // array filter and array item value: where all items in values
+                        return value
+                            .every(v => item[key].indexOf(v) !== -1);
+                    }
+                    // where item in values
                     return value.filter(v => v == item[key]).length > 0;
                 }
+            }
+            return item => {
                 if (Array.isArray(item[key]) && typeof value == 'string') {
                     // simple filter but array item value: where value in item
                     return item[key].indexOf(value) !== -1;
