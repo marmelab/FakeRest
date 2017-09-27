@@ -2,6 +2,12 @@ import objectAssign from 'object.assign';
 import 'array.prototype.findindex';
 import 'string.prototype.endswith';
 
+const every = (array, predicate) =>
+    array.reduce((acc, value) => acc && predicate(value), true);
+
+const some = (array, predicate) =>
+    array.reduce((acc, value) => acc || predicate(value), false);
+
 function filterItems(items, filter) {
     if (typeof filter === 'function') {
         return items.filter(filter);
@@ -44,9 +50,9 @@ function filterItems(items, filter) {
                 return item => {
                     if (Array.isArray(item[key])) {
                         // array filter and array item value: where all items in values
-
-                        return value.every(
-                            v => item[key].some(itemValue => itemValue == v)
+                        return every(
+                            value,
+                            v => some(item[key], itemValue => itemValue == v)
                         );
                     }
                     // where item in values
