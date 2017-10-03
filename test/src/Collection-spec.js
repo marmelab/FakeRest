@@ -153,6 +153,19 @@
                     expect(collection.getAll({filter: { tags: 'f' } })).toEqual([])
                 })
 
+                it('should filter array values properly when receiving several values', function() {
+                    var collection = new Collection([
+                        { tags: ['a', 'b', 'c'] },
+                        { tags: ['b', 'c', 'd'] },
+                        { tags: ['c', 'd', 'e'] },
+                    ]);
+                    var expected = [
+                        { id: 1, tags: ['b', 'c', 'd'] },
+                    ];
+                    expect(collection.getAll({filter: { tags: ['b', 'd'] } })).toEqual(expected)
+                    expect(collection.getAll({filter: { tags: ['a', 'b', 'e'] } })).toEqual([])
+                })
+
                 it('should filter by the special q full-text filter', function() {
                     var collection = new Collection([
                         { a: 'Hello', b: 'world' },
