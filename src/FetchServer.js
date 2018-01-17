@@ -109,7 +109,7 @@ export default class FetchServer extends Server {
 
                 // handle collections
                 for (let name of this.getCollectionNames()) {
-                    let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
+                    let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\w+))?(\\?.*)?$' ));
                     if (!matches) continue;
                     let params = assign({}, this.defaultQuery(name), request.params);
                     if (!matches[2]) {
