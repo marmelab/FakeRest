@@ -59,7 +59,7 @@ var data = {
 };
 const restServer = new FakeRest.FetchServer('http://localhost:3000');
 restServer.init(data);
-fetchMock.mock('^http://localhost:3000', restServer.getHandler());
+fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
 ```
 
 FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes for collections of items are:
