@@ -266,7 +266,7 @@ Note that all of the above apply only to collections. Single objects respond to 
 
 ```js
 // initialize a rest server with a custom base URL
-var restServer = new FakeRest.Server('http://my.custom.domain'); // // only URLs starting wiyj my.custom.domain will be intercepted
+var restServer = new FakeRest.Server('http://my.custom.domain'); // // only URLs starting with my.custom.domain will be intercepted
 restServer.toggleLogging(); // logging is off by default, enable it to see network calls in the console
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
