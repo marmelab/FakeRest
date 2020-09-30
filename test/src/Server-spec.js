@@ -257,6 +257,17 @@
                 expect(server.getAll('foo')).toEqual([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}, {id: 3, name: 'baz'}]);
             });
 
+            it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', function() {
+                var server = new Server();
+                var request = getFakeXMLHTTPRequest('POST', '/foo', JSON.stringify({name: 'baz'}));
+                server.handle(request);
+                expect(request.status).toEqual(201);
+                expect(request.responseText).toEqual('{"name":"baz","id":0}');
+                expect(request.getResponseHeader('Content-Type')).toEqual('application/json');
+                expect(request.getResponseHeader('Location')).toEqual('/foo/0');
+                expect(server.getAll('foo')).toEqual([{id: 0, name: 'baz'}]);
+            });
+
             it('should respond to GET /foo/:id by sending element of identifier id in collection foo', function() {
                 var server = new Server();
                 server.addCollection('foo', new Collection([{id: 1, name: 'foo'}, {id: 2, name: 'bar'}]));

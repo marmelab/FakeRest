@@ -110,6 +110,9 @@ export default class Server {
     }
 
     addOne(name, item) {
+        if (!this.collections.hasOwnProperty(name)) {
+            this.addCollection(name, new Collection([], 'id'));
+        }
         return this.collections[name].addOne(item);
     }
 
@@ -273,65 +276,70 @@ export default class Server {
         }
 
         // Handle collections
-        for (let name of this.getCollectionNames()) {
-            let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
-            if (!matches) continue;
-            let params = assign({}, this.defaultQuery(name), request.params);
-            if (!matches[2]) {
-                if (request.method == 'GET') {
-                    let count = this.getCount(name, params.filter ? { filter: params.filter } : {});
-                    let items, contentRange, status;
-                    if (count > 0) {
-                        items = this.getAll(name, params);
-                        let first = params.range ? params.range[0] : 0;
-                        let last = params.range ? Math.min(items.length - 1 + first, params.range[1]) : (items.length - 1);
-                        contentRange = `items ${first}-${last}/${count}`;
-                        status = (items.length == count) ? 200 : 206;
-                    } else {
-                        items = [];
-                        contentRange = 'items */0';
-                        status = 200;
-                    }
-                    return this.respond(items, { 'Content-Range': contentRange }, request, status);
+        let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/([^\\/?]+)(\\/(\\d+))?(\\?.*)?$' ));
+        if (!matches) return;
+        let name = matches[1];
+        let params = assign({}, this.defaultQuery(name), request.params);
+        if (!matches[2]) {
+            if (request.method == 'GET') {
+                if (!this.getCollection(name)) {
+                    return;
                 }
-                if (request.method == 'POST') {
-                    let newResource = this.addOne(name, request.json);
-                    let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
-                    return this.respond(newResource, { Location: newResourceURI }, request, 201);
+                let count = this.getCount(name, params.filter ? { filter: params.filter } : {});
+                let items, contentRange, status;
+                if (count > 0) {
+                    items = this.getAll(name, params);
+                    let first = params.range ? params.range[0] : 0;
+                    let last = params.range ? Math.min(items.length - 1 + first, params.range[1]) : (items.length - 1);
+                    contentRange = `items ${first}-${last}/${count}`;
+                    status = (items.length == count) ? 200 : 206;
+                } else {
+                    items = [];
+                    contentRange = 'items */0';
+                    status = 200;
                 }
-            } else {
-                let id = matches[3];
-                if (request.method == 'GET') {
-                    try {
-                        let item = this.getOne(name, id, params);
-                        return this.respond(item, null, request);
-                    } catch (error) {
-                        return request.respond(404);
-                    }
+                return this.respond(items, { 'Content-Range': contentRange }, request, status);
+            }
+            if (request.method == 'POST') {
+                let newResource = this.addOne(name, request.json);
+                let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
+                return this.respond(newResource, { Location: newResourceURI }, request, 201);
+            }
+        } else {
+            if (!this.getCollection(name)) {
+                return;
+            }
+            let id = matches[3];
+            if (request.method == 'GET') {
+                try {
+                    let item = this.getOne(name, id, params);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
                 }
-                if (request.method == 'PUT') {
-                    try {
-                        let item = this.updateOne(name, id, request.json);
-                        return this.respond(item, null, request);
-                    } catch (error) {
-                        return request.respond(404);
-                    }
+            }
+            if (request.method == 'PUT') {
+                try {
+                    let item = this.updateOne(name, id, request.json);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
                 }
-                if (request.method == 'PATCH') {
-                    try {
-                        let item = this.updateOne(name, id, request.json);
-                        return this.respond(item, null, request);
-                    } catch (error) {
-                        return request.respond(404);
-                    }
+            }
+            if (request.method == 'PATCH') {
+                try {
+                    let item = this.updateOne(name, id, request.json);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
                 }
-                if (request.method == 'DELETE') {
-                    try {
-                        let item = this.removeOne(name, id);
-                        return this.respond(item, null, request);
-                    } catch (error) {
-                        return request.respond(404);
-                    }
+            }
+            if (request.method == 'DELETE') {
+                try {
+                    let item = this.removeOne(name, id);
+                    return this.respond(item, null, request);
+                } catch (error) {
+                    return request.respond(404);
                 }
             }
         }
