@@ -1,5 +1,5 @@
-import { Server } from 'Server';
-import { parseQueryString } from 'parseQueryString';
+import { Server } from './Server';
+import { parseQueryString } from './parseQueryString';
 
 export class FetchServer extends Server {
     decode(request, opts) {

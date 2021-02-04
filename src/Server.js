@@ -1,6 +1,6 @@
-import { Collection } from 'Collection';
-import { Single } from 'Single';
-import { parseQueryString } from 'parseQueryString';
+import { Collection } from './Collection';
+import { Single } from './Single';
+import { parseQueryString } from './parseQueryString';
 
 export class Server {
     constructor(baseUrl='') {
