@@ -1,11 +1,8 @@
-import objectAssign from 'object.assign';
-import Collection from 'Collection';
-import Single from 'Single';
-import parseQueryString from 'parseQueryString';
+import { Collection } from 'Collection';
+import { Single } from 'Single';
+import { parseQueryString } from 'parseQueryString';
 
-const assign = objectAssign.getPolyfill();
-
-export default class Server {
+export class Server {
     constructor(baseUrl='') {
         this.baseUrl = baseUrl;
         this.loggingEnabled = false;
@@ -279,7 +276,7 @@ export default class Server {
         let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/([^\\/?]+)(\\/(\\d+))?(\\?.*)?$' ));
         if (!matches) return;
         let name = matches[1];
-        let params = assign({}, this.defaultQuery(name), request.params);
+        let params = Object.assign({}, this.defaultQuery(name), request.params);
         if (!matches[2]) {
             if (request.method == 'GET') {
                 if (!this.getCollection(name)) {

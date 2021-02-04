@@ -1,7 +1,3 @@
-import objectAssign from 'object.assign';
-import 'array.prototype.findindex';
-import 'string.prototype.endswith';
-
 const every = (array, predicate) =>
     array.reduce((acc, value) => acc && predicate(value), true);
 
@@ -118,7 +114,7 @@ function rangeItems(items, range) {
     throw new Error('Unsupported range type');
 }
 
-export default class Collection {
+export class Collection {
 
     constructor(items=[], identifierName='id') {
         if (!Array.isArray(items)) {
@@ -226,7 +222,7 @@ export default class Collection {
             if (query.range) {
                 items = rangeItems(items, query.range);
             }
-            items = items.map(item => objectAssign({}, item)) // clone item to avoid returning the original
+            items = items.map(item => Object.assign({}, item)) // clone item to avoid returning the original
             if (query.embed && this.server) {
                 items = items.map(this._itemEmbedder(query.embed)); // embed reference
             }
@@ -244,7 +240,7 @@ export default class Collection {
             throw new Error(`No item with identifier ${ identifier }`);
         }
         let item = this.items[index];
-        item = objectAssign({}, item); // clone item to avoid returning the original
+        item = Object.assign({}, item); // clone item to avoid returning the original
         if (query && query.embed && this.server) {
             item = this._itemEmbedder(query.embed)(item); // embed reference
         }
@@ -263,7 +259,7 @@ export default class Collection {
             item[this.identifierName] = this.sequence++;
         }
         this.items.push(item);
-        return objectAssign({}, item); // clone item to avoid returning the original;
+        return Object.assign({}, item); // clone item to avoid returning the original;
     }
 
     updateOne(identifier, item) {
@@ -274,7 +270,7 @@ export default class Collection {
         for (let key in item) {
             this.items[index][key] = item[key];
         }
-        return objectAssign({}, this.items[index]); // clone item to avoid returning the original
+        return Object.assign({}, this.items[index]); // clone item to avoid returning the original
     }
 
     removeOne(identifier) {

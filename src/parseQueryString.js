@@ -1,4 +1,4 @@
-export default function parseQueryString(queryString) {
+export function parseQueryString(queryString) {
     if (!queryString) {
         return {};
     }
