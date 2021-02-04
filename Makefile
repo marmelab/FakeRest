@@ -8,7 +8,7 @@ build-dev:
 	@${CURDIR}/node_modules/.bin/webpack
 
 build:
-	@${CURDIR}/node_modules/.bin/webpack --optimize-minimize --output-file=FakeRest.min.js
+	@${CURDIR}/node_modules/.bin/webpack --mode=production 
 
 watch:
 	@${CURDIR}/node_modules/.bin/webpack --watch

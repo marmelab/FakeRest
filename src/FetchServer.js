@@ -1,12 +1,7 @@
-import objectAssign from 'object.assign';
-import Server from 'Server';
-import Collection from 'Collection';
-import Single from 'Single';
-import parseQueryString from 'parseQueryString';
+import { Server } from './Server';
+import { parseQueryString } from './parseQueryString';
 
-const assign = objectAssign.getPolyfill();
-
-export default class FetchServer extends Server {
+export class FetchServer extends Server {
     decode(request, opts) {
         const req = (typeof request === 'string') ? new Request(request, opts) : request;
         req.queryString = decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1));
@@ -111,7 +106,7 @@ export default class FetchServer extends Server {
                 for (let name of this.getCollectionNames()) {
                     let matches = request.url.match(new RegExp('^' + this.baseUrl + '\\/(' + name + ')(\\/(\\d+))?(\\?.*)?$' ));
                     if (!matches) continue;
-                    let params = assign({}, this.defaultQuery(name), request.params);
+                    let params = Object.assign({}, this.defaultQuery(name), request.params);
                     if (!matches[2]) {
                         if (request.method == 'GET') {
                             let count = this.getCount(name, params.filter ? { filter: params.filter } : {});

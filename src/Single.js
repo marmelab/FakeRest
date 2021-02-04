@@ -1,7 +1,4 @@
-import objectAssign from 'object.assign';
-import 'string.prototype.endswith';
-
-export default class Single {
+export class Single {
     constructor(obj) {
         if (!(obj instanceof Object)) {
             throw new Error('Can\'t initialize a Single with anything except an object');
@@ -65,7 +62,7 @@ export default class Single {
     getOnly(query) {
         let item = this.obj;
         if (query && query.embed && this.server) {
-            item = objectAssign({}, item); // Clone
+            item = Object.assign({}, item); // Clone
             item = this._itemEmbedder(query.embed)(item);
         }
         return item;
