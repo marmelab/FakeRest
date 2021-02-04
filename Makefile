@@ -13,5 +13,5 @@ build:
 watch:
 	@${CURDIR}/node_modules/.bin/webpack --watch
 
-test: build-dev
-	@CHROME_BIN=`which chromium-browser` ${CURDIR}/node_modules/karma/bin/karma start test/karma.conf.js --single-run
+test:
+	@npm run test
