@@ -178,6 +178,16 @@ describe("Collection", () => {
         expect(collection.getAll({ filter: { name: "b" } })).toEqual(expected);
       });
 
+      it("should filter values with deep paths", () => {
+        const collection = new Collection([
+          { name: "c", deep: { value: "c" } },
+          { name: "a", deep: { value: "a" } },
+          { name: "b", deep: { value: "b" } },
+        ]);
+        const expected = [{ name: "b", deep: { value: "b" }, id: 2 }];
+        expect(collection.getAll({ filter: { "deep.value": "b" } })).toEqual(expected);
+      });
+
       it("should filter boolean values properly", () => {
         const collection = new Collection([
           { name: "a", is: true },
@@ -215,6 +225,81 @@ describe("Collection", () => {
         ];
         expect(collection.getAll({ filter: { tags: "b" } })).toEqual(expected);
         expect(collection.getAll({ filter: { tags: "f" } })).toEqual([]);
+      });
+
+      it("should filter array values properly within deep paths", () => {
+        const collection = new Collection([
+          { deep: { tags: ["a", "b", "c"] } },
+          { deep: { tags: ["b", "c", "d"] } },
+          { deep: { tags: ["c", "d", "e"] } },
+        ]);
+        const expected = [
+          { id: 0, deep: { tags: ["a", "b", "c"] } },
+          { id: 1, deep: { tags: ["b", "c", "d"] } },
+        ];
+        expect(collection.getAll({ filter: { 'deep.tags': "b" } })).toEqual(expected);
+        expect(collection.getAll({ filter: { 'deep.tags': "f" } })).toEqual([]);
+      });
+
+      it("should filter array values properly inside deep paths", () => {
+        const collection = new Collection([
+          { tags: { deep: ["a", "b", "c"] } },
+          { tags: { deep: ["b", "c", "d"] } },
+          { tags: { deep: ["c", "d", "e"] } },
+        ]);
+        const expected = [
+          { id: 0, tags: { deep: ["a", "b", "c"] } },
+          { id: 1, tags: { deep: ["b", "c", "d"] } },
+        ];
+        expect(collection.getAll({ filter: { 'tags.deep': "b" } })).toEqual(expected);
+        expect(collection.getAll({ filter: { 'tags.deep': "f" } })).toEqual([]);
+      });
+
+      it("should filter array values properly with deep paths", () => {
+        const collection = new Collection([
+          { tags: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+          { tags: [{ name: "b" }, { name: "c" }, { name: "d" }] },
+          { tags: [{ name: "c" }, { name: "d" }, { name: "e" }] },
+        ]);
+        const expected = [
+          { id: 0, tags: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+          { id: 1, tags: [{ name: "b" }, { name: "c" }, { name: "d" }] },
+        ];
+        expect(collection.getAll({ filter: { 'tags.name': "b" } })).toEqual(expected);
+        expect(collection.getAll({ filter: { 'tags.name': "f" } })).toEqual([]);
+      });
+
+      it("should filter array values properly when receiving several values within deep paths", () => {
+        const collection = new Collection([
+          { deep: { tags: ["a", "b", "c"] } },
+          { deep: { tags: ["b", "c", "d"] } },
+          { deep: { tags: ["c", "d", "e"] } },
+        ]);
+        const expected = [{ id: 1, deep: { tags: ["b", "c", "d"] } }];
+        expect(collection.getAll({ filter: { 'deep.tags': ["b", "d"] } })).toEqual(
+          expected
+        );
+        expect(
+          collection.getAll({ filter: { 'deep.tags': ["a", "b", "e"] } })
+        ).toEqual([]);
+      });
+
+      it("should filter array values properly when receiving several values with deep paths", () => {
+        const collection = new Collection([
+          { tags: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+          { tags: [{ name: "c" }, { name: "d" }, { name: "e" }] },
+          { tags: [{ name: "e" }, { name: "f" }, { name: "g" }] },
+        ]);   
+        const expected = [
+          { id: 0, tags: [{ name: "a" }, { name: "b" }, { name: "c" }] },
+          { id: 1, tags: [{ name: "c" }, { name: "d" }, { name: "e" }] }
+        ];
+        expect(collection.getAll({ filter: { 'tags.name': ["c"] } })).toEqual(
+          expected
+        );
+        expect(
+          collection.getAll({ filter: { 'tags.name': ["h", "i"] } })
+        ).toEqual([]);
       });
 
       it("should filter array values properly when receiving several values", () => {
