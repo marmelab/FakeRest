@@ -1,8 +1,77 @@
+import get from 'lodash/get';
+
 const every = (array, predicate) =>
     array.reduce((acc, value) => acc && predicate(value), true);
 
 const some = (array, predicate) =>
     array.reduce((acc, value) => acc || predicate(value), false);
+
+const getArrayOfObjectsPaths = (keyParts, item) => 
+    keyParts.reduce((acc, key, index) => {
+        // If we already found an array, we don't need to explore further
+        // For example with path `tags.name` when tags is an array of objects
+        if (acc != undefined) {
+            return acc;
+        }
+        
+        let keyToArray = keyParts.slice(0, index + 1).join('.');
+        let keyToItem = keyParts.slice(index + 1).join('.')
+        let itemValue = get(item, keyToArray);
+        
+        // If the array is at the end of the key path, we will process it like we do normally with arrays
+        // For example with path `deep.tags` where tags is the array. In this case, we return undefined
+        return Array.isArray(itemValue) && index < keyParts.length - 1
+            ? [keyToArray, keyToItem]
+            : undefined;
+    }, undefined);
+
+const getSimpleFilter = (key, value) => {
+    if (key.indexOf('_lte') !== -1) {
+        // less than or equal
+        let realKey = key.replace(/(_lte)$/, '');
+        return item => get(item, realKey) <= value;
+    }
+    if (key.indexOf('_gte') !== -1) {
+        // less than or equal
+        let realKey = key.replace(/(_gte)$/, '');
+        return item => get(item, realKey) >= value;
+    }
+    if (key.indexOf('_lt') !== -1) {
+        // less than or equal
+        let realKey = key.replace(/(_lt)$/, '');
+        return item => get(item, realKey) < value;
+    }
+    if (key.indexOf('_gt') !== -1) {
+        // less than or equal
+        let realKey = key.replace(/(_gt)$/, '');
+        return item => get(item, realKey) > value;
+    }
+    if (Array.isArray(value)) {
+        return item => {
+            if (Array.isArray(get(item, key))) {
+                // array filter and array item value: where all items in values
+                return every(
+                    value,
+                    v => some(get(item, key), itemValue => itemValue == v)
+                );
+            }
+            // where item in values
+            return value.filter(v => v == get(item, key)).length > 0;
+        }
+    }
+    return item => {
+        if (Array.isArray(get(item, key)) && typeof value == 'string') {
+            // simple filter but array item value: where value in item
+            return get(item, key).indexOf(value) !== -1;
+        }
+        if (typeof get(item, key) == 'boolean' && typeof value == 'string') {
+            // simple filter but boolean item value: boolean where
+            return get(item, key) == (value === 'true' ? true : false);
+        }
+        // simple filter
+        return get(item, key) == value;
+    };
+}
 
 function filterItems(items, filter) {
     if (typeof filter === 'function') {
@@ -21,52 +90,25 @@ function filterItems(items, filter) {
                     return false;
                 };
             }
+
+            let keyParts = key.split('.');
             let value = filter[key];
-            if (key.indexOf('_lte') !== -1) {
-                // less than or equal
-                let realKey = key.replace(/(_lte)$/, '');
-                return item => item[realKey] <= value;
-            }
-            if (key.indexOf('_gte') !== -1) {
-                // less than or equal
-                let realKey = key.replace(/(_gte)$/, '');
-                return item => item[realKey] >= value;
-            }
-            if (key.indexOf('_lt') !== -1) {
-                // less than or equal
-                let realKey = key.replace(/(_lt)$/, '');
-                return item => item[realKey] < value;
-            }
-            if (key.indexOf('_gt') !== -1) {
-                // less than or equal
-                let realKey = key.replace(/(_gt)$/, '');
-                return item => item[realKey] > value;
-            }
-            if (Array.isArray(value)) {
+            if (keyParts.length > 1) {
                 return item => {
-                    if (Array.isArray(item[key])) {
-                        // array filter and array item value: where all items in values
-                        return every(
-                            value,
-                            v => some(item[key], itemValue => itemValue == v)
-                        );
+                    let arrayOfObjectsPaths = getArrayOfObjectsPaths(keyParts, item);
+
+                    if (arrayOfObjectsPaths) {
+                        let [arrayPath, valuePath] = arrayOfObjectsPaths;
+                        // Check wether any item in the array matches the filter
+                        const filteredArrayItems = filterItems(get(item, arrayPath), {[valuePath]: value});
+                        return filteredArrayItems.length > 0;
+                    } else {
+                        return getSimpleFilter(key, value)(item);
                     }
-                    // where item in values
-                    return value.filter(v => v == item[key]).length > 0;
                 }
             }
-            return item => {
-                if (Array.isArray(item[key]) && typeof value == 'string') {
-                    // simple filter but array item value: where value in item
-                    return item[key].indexOf(value) !== -1;
-                }
-                if (typeof item[key] == 'boolean' && typeof value == 'string') {
-                    // simple filter but boolean item value: boolean where
-                    return item[key] == (value === 'true' ? true : false);
-                }
-                // simple filter
-                return item[key] == value;
-            };
+
+            return getSimpleFilter(key, value);
         });
         // only the items matching all filters functions are in (AND logic)
         return items.filter(item =>

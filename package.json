@@ -25,7 +25,8 @@
     "webpack-cli": "^4.5.0"
   },
   "dependencies": {
-    "babel-runtime": "^6.26.0"
+    "babel-runtime": "^6.26.0",
+    "lodash": "^4.17.21"
   },
   "browserslist": "> 0.25%, not dead"
 }
