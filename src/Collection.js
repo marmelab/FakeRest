@@ -46,6 +46,11 @@ const getSimpleFilter = (key, value) => {
         let realKey = key.replace(/(_gt)$/, '');
         return item => get(item, realKey) > value;
     }
+    if (key.indexOf('_neq') !== -1) {
+        // not equal
+        let realKey = key.replace(/(_neq)$/, '');
+        return item => get(item, realKey) != value;
+    }
     if (Array.isArray(value)) {
         return item => {
             if (Array.isArray(get(item, key))) {
