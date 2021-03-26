@@ -188,6 +188,16 @@ describe("Collection", () => {
         expect(collection.getAll({ filter: { "deep.value": "b" } })).toEqual(expected);
       });
 
+      it("should filter values with objects", () => {
+        const collection = new Collection([
+          { name: "c", deep: { value: "c" } },
+          { name: "a", deep: { value: "a" } },
+          { name: "b", deep: { value: "b" } },
+        ]);
+        const expected = [{ name: "b", deep: { value: "b" }, id: 2 }];
+        expect(collection.getAll({ filter: { deep: { value: "b" } } })).toEqual(expected);
+      });
+
       it("should filter boolean values properly", () => {
         const collection = new Collection([
           { name: "a", is: true },
