@@ -1,4 +1,4 @@
 node_modules
 bower_components
-dist/FakeRest.js
+dist
 example/ng-admin/bower-components

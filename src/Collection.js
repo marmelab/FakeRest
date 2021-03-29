@@ -1,4 +1,5 @@
 import get from 'lodash/get';
+import matches from 'lodash/matches';
 
 const every = (array, predicate) =>
     array.reduce((acc, value) => acc && predicate(value), true);
@@ -59,6 +60,11 @@ const getSimpleFilter = (key, value) => {
             return value.filter(v => v == get(item, key)).length > 0;
         }
     }
+
+    if (typeof value === 'object') {
+        return item => matches(value)(get(item, key));
+    }
+
     return item => {
         if (Array.isArray(get(item, key)) && typeof value == 'string') {
             // simple filter but array item value: where value in item
