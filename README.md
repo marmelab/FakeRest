@@ -185,7 +185,7 @@ FakeRest uses a standard REST flavor, described below.
           { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
         ]
 
-        // use _gt, _gte, _lte, or _lt suffix on filter names to make range queries
+        // use _gt, _gte, _lte, _lt, or _neq suffix on filter names to make range queries
         GET /books?filter={"price_lte":20} // return books where price is less than or equal to 20
         GET /books?filter={"price_gt":20} // return books where price is greater than 20
 

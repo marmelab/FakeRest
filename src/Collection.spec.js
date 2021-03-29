@@ -365,6 +365,14 @@ describe("Collection", () => {
         expect(collection.getAll({ filter: { v_lte: 0 } })).toEqual([]);
       });
 
+      it("should filter by inequality using _neq", () => {
+        const collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 }]);
+        expect(collection.getAll({ filter: { v_neq: 2 } })).toEqual([
+          { v: 1, id: 0 },
+          { v: 3, id: 2 },
+        ]);
+      });
+
       it("should filter by array", () => {
         const collection = new Collection([
           { a: "H" },
