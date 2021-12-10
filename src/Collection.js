@@ -92,14 +92,26 @@ function filterItems(items, filter) {
         // turn filter properties to functions
         var filterFunctions = Object.keys(filter).map(key => {
             if (key === 'q') {
-                let regex = new RegExp(filter.q, 'i');
-                // full-text filter
-                return item => {
+                let regex = new RegExp(filter.q, "i");
+                const filterWithQuery = (item) => {
                     for (let itemKey in item) {
-                        if (item[itemKey] && item[itemKey].match && item[itemKey].match(regex) !== null) return true;
+                        if (typeof item[itemKey] === "object") {
+                            if (filterWithQuery(item[itemKey])) {
+                                return true;
+                            }
+                        }
+
+                        if (
+                            item[itemKey] &&
+                            item[itemKey].match &&
+                            item[itemKey].match(regex) !== null
+                        )
+                        return true;
                     }
                     return false;
                 };
+                // full-text filter
+                return filterWithQuery;
             }
 
             let keyParts = key.split('.');
