@@ -332,6 +332,7 @@ describe("Collection", () => {
           { a: "Hello", b: "world" },
           { a: "helloworld", b: "bunny" },
           { a: "foo", b: "bar" },
+          { a: { b: "bar" } },
           { a: "", b: "" },
           { a: null, b: null },
           {},
@@ -342,6 +343,7 @@ describe("Collection", () => {
         ]);
         expect(collection.getAll({ filter: { q: "bar" } })).toEqual([
           { id: 2, a: "foo", b: "bar" },
+          { id: 3, a: { b: "bar" } },
         ]);
       });
 
