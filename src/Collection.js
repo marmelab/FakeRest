@@ -27,6 +27,13 @@ const getArrayOfObjectsPaths = (keyParts, item) =>
     }, undefined);
 
 const getSimpleFilter = (key, value) => {
+    if (key.indexOf('_q') !== -1) {
+        // text search
+        let realKey = key.replace(/(_q)$/, '');
+        let regex = new RegExp(value, 'i');
+
+        return (item) => get(item, realKey)?.match(regex) !== null;
+    }
     if (key.indexOf('_lte') !== -1) {
         // less than or equal
         let realKey = key.replace(/(_lte)$/, '');

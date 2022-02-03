@@ -373,6 +373,16 @@ describe("Collection", () => {
         ]);
       });
 
+      it("should filter by text search using _q", () => {
+        const collection = new Collection([{ v: 'abCd' }, { v: 'cDef' }, { v: 'EFgh' }]);
+        expect(collection.getAll({ filter: { v_q: 'cd' } })).toEqual([
+          { id: 0, v: 'abCd' }, { id: 1, v: 'cDef' }
+        ]);
+        expect(collection.getAll({ filter: { v_q: 'ef' } })).toEqual([
+          { id: 1, v: 'cDef' }, { id: 2, v: 'EFgh' }
+        ]);
+      });
+
       it("should filter by array", () => {
         const collection = new Collection([
           { a: "H" },
