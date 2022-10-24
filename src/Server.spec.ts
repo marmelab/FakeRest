@@ -4,7 +4,7 @@ import { Server } from "./Server";
 import { Single } from "./Single";
 import { Collection } from "./Collection";
 
-function getFakeXMLHTTPRequest(method, url, data) {
+function getFakeXMLHTTPRequest(method: string, url: string, data?: any): any {
   const xhr = sinon.useFakeXMLHttpRequest();
   let request;
   xhr.onCreate = function (xhr) {
@@ -148,7 +148,7 @@ describe("Server", () => {
   describe("addRequestInterceptor", () => {
     it("should allow request transformation", () => {
       const server = new Server();
-      server.addRequestInterceptor(function (request) {
+      server.addRequestInterceptor(function (request: any) {
         const start = request.params._start - 1 || 0;
         const end =
           request.params._end !== undefined ? request.params._end - 1 : 19;
@@ -179,11 +179,11 @@ describe("Server", () => {
   describe("addResponseInterceptor", () => {
     it("should allow response transformation", () => {
       const server = new Server();
-      server.addResponseInterceptor(function (response) {
+      server.addResponseInterceptor(function (response: any) {
         response.body = { data: response.body, status: response.status };
         return response;
       });
-      server.addResponseInterceptor(function (response) {
+      server.addResponseInterceptor(function (response: any) {
         response.status = 418;
         return response;
       });
@@ -205,7 +205,7 @@ describe("Server", () => {
     it("should pass request in response interceptor", () => {
       const server = new Server();
       let requestUrl;
-      server.addResponseInterceptor(function (response, request) {
+      server.addResponseInterceptor(function (response: any, request: any) {
         requestUrl = request.url;
         return response;
       });
@@ -569,7 +569,7 @@ describe("Server", () => {
         "foo",
         new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
       ); // 10 items
-      server.setDefaultQuery(function (name) {
+      server.setDefaultQuery(function (name: string) {
         return { range: [2, 4] };
       });
       const request = getFakeXMLHTTPRequest("GET", "/foo?range=[0,4]");

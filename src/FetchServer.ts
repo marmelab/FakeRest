@@ -2,12 +2,12 @@ import { Server } from './Server';
 import { parseQueryString } from './parseQueryString';
 
 export class FetchServer extends Server {
-    decode(request, opts) {
+    decode(request: any, opts?: any): any {
         const req = (typeof request === 'string') ? new Request(request, opts) : request;
         req.queryString = decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1));
         req.params = parseQueryString(req.queryString);
         return req.text()
-            .then(text => {
+            .then((text: string) => {
                 req.requestBody = text
                 try {
                     req.requestJson = JSON.parse(text)
@@ -15,11 +15,11 @@ export class FetchServer extends Server {
                     // not JSON, no big deal
                 }
             })
-            .then(() => this.requestInterceptors.reduce((previous, current) => current(previous), req))
+            .then(() => this.requestInterceptors.reduce((previous: any, current: any) => current(previous), req))
     }
 
-    respond(response, request) {
-        response = this.responseInterceptors.reduce(function(previous, current) {
+    respond(response: any, request: any): any {
+        response = this.responseInterceptors.reduce(function(previous: any, current: any) {
             return current(previous, request);
         }, response);
         this.log(request, response);
@@ -28,7 +28,7 @@ export class FetchServer extends Server {
         return response;
     }
 
-    log(request, response) {
+    log(request: any, response: any): void {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
@@ -49,7 +49,7 @@ export class FetchServer extends Server {
         }
     }
 
-    batch(request) {
+    batch(request: any): void {
         throw new Error('not implemented');
     }
 
@@ -58,10 +58,10 @@ export class FetchServer extends Server {
      * @param {Object} options
      *
      */
-    handle(req, opts) {
+    handle(req: any, opts?: any): any{
         return this.decode(req, opts)
-            .then(request => {
-                const response = {
+            .then((request: any) => {
+                const response: Record<string, unknown> = {
                     headers: {'Content-Type': 'application/json' },
                     status: 200,
                 };
@@ -80,7 +80,7 @@ export class FetchServer extends Server {
                         try {
                             response.body = this.getOnly(name);
                         } catch (error) {
-                            reponse.status = 404;
+                            response.status = 404;
                         }
                         return this.respond(response, request);
                     }
@@ -88,7 +88,7 @@ export class FetchServer extends Server {
                         try {
                             response.body = this.updateOnly(name, request.requestJson);
                         } catch (error) {
-                            reponse.status = 404;
+                            response.status = 404;
                         }
                         return this.respond(response, request);
                     }
@@ -96,7 +96,7 @@ export class FetchServer extends Server {
                        try {
                             response.body = this.updateOnly(name, request.requestJson);
                         } catch (error) {
-                            reponse.status = 404;
+                            response.status = 404;
                         }
                         return this.respond(response, request);
                     }
@@ -115,11 +115,11 @@ export class FetchServer extends Server {
                                 let first = params.range ? params.range[0] : 0;
                                 let last = params.range ? Math.min(items.length - 1 + first, params.range[1]) : (items.length - 1);
                                 response.body = items;
-                                response.headers['Content-Range'] = `items ${first}-${last}/${count}`;
+                                (response.headers as Record<string, unknown>)['Content-Range'] = `items ${first}-${last}/${count}`;
                                 response.status = (items.length == count) ? 200 : 206;
                             } else {
                                 response.body = [];
-                                response.headers['Content-Range'] = 'items */0';
+                                (response.headers as Record<string, unknown>)['Content-Range'] = 'items */0';
                             }
                             return this.respond(response, request);
                         }
@@ -127,7 +127,7 @@ export class FetchServer extends Server {
                             let newResource = this.addOne(name, request.requestJson);
                             let newResourceURI = this.baseUrl + '/' + name + '/' + newResource[this.getCollection(name).identifierName];
                             response.body = newResource;
-                            response.headers['Location'] = newResourceURI;
+                            (response.headers as Record<string, unknown>)['Location'] = newResourceURI;
                             response.status = 201;
                             return this.respond(response, request);
                         }

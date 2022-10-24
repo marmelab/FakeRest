@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "es2017",
+    "module": "esnext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, 
+    "removeComments": false,
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "types": ["vitest/globals"],
+  }, 
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "example", "src/**/*.spec.ts"]
+}

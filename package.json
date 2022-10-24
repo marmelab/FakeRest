@@ -4,23 +4,22 @@
   "repository": "https://github.com/marmelab/FakeRest",
   "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {
-    "test": "jest"
+    "test": "vitest"
   },
   "main": "dist/FakeRest.min.js",
+  "types": "dist/FakeRest.d.ts",
   "author": "François Zaninotto <fzaninotto@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/preset-env": "^7.12.13",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^8.2.2",
-    "babel-plugin-add-module-exports": "^1.0.4",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-polyfill": "^6.26.0",
-    "babel-runtime": "^6.26.0",
+    "@types/lodash": "^4.14.186",
+    "@types/sinon": "^10.0.13",
     "fetch-mock": "^9.11.0",
-    "jest": "^26.6.3",
+    "jsdom": "^20.0.1",
+    "npm-dts-webpack-plugin": "^1.3.12",
     "sinon": "~1.14.1",
     "terser-webpack-plugin": "^5.1.1",
+    "ts-loader": "^9.4.1",
+    "vitest": "^0.24.3",
     "webpack": "^5.20.0",
     "webpack-cli": "^4.5.0"
   },

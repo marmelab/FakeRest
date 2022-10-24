@@ -1,4 +1,3 @@
-import expect from "expect";
 import { Collection } from "./Collection";
 import { Server } from "./Server";
 
@@ -38,7 +37,7 @@ describe("Collection", () => {
 
     it("should accept a query object", () => {
       const collection = new Collection([{}, { name: "a" }, { name: "b" }]);
-      function filter(item) {
+      function filter(item: any) {
         return item.name == "a" || item.name == "b";
       }
       expect(collection.getCount({ filter: filter })).toEqual(2);
@@ -80,7 +79,7 @@ describe("Collection", () => {
           { name: "b", id: 2 },
           { name: "c", id: 0 },
         ];
-        function sort(a, b) {
+        function sort(a: any, b: any) {
           if (a.name > b.name) {
             return 1;
           }
@@ -162,7 +161,7 @@ describe("Collection", () => {
           { name: "c", id: 0 },
           { name: "b", id: 2 },
         ];
-        function filter(item) {
+        function filter(item: any) {
           return item.name !== "a";
         }
         expect(collection.getAll({ filter: filter })).toEqual(expected);
@@ -419,7 +418,7 @@ describe("Collection", () => {
           { name: "a" },
           { name: "b" },
         ]);
-        function filter(item) {
+        function filter(item: any) {
           return item.name !== "a";
         }
         collection.getAll({ filter: filter });

@@ -1,8 +1,8 @@
-export function parseQueryString(queryString) {
+export function parseQueryString(queryString: string): any {
     if (!queryString) {
         return {};
     }
-    let queryObject = {};
+    let queryObject: Record<string, any> = {};
     let queryElements = queryString.split('&');
 
     queryElements.map(function(queryElement) {
