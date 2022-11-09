@@ -29,6 +29,9 @@ export class Single {
   // it is by definition a singleton
   _oneToManyEmbedder(resourceName) {
     return (item) => {
+      if (this.server == null) {
+        throw new Error("Can't embed references without a server");
+      }
       const otherCollection = this.server.collections[resourceName];
       if (!otherCollection)
         throw new Error(
@@ -48,6 +51,9 @@ export class Single {
     const pluralResourceName = resourceName + "s";
     const referenceName = resourceName + "_id";
     return (item) => {
+      if (this.server == null) {
+        throw new Error("Can't embed references without a server");
+      }
       const otherCollection = this.server.collections[pluralResourceName];
       if (!otherCollection)
         throw new Error(
