@@ -187,16 +187,17 @@ function rangeItems(items, range) {
 }
 
 export class Collection {
+    sequence = 0;
+    items = [];
+    server = null;
+    name = null;
+    identifierName = 'id';
 
     constructor(items=[], identifierName='id') {
         if (!Array.isArray(items)) {
             throw new Error('Can\'t initialize a Collection with anything else than an array of items');
         }
-        this.sequence = 0; // id of the next item
         this.identifierName = identifierName;
-        this.items = [];
-        this.server = null;
-        this.name = null;
         items.map(this.addOne.bind(this));
     }
 
