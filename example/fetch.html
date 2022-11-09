@@ -34,7 +34,7 @@
 	<textarea id="req3" cols=80 rows=1></textarea>
 </div>
 <script src="../dist/FakeRest.js"></script>
-<script src="../node_modules/fetch-mock/es5/client-browserified.js"></script>
+<script src="../node_modules/fetch-mock/es5/client-bundle.js"></script>
 <script type="text/javascript">
 // initialize fake REST server and data
 var restServer = new FakeRest.FetchServer('http://fakeapi');
@@ -53,7 +53,7 @@ restServer.init({
 restServer.toggleLogging(); // logging is off by default, enable it
 
 // use restServer as fetch mock
-fetchMock.mock('^http://fakeapi', restServer.getHandler())
+fetchMock.mock('begin:http://fakeapi', restServer.getHandler())
 
 // Now query the fake REST server
 fetch('http://fakeapi/authors?range=%5B0,1%5D')
