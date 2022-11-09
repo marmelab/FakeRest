@@ -223,9 +223,15 @@ export class Collection {
      * @returns Function item => item
      */
     _oneToManyEmbedder(resourceName) {
+        if (this.name == null) {
+            throw new Error('Can\'t embed references without a collection name');
+        }
         const singularResourceName = this.name.slice(0,-1);
         const referenceName = singularResourceName + '_id';
         return (item) => {
+            if (this.server == null) {
+                throw new Error('Can\'t embed references without a server');
+            }
             const otherCollection = this.server.collections[resourceName];
             if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
             if (Array.isArray(item[resourceName])) {
@@ -256,6 +262,9 @@ export class Collection {
         const pluralResourceName = resourceName + 's';
         const referenceName = resourceName + '_id';
         return (item) => {
+            if (this.server == null) {
+                throw new Error('Can\'t embed references without a server');
+            }
             const otherCollection = this.server.collections[pluralResourceName];
             if (!otherCollection) throw new Error(`Can't embed a non-existing collection ${resourceName}`);
             try {
