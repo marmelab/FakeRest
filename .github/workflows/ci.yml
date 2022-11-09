@@ -1,0 +1,28 @@
+name: "Tests"
+
+on: 
+  push:
+    paths-ignore:
+      - 'docs/**'
+    branches:
+      - master
+      - next
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js LTS
+      uses: actions/setup-node@v1
+      with:
+        node-version: '16.x'
+    - uses: bahmutov/npm-install@v1
+    - name: Unit Tests
+      run: make test
+      env:
+        CI: true
