@@ -62,7 +62,7 @@ restServer.init(data);
 fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
 ```
 
-FakeRest will now intercept every XmlHTTPResquest to the REST server. The handled routes for collections of items are:
+FakeRest will now intercept every `XmlHttpRequest` to the REST server. The handled routes for collections of items are:
 
 ```
 GET    /:resource
@@ -152,7 +152,7 @@ FakeRest uses a standard REST flavor, described below.
           { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
         ]
 
-    The `filter` param must be a serialized object litteral describing the criteria to apply to the search query.
+    The `filter` param must be a serialized object literal describing the criteria to apply to the search query.
 
         GET /books?filter={"author_id":1} // return books where author_id is equal to 1
         HTTP 1.1 200 OK
