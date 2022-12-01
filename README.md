@@ -138,7 +138,7 @@ npm install fakerest --save-dev
 
 ## REST Flavor
 
-FakeRest uses a standard REST flavor, described below.
+FakeRest defines a REST flavor, described below. It is inspired by commonly used ways how to handle aspects like filtering and sorting.
 
 * `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response contains a mention of the total count in the `Content-Range` header.
 
