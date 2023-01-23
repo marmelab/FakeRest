@@ -54,10 +54,45 @@ const getSimpleFilter = (key, value) => {
         let realKey = key.replace(/(_gt)$/, '');
         return item => get(item, realKey) > value;
     }
+    if (key.indexOf("_neq_any") !== -1) {
+      // not equal to any
+      let realKey = key.replace(/(_neq_any)$/, "");
+      let finalValue = Array.isArray(value) ? value : [value];
+      return (item) => finalValue.every((val) => get(item, realKey) != val);
+    }
     if (key.indexOf('_neq') !== -1) {
         // not equal
         let realKey = key.replace(/(_neq)$/, '');
         return item => get(item, realKey) != value;
+    }
+    if (key.indexOf("_eq_any") !== -1) {
+      // equal any 
+      let realKey = key.replace(/(_eq_any)$/, "");
+      let finalValue = Array.isArray(value) ? value : [value];
+      return (item) => finalValue.some((val) => get(item, realKey) == val);
+    }
+    if (key.indexOf('_eq') !== -1) {
+        // equal
+        let realKey = key.replace(/(_eq)$/, '');
+        return item => get(item, realKey) == value;
+    }    
+    if (key.indexOf('_inc_any') !== -1) {
+        // include any
+        let realKey = key.replace(/(_inc_any)$/, "");
+        let finalValue = Array.isArray(value) ? value : [value];
+        return item => finalValue.some(val => get(item, realKey).includes(val));
+    }
+    if (key.indexOf('_inc') !== -1) {
+        // includes all
+        let realKey = key.replace(/(_inc)$/, "");
+        let finalValue = Array.isArray(value) ? value : [value];
+        return item => finalValue.every(val => get(item, realKey).includes(val));
+    }
+    if (key.indexOf('_ninc_any') !== -1) {
+        // does not include any
+        let realKey = key.replace(/(_ninc_any)$/, "");
+        let finalValue = Array.isArray(value) ? value : [value];
+        return item => finalValue.every(val => !get(item, realKey).includes(val));
     }
     if (Array.isArray(value)) {
         return item => {
