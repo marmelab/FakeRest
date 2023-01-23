@@ -84,7 +84,7 @@ const getSimpleFilter = (key, value) => {
     }
     if (key.indexOf('_inc') !== -1) {
         // includes all
-        let realKey = key.replace(/(_inc_all)$/, "");
+        let realKey = key.replace(/(_inc)$/, "");
         let finalValue = Array.isArray(value) ? value : [value];
         return item => finalValue.every(val => get(item, realKey).includes(val));
     }

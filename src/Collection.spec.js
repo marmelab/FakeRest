@@ -412,13 +412,13 @@ describe("Collection", () => {
         ]);
       });
 
-      it("should filter using _inc_all", () => {
+      it("should filter using _inc", () => {
         const collection = new Collection([
           { v: [1, 2] },
           { v: [2, 4] },
           { v: [3, 1] },
         ]);
-        expect(collection.getAll({ filter: { v_inc_all: [1, 3] } })).toEqual([
+        expect(collection.getAll({ filter: { v_inc: [1, 3] } })).toEqual([
           { v: [3, 1], id: 2 },
         ]);
       });
