@@ -55,7 +55,7 @@ const getSimpleFilter = (key, value) => {
         return item => get(item, realKey) > value;
     }
     if (key.indexOf("_neq_any") !== -1) {
-      // equal
+      // not equal to any
       let realKey = key.replace(/(_neq_any)$/, "");
       let finalValue = Array.isArray(value) ? value : [value];
       return (item) => finalValue.every((val) => get(item, realKey) != val);
@@ -66,7 +66,7 @@ const getSimpleFilter = (key, value) => {
         return item => get(item, realKey) != value;
     }
     if (key.indexOf("_eq_any") !== -1) {
-      // equal
+      // equal any 
       let realKey = key.replace(/(_eq_any)$/, "");
       let finalValue = Array.isArray(value) ? value : [value];
       return (item) => finalValue.some((val) => get(item, realKey) == val);
@@ -77,19 +77,19 @@ const getSimpleFilter = (key, value) => {
         return item => get(item, realKey) == value;
     }    
     if (key.indexOf('_inc_any') !== -1) {
-        // equal
+        // include any
         let realKey = key.replace(/(_inc_any)$/, "");
         let finalValue = Array.isArray(value) ? value : [value];
         return item => finalValue.some(val => get(item, realKey).includes(val));
     }
-    if (key.indexOf('_inc_all') !== -1) {
-        // equal
+    if (key.indexOf('_inc') !== -1) {
+        // includes all
         let realKey = key.replace(/(_inc_all)$/, "");
         let finalValue = Array.isArray(value) ? value : [value];
         return item => finalValue.every(val => get(item, realKey).includes(val));
     }
     if (key.indexOf('_ninc_any') !== -1) {
-        // equal
+        // does not include any
         let realKey = key.replace(/(_ninc_any)$/, "");
         let finalValue = Array.isArray(value) ? value : [value];
         return item => finalValue.every(val => !get(item, realKey).includes(val));
