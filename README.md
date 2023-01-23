@@ -292,6 +292,22 @@ Operators are specified as suffixes on each filtered field. For instance, applyi
 
         GET /books?filter={"author_q":['Gibson']} // return books where author includes 'Gibson' not considering the other fields
 
+- `_lt`: check for items that has a value lower than the provided value
+
+        GET /books?filter={"price_lte":100} // return books that have a price lower that 100
+
+- `_lte`: check for items that has a value lower or equal than the provided value
+
+        GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
+
+- `_gt`: check for items that has a value greater than the provided value
+
+        GET /books?filter={"price_gte":100} // return books that have a price greater that 100
+
+- `_gte`: check for items that has a value greater or equal than the provided value
+
+        GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
+
 ## Usage and Configuration
 
 ```js
