@@ -375,6 +375,54 @@ describe("Collection", () => {
         ]);
       });
 
+      it("should filter by equality using _eq", () => {
+        const collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 }]);
+        expect(collection.getAll({ filter: { v_eq: 2 } })).toEqual([
+          { v: 2, id: 1 },
+        ]);
+      });
+
+      it("should filter using _eq_any", () => {
+        const collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 }]);
+        expect(collection.getAll({ filter: { v_eq_any: [1, 3] } })).toEqual([
+          { v: 1, id: 0 },
+          { v: 3, id: 2 },
+        ]);
+      });
+
+      it("should filter using _neq_any", () => {
+        const collection = new Collection([{ v: 1 }, { v: 2 }, { v: 3 }]);
+        expect(collection.getAll({ filter: { v_neq_any: [1, 3] } })).toEqual([
+          { v: 2, id: 1 },
+        ]);
+      });
+
+      it("should filter using _inc_any", () => {
+        const collection = new Collection([{ v: [1, 2] }, { v: [2, 4] }, { v: [3, 1] }]);
+        expect(collection.getAll({ filter: { v_inc_any: [1, 3] } })).toEqual([
+          { v: [1, 2], id: 0 },
+          { v: [3, 1], id: 2 },
+        ]);
+      });
+
+      it("should filter using _ninc_any", () => {
+        const collection = new Collection([{ v: [1, 2] }, { v: [2, 4] }, { v: [3, 1] }]);
+        expect(collection.getAll({ filter: { v_ninc_any: [1, 3] } })).toEqual([
+          { v: [2, 4], id: 1 },
+        ]);
+      });
+
+      it("should filter using _inc_all", () => {
+        const collection = new Collection([
+          { v: [1, 2] },
+          { v: [2, 4] },
+          { v: [3, 1] },
+        ]);
+        expect(collection.getAll({ filter: { v_inc_all: [1, 3] } })).toEqual([
+          { v: [3, 1], id: 2 },
+        ]);
+      });
+
       it("should filter by text search using _q", () => {
         const collection = new Collection([{ v: 'abCd' }, { v: 'cDef' }, { v: 'EFgh' }]);
         expect(collection.getAll({ filter: { v_q: 'cd' } })).toEqual([
