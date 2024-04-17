@@ -5,7 +5,10 @@
   "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {
     "build": "vite build && vite build -c vite.config.min.ts",
-    "test": "vitest"
+    "format": "biome format --write src",
+    "lint": "biome lint --apply src",
+    "test": "vitest",
+    "prepare": "husky"
   },
   "main": "dist/fakerest.min.umd.js",
   "module": "./dist/fakerest.min.mjs",
@@ -18,8 +21,11 @@
   "author": "François Zaninotto <fzaninotto@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "1.7.0",
     "fetch-mock": "^9.11.0",
     "happy-dom": "^14.7.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "sinon": "~1.14.1",
     "vite": "^5.2.9",
     "vitest": "^1.5.0"
@@ -27,5 +33,11 @@
   "dependencies": {
     "lodash": "^4.17.21"
   },
-  "browserslist": "> 0.25%, not dead"
+  "browserslist": "> 0.25%, not dead",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "biome lint --apply",
+      "biome format --write"
+    ]
+  }
 }
