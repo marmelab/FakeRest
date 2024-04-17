@@ -23,9 +23,9 @@ jobs:
         node-version: '18.x'
     - uses: bahmutov/npm-install@v1
     - name: Lint Check
-      run: biome lint src
+      run: npx @biomejs/biome lint src
     - name: Format Check
-      run: biome format src
+      run: npx @biomejs/biome format src
   unit-test:
     runs-on: ubuntu-latest
     steps:
