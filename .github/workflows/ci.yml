@@ -20,7 +20,7 @@ jobs:
     - name: Use Node.js LTS
       uses: actions/setup-node@v1
       with:
-        node-version: '16.x'
+        node-version: '18.x'
     - uses: bahmutov/npm-install@v1
     - name: Lint Check
       run: biome lint src
@@ -34,7 +34,7 @@ jobs:
     - name: Use Node.js LTS
       uses: actions/setup-node@v1
       with:
-        node-version: '16.x'
+        node-version: '18.x'
     - uses: bahmutov/npm-install@v1
     - name: Unit Tests
       run: make test
