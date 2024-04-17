@@ -1,5 +1,5 @@
-import get from "lodash/get";
-import matches from "lodash/matches";
+import get from 'lodash/get';
+import matches from 'lodash/matches';
 
 const every = (array, predicate) =>
     array.reduce((acc, value) => acc && predicate(value), true);
@@ -15,8 +15,8 @@ const getArrayOfObjectsPaths = (keyParts, item) =>
             return acc;
         }
 
-        const keyToArray = keyParts.slice(0, index + 1).join(".");
-        const keyToItem = keyParts.slice(index + 1).join(".");
+        const keyToArray = keyParts.slice(0, index + 1).join('.');
+        const keyToItem = keyParts.slice(index + 1).join('.');
         const itemValue = get(item, keyToArray);
 
         // If the array is at the end of the key path, we will process it like we do normally with arrays
@@ -27,76 +27,76 @@ const getArrayOfObjectsPaths = (keyParts, item) =>
     }, undefined);
 
 const getSimpleFilter = (key, value) => {
-    if (key.indexOf("_q") !== -1) {
+    if (key.indexOf('_q') !== -1) {
         // text search
-        const realKey = key.replace(/(_q)$/, "");
-        const regex = new RegExp(value, "i");
+        const realKey = key.replace(/(_q)$/, '');
+        const regex = new RegExp(value, 'i');
 
         return (item) => get(item, realKey)?.match(regex) !== null;
     }
-    if (key.indexOf("_lte") !== -1) {
+    if (key.indexOf('_lte') !== -1) {
         // less than or equal
-        const realKey = key.replace(/(_lte)$/, "");
+        const realKey = key.replace(/(_lte)$/, '');
         return (item) => get(item, realKey) <= value;
     }
-    if (key.indexOf("_gte") !== -1) {
+    if (key.indexOf('_gte') !== -1) {
         // less than or equal
-        const realKey = key.replace(/(_gte)$/, "");
+        const realKey = key.replace(/(_gte)$/, '');
         return (item) => get(item, realKey) >= value;
     }
-    if (key.indexOf("_lt") !== -1) {
+    if (key.indexOf('_lt') !== -1) {
         // less than or equal
-        const realKey = key.replace(/(_lt)$/, "");
+        const realKey = key.replace(/(_lt)$/, '');
         return (item) => get(item, realKey) < value;
     }
-    if (key.indexOf("_gt") !== -1) {
+    if (key.indexOf('_gt') !== -1) {
         // less than or equal
-        const realKey = key.replace(/(_gt)$/, "");
+        const realKey = key.replace(/(_gt)$/, '');
         return (item) => get(item, realKey) > value;
     }
-    if (key.indexOf("_neq_any") !== -1) {
+    if (key.indexOf('_neq_any') !== -1) {
         // not equal to any
-        const realKey = key.replace(/(_neq_any)$/, "");
+        const realKey = key.replace(/(_neq_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
         // biome-ignore lint: we want implicit type coercion
         return (item) => finalValue.every((val) => get(item, realKey) != val);
     }
-    if (key.indexOf("_neq") !== -1) {
+    if (key.indexOf('_neq') !== -1) {
         // not equal
-        const realKey = key.replace(/(_neq)$/, "");
+        const realKey = key.replace(/(_neq)$/, '');
         // biome-ignore lint: we want implicit type coercion
         return (item) => get(item, realKey) != value;
     }
-    if (key.indexOf("_eq_any") !== -1) {
+    if (key.indexOf('_eq_any') !== -1) {
         // equal any
-        const realKey = key.replace(/(_eq_any)$/, "");
+        const realKey = key.replace(/(_eq_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
         // biome-ignore lint: we want implicit type coercion
         return (item) => finalValue.some((val) => get(item, realKey) == val);
     }
-    if (key.indexOf("_eq") !== -1) {
+    if (key.indexOf('_eq') !== -1) {
         // equal
-        const realKey = key.replace(/(_eq)$/, "");
+        const realKey = key.replace(/(_eq)$/, '');
         // biome-ignore lint: we want implicit type coercion
         return (item) => get(item, realKey) == value;
     }
-    if (key.indexOf("_inc_any") !== -1) {
+    if (key.indexOf('_inc_any') !== -1) {
         // include any
-        const realKey = key.replace(/(_inc_any)$/, "");
+        const realKey = key.replace(/(_inc_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
         return (item) =>
             finalValue.some((val) => get(item, realKey).includes(val));
     }
-    if (key.indexOf("_inc") !== -1) {
+    if (key.indexOf('_inc') !== -1) {
         // includes all
-        const realKey = key.replace(/(_inc)$/, "");
+        const realKey = key.replace(/(_inc)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
         return (item) =>
             finalValue.every((val) => get(item, realKey).includes(val));
     }
-    if (key.indexOf("_ninc_any") !== -1) {
+    if (key.indexOf('_ninc_any') !== -1) {
         // does not include any
-        const realKey = key.replace(/(_ninc_any)$/, "");
+        const realKey = key.replace(/(_ninc_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
         return (item) =>
             finalValue.every((val) => !get(item, realKey).includes(val));
@@ -116,18 +116,18 @@ const getSimpleFilter = (key, value) => {
         };
     }
 
-    if (typeof value === "object") {
+    if (typeof value === 'object') {
         return (item) => matches(value)(get(item, key));
     }
 
     return (item) => {
-        if (Array.isArray(get(item, key)) && typeof value === "string") {
+        if (Array.isArray(get(item, key)) && typeof value === 'string') {
             // simple filter but array item value: where value in item
             return get(item, key).indexOf(value) !== -1;
         }
-        if (typeof get(item, key) === "boolean" && typeof value === "string") {
+        if (typeof get(item, key) === 'boolean' && typeof value === 'string') {
             // simple filter but boolean item value: boolean where
-            return get(item, key) === (value === "true");
+            return get(item, key) === (value === 'true');
         }
         // simple filter
         // biome-ignore lint: we want implicit type coercion
@@ -136,17 +136,17 @@ const getSimpleFilter = (key, value) => {
 };
 
 function filterItems(items, filter) {
-    if (typeof filter === "function") {
+    if (typeof filter === 'function') {
         return items.filter(filter);
     }
     if (filter instanceof Object) {
         // turn filter properties to functions
         const filterFunctions = Object.keys(filter).map((key) => {
-            if (key === "q") {
-                const regex = new RegExp(filter.q, "i");
+            if (key === 'q') {
+                const regex = new RegExp(filter.q, 'i');
                 const filterWithQuery = (item) => {
                     for (const itemKey in item) {
-                        if (typeof item[itemKey] === "object") {
+                        if (typeof item[itemKey] === 'object') {
                             if (filterWithQuery(item[itemKey])) {
                                 return true;
                             }
@@ -165,7 +165,7 @@ function filterItems(items, filter) {
                 return filterWithQuery;
             }
 
-            const keyParts = key.split(".");
+            const keyParts = key.split('.');
             const value = filter[key];
             if (keyParts.length > 1) {
                 return (item) => {
@@ -199,14 +199,14 @@ function filterItems(items, filter) {
             ),
         );
     }
-    throw new Error("Unsupported filter type");
+    throw new Error('Unsupported filter type');
 }
 
 function sortItems(items, sort) {
-    if (typeof sort === "function") {
+    if (typeof sort === 'function') {
         return items.sort(sort);
     }
-    if (typeof sort === "string") {
+    if (typeof sort === 'string') {
         return items.sort((a, b) => {
             if (a[sort] > b[sort]) {
                 return 1;
@@ -219,7 +219,7 @@ function sortItems(items, sort) {
     }
     if (Array.isArray(sort)) {
         const key = sort[0];
-        const direction = sort[1].toLowerCase() === "asc" ? 1 : -1;
+        const direction = sort[1].toLowerCase() === 'asc' ? 1 : -1;
         return items.sort((a, b) => {
             if (a[key] > b[key]) {
                 return direction;
@@ -230,7 +230,7 @@ function sortItems(items, sort) {
             return 0;
         });
     }
-    throw new Error("Unsupported sort type");
+    throw new Error('Unsupported sort type');
 }
 
 function rangeItems(items, range) {
@@ -240,7 +240,7 @@ function rangeItems(items, range) {
             range[1] !== undefined ? range[1] + 1 : undefined,
         );
     }
-    throw new Error("Unsupported range type");
+    throw new Error('Unsupported range type');
 }
 
 export class Collection {
@@ -248,9 +248,9 @@ export class Collection {
     items = [];
     server = null;
     name = null;
-    identifierName = "id";
+    identifierName = 'id';
 
-    constructor(items = [], identifierName = "id") {
+    constructor(items = [], identifierName = 'id') {
         if (!Array.isArray(items)) {
             throw new Error(
                 "Can't initialize a Collection with anything else than an array of items",
@@ -354,7 +354,7 @@ export class Collection {
     _itemEmbedder(embed) {
         const resourceNames = Array.isArray(embed) ? embed : [embed];
         const resourceEmbedders = resourceNames.map((resourceName) =>
-            resourceName.endsWith("s")
+            resourceName.endsWith('s')
                 ? this._oneToManyEmbedder(resourceName)
                 : this._manyToOneEmbedder(resourceName),
         );

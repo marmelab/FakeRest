@@ -8,6 +8,11 @@
     "indentStyle": "space",
     "indentWidth": 4
   },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {

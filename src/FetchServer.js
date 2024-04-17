@@ -1,12 +1,12 @@
-import { Server } from "./Server";
-import { parseQueryString } from "./parseQueryString";
+import { Server } from './Server';
+import { parseQueryString } from './parseQueryString';
 
 export class FetchServer extends Server {
     decode(request, opts) {
         const req =
-            typeof request === "string" ? new Request(request, opts) : request;
+            typeof request === 'string' ? new Request(request, opts) : request;
         req.queryString = decodeURIComponent(
-            req.url.slice(req.url.indexOf("?") + 1),
+            req.url.slice(req.url.indexOf('?') + 1),
         );
         req.params = parseQueryString(req.queryString);
         return req
@@ -43,40 +43,40 @@ export class FetchServer extends Server {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
-            console.groupCollapsed(request.method, request.url, "(FakeRest)");
-            console.group("request");
+            console.groupCollapsed(request.method, request.url, '(FakeRest)');
+            console.group('request');
             console.log(request.method, request.url);
-            console.log("headers", request.headers);
-            console.log("body   ", request.requestBody);
+            console.log('headers', request.headers);
+            console.log('body   ', request.requestBody);
             console.groupEnd();
-            console.group("response", response.status);
-            console.log("headers", response.headers);
-            console.log("body   ", response.body);
+            console.group('response', response.status);
+            console.log('headers', response.headers);
+            console.log('body   ', response.body);
             console.groupEnd();
             console.groupEnd();
         } else {
             console.log(
-                "FakeRest request ",
+                'FakeRest request ',
                 request.method,
                 request.url,
-                "headers",
+                'headers',
                 request.headers,
-                "body",
+                'body',
                 request.requestBody,
             );
             console.log(
-                "FakeRest response",
+                'FakeRest response',
                 response.status,
-                "headers",
+                'headers',
                 response.headers,
-                "body",
+                'body',
                 response.body,
             );
         }
     }
 
     batch(request) {
-        throw new Error("not implemented");
+        throw new Error('not implemented');
     }
 
     /**
@@ -87,7 +87,7 @@ export class FetchServer extends Server {
     handle(req, opts) {
         return this.decode(req, opts).then((request) => {
             const response = {
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
                 status: 200,
             };
 
@@ -95,7 +95,7 @@ export class FetchServer extends Server {
             if (
                 this.batchUrl &&
                 this.batchUrl === request.url &&
-                request.method === "POST"
+                request.method === 'POST'
             ) {
                 return this.batch(request);
             }
@@ -107,7 +107,7 @@ export class FetchServer extends Server {
                 );
                 if (!matches) continue;
 
-                if (request.method === "GET") {
+                if (request.method === 'GET') {
                     try {
                         response.body = this.getOnly(name);
                     } catch (error) {
@@ -115,7 +115,7 @@ export class FetchServer extends Server {
                     }
                     return this.respond(response, request);
                 }
-                if (request.method === "PUT") {
+                if (request.method === 'PUT') {
                     try {
                         response.body = this.updateOnly(
                             name,
@@ -126,7 +126,7 @@ export class FetchServer extends Server {
                     }
                     return this.respond(response, request);
                 }
-                if (request.method === "PATCH") {
+                if (request.method === 'PATCH') {
                     try {
                         response.body = this.updateOnly(
                             name,
@@ -153,7 +153,7 @@ export class FetchServer extends Server {
                     request.params,
                 );
                 if (!matches[2]) {
-                    if (request.method === "GET") {
+                    if (request.method === 'GET') {
                         const count = this.getCount(
                             name,
                             params.filter ? { filter: params.filter } : {},
@@ -168,17 +168,17 @@ export class FetchServer extends Server {
                                   )
                                 : items.length - 1;
                             response.body = items;
-                            response.headers["Content-Range"] =
+                            response.headers['Content-Range'] =
                                 `items ${first}-${last}/${count}`;
                             response.status =
                                 items.length === count ? 200 : 206;
                         } else {
                             response.body = [];
-                            response.headers["Content-Range"] = "items */0";
+                            response.headers['Content-Range'] = 'items */0';
                         }
                         return this.respond(response, request);
                     }
-                    if (request.method === "POST") {
+                    if (request.method === 'POST') {
                         const newResource = this.addOne(
                             name,
                             request.requestJson,
@@ -193,7 +193,7 @@ export class FetchServer extends Server {
                     }
                 } else {
                     const id = matches[3];
-                    if (request.method === "GET") {
+                    if (request.method === 'GET') {
                         try {
                             response.body = this.getOne(name, id, params);
                         } catch (error) {
@@ -201,7 +201,7 @@ export class FetchServer extends Server {
                         }
                         return this.respond(response, request);
                     }
-                    if (request.method === "PUT") {
+                    if (request.method === 'PUT') {
                         try {
                             response.body = this.updateOne(
                                 name,
@@ -213,7 +213,7 @@ export class FetchServer extends Server {
                         }
                         return this.respond(response, request);
                     }
-                    if (request.method === "PATCH") {
+                    if (request.method === 'PATCH') {
                         try {
                             response.body = this.updateOne(
                                 name,
@@ -225,7 +225,7 @@ export class FetchServer extends Server {
                         }
                         return this.respond(response, request);
                     }
-                    if (request.method === "DELETE") {
+                    if (request.method === 'DELETE') {
                         try {
                             response.body = this.removeOne(name, id);
                         } catch (error) {

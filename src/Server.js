@@ -1,6 +1,6 @@
-import { Collection } from "./Collection";
-import { Single } from "./Single";
-import { parseQueryString } from "./parseQueryString";
+import { Collection } from './Collection';
+import { Single } from './Single';
+import { parseQueryString } from './parseQueryString';
 
 export class Server {
     baseUrl = null;
@@ -12,7 +12,7 @@ export class Server {
     requestInterceptors = [];
     responseInterceptors = [];
 
-    constructor(baseUrl = "") {
+    constructor(baseUrl = '') {
         this.baseUrl = baseUrl;
     }
 
@@ -22,7 +22,7 @@ export class Server {
     init(data) {
         for (const name in data) {
             if (Array.isArray(data[name])) {
-                this.addCollection(name, new Collection(data[name], "id"));
+                this.addCollection(name, new Collection(data[name], 'id'));
             } else {
                 this.addSingle(name, new Single(data[name]));
             }
@@ -49,7 +49,7 @@ export class Server {
      */
     setBatch(url) {
         console.warn(
-            "Server.setBatch() is deprecated, use Server.setBatchUrl() instead",
+            'Server.setBatch() is deprecated, use Server.setBatchUrl() instead',
         );
         this.batchUrl = url;
     }
@@ -112,7 +112,7 @@ export class Server {
 
     addOne(name, item) {
         if (!Object.prototype.hasOwnProperty.call(this.collections, name)) {
-            this.addCollection(name, new Collection([], "id"));
+            this.addCollection(name, new Collection([], 'id'));
         }
         return this.collections[name].addOne(item);
     }
@@ -135,7 +135,7 @@ export class Server {
 
     decode(request) {
         request.queryString = decodeURIComponent(
-            request.url.slice(request.url.indexOf("?") + 1),
+            request.url.slice(request.url.indexOf('?') + 1),
         );
         request.params = parseQueryString(request.queryString);
         if (request.requestBody) {
@@ -156,8 +156,8 @@ export class Server {
             // biome-ignore lint: FIXME
             headers = {};
         }
-        if (!headers["Content-Type"]) {
-            headers["Content-Type"] = "application/json";
+        if (!headers['Content-Type']) {
+            headers['Content-Type'] = 'application/json';
         }
         let response = { status: status, headers: headers, body: body };
         response = this.responseInterceptors.reduce(
@@ -177,33 +177,33 @@ export class Server {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
-            console.groupCollapsed(request.method, request.url, "(FakeRest)");
-            console.group("request");
+            console.groupCollapsed(request.method, request.url, '(FakeRest)');
+            console.group('request');
             console.log(request.method, request.url);
-            console.log("headers", request.requestHeaders);
-            console.log("body   ", request.requestBody);
+            console.log('headers', request.requestHeaders);
+            console.log('body   ', request.requestBody);
             console.groupEnd();
-            console.group("response", response.status);
-            console.log("headers", response.headers);
-            console.log("body   ", response.body);
+            console.group('response', response.status);
+            console.log('headers', response.headers);
+            console.log('body   ', response.body);
             console.groupEnd();
             console.groupEnd();
         } else {
             console.log(
-                "FakeRest request ",
+                'FakeRest request ',
                 request.method,
                 request.url,
-                "headers",
+                'headers',
                 request.requestHeaders,
-                "body",
+                'body',
                 request.requestBody,
             );
             console.log(
-                "FakeRest response",
+                'FakeRest response',
                 response.status,
-                "headers",
+                'headers',
                 response.headers,
-                "body",
+                'body',
                 response.body,
             );
         }
@@ -218,7 +218,7 @@ export class Server {
                 let subResponse;
                 const sub = {
                     url: json[requestName],
-                    method: "GET",
+                    method: 'GET',
                     params: {},
                     respond: (code, headers, body) => {
                         subResponse = {
@@ -270,7 +270,7 @@ export class Server {
         if (
             this.batchUrl &&
             this.batchUrl === request.url &&
-            request.method === "POST"
+            request.method === 'POST'
         ) {
             return this.batch(request);
         }
@@ -282,7 +282,7 @@ export class Server {
             );
             if (!matches) continue;
 
-            if (request.method === "GET") {
+            if (request.method === 'GET') {
                 try {
                     const item = this.getOnly(name);
                     return this.respond(item, null, request);
@@ -290,7 +290,7 @@ export class Server {
                     return request.respond(404);
                 }
             }
-            if (request.method === "PUT") {
+            if (request.method === 'PUT') {
                 try {
                     const item = this.updateOnly(name, request.json);
                     return this.respond(item, null, request);
@@ -298,7 +298,7 @@ export class Server {
                     return request.respond(404);
                 }
             }
-            if (request.method === "PATCH") {
+            if (request.method === 'PATCH') {
                 try {
                     const item = this.updateOnly(name, request.json);
                     return this.respond(item, null, request);
@@ -320,7 +320,7 @@ export class Server {
             request.params,
         );
         if (!matches[2]) {
-            if (request.method === "GET") {
+            if (request.method === 'GET') {
                 if (!this.getCollection(name)) {
                     return;
                 }
@@ -341,17 +341,17 @@ export class Server {
                     status = items.length === count ? 200 : 206;
                 } else {
                     items = [];
-                    contentRange = "items */0";
+                    contentRange = 'items */0';
                     status = 200;
                 }
                 return this.respond(
                     items,
-                    { "Content-Range": contentRange },
+                    { 'Content-Range': contentRange },
                     request,
                     status,
                 );
             }
-            if (request.method === "POST") {
+            if (request.method === 'POST') {
                 const newResource = this.addOne(name, request.json);
                 const newResourceURI = `${this.baseUrl}/${name}/${
                     newResource[this.getCollection(name).identifierName]
@@ -368,7 +368,7 @@ export class Server {
                 return;
             }
             const id = matches[3];
-            if (request.method === "GET") {
+            if (request.method === 'GET') {
                 try {
                     const item = this.getOne(name, id, params);
                     return this.respond(item, null, request);
@@ -376,7 +376,7 @@ export class Server {
                     return request.respond(404);
                 }
             }
-            if (request.method === "PUT") {
+            if (request.method === 'PUT') {
                 try {
                     const item = this.updateOne(name, id, request.json);
                     return this.respond(item, null, request);
@@ -384,7 +384,7 @@ export class Server {
                     return request.respond(404);
                 }
             }
-            if (request.method === "PATCH") {
+            if (request.method === 'PATCH') {
                 try {
                     const item = this.updateOne(name, id, request.json);
                     return this.respond(item, null, request);
@@ -392,7 +392,7 @@ export class Server {
                     return request.respond(404);
                 }
             }
-            if (request.method === "DELETE") {
+            if (request.method === 'DELETE') {
                 try {
                     const item = this.removeOne(name, id);
                     return this.respond(item, null, request);

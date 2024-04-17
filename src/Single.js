@@ -75,7 +75,7 @@ export class Single {
     _itemEmbedder(embed) {
         const resourceNames = Array.isArray(embed) ? embed : [embed];
         const resourceEmbedders = resourceNames.map((resourceName) =>
-            resourceName.endsWith("s")
+            resourceName.endsWith('s')
                 ? this._oneToManyEmbedder(resourceName)
                 : this._manyToOneEmbedder(resourceName),
         );
