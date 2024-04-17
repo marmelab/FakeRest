@@ -1,15 +1,19 @@
-import { Server } from './Server';
-import { parseQueryString } from './parseQueryString';
+import { BaseServer } from './BaseServer.js';
+import { parseQueryString } from './parseQueryString.js';
+import type { MockResponse, MockResponseObject } from 'fetch-mock';
 
-export class FetchServer extends Server {
-    decode(request, opts) {
-        const req =
+export class FetchServer extends BaseServer {
+    requestInterceptors: FetchMockRequestInterceptor[] = [];
+    responseInterceptors: FetchMockResponseInterceptor[] = [];
+
+    decode(request: Request, opts?: RequestInit) {
+        const req: FetchMockFakeRestRequest =
             typeof request === 'string' ? new Request(request, opts) : request;
-        req.queryString = decodeURIComponent(
-            req.url.slice(req.url.indexOf('?') + 1),
-        );
+        req.queryString = req.url
+            ? decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1))
+            : '';
         req.params = parseQueryString(req.queryString);
-        return req
+        return (req as Request)
             .text()
             .then((text) => {
                 req.requestBody = text;
@@ -27,19 +31,17 @@ export class FetchServer extends Server {
             );
     }
 
-    respond(response, request) {
-        // biome-ignore lint: FIXME
-        response = this.responseInterceptors.reduce(
+    respond(response: MockResponseObject, request: FetchMockFakeRestRequest) {
+        const resp = this.responseInterceptors.reduce(
             (previous, current) => current(previous, request),
             response,
         );
-        this.log(request, response);
-        response.headers = new Headers(response.headers);
+        this.log(request, resp);
 
-        return response;
+        return resp;
     }
 
-    log(request, response) {
+    log(request: FetchMockFakeRestRequest, response: MockResponseObject) {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
@@ -75,7 +77,7 @@ export class FetchServer extends Server {
         }
     }
 
-    batch(request) {
+    batch(request: any) {
         throw new Error('not implemented');
     }
 
@@ -84,11 +86,16 @@ export class FetchServer extends Server {
      * @param {Object} options
      *
      */
-    handle(req, opts) {
+    handle(req: Request, opts?: RequestInit) {
         return this.decode(req, opts).then((request) => {
-            const response = {
-                headers: { 'Content-Type': 'application/json' },
+            const defaultHeader: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            const response: MockResponseObject &
+                Required<Pick<MockResponseObject, 'headers'>> = {
+                headers: defaultHeader,
                 status: 200,
+                body: '',
             };
 
             // handle batch request
@@ -102,7 +109,7 @@ export class FetchServer extends Server {
 
             // Handle Single Objects
             for (const name of this.getSingleNames()) {
-                const matches = request.url.match(
+                const matches = request.url?.match(
                     new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
                 );
                 if (!matches) continue;
@@ -117,10 +124,14 @@ export class FetchServer extends Server {
                 }
                 if (request.method === 'PUT') {
                     try {
-                        response.body = this.updateOnly(
-                            name,
-                            request.requestJson,
-                        );
+                        if (request.requestJson == null) {
+                            response.status = 400;
+                        } else {
+                            response.body = this.updateOnly(
+                                name,
+                                request.requestJson,
+                            );
+                        }
                     } catch (error) {
                         response.status = 404;
                     }
@@ -128,10 +139,14 @@ export class FetchServer extends Server {
                 }
                 if (request.method === 'PATCH') {
                     try {
-                        response.body = this.updateOnly(
-                            name,
-                            request.requestJson,
-                        );
+                        if (request.requestJson == null) {
+                            response.status = 400;
+                        } else {
+                            response.body = this.updateOnly(
+                                name,
+                                request.requestJson,
+                            );
+                        }
                     } catch (error) {
                         response.status = 404;
                     }
@@ -141,7 +156,7 @@ export class FetchServer extends Server {
 
             // handle collections
             for (const name of this.getCollectionNames()) {
-                const matches = request.url.match(
+                const matches = request.url?.match(
                     new RegExp(
                         `^${this.baseUrl}\\/(${name})(\\/(\\d+))?(\\?.*)?$`,
                     ),
@@ -161,12 +176,13 @@ export class FetchServer extends Server {
                         if (count > 0) {
                             const items = this.getAll(name, params);
                             const first = params.range ? params.range[0] : 0;
-                            const last = params.range
-                                ? Math.min(
-                                      items.length - 1 + first,
-                                      params.range[1],
-                                  )
-                                : items.length - 1;
+                            const last =
+                                params.range && params.range.length === 2
+                                    ? Math.min(
+                                          items.length - 1 + first,
+                                          params.range[1],
+                                      )
+                                    : items.length - 1;
                             response.body = items;
                             response.headers['Content-Range'] =
                                 `items ${first}-${last}/${count}`;
@@ -179,20 +195,26 @@ export class FetchServer extends Server {
                         return this.respond(response, request);
                     }
                     if (request.method === 'POST') {
-                        const newResource = this.addOne(
-                            name,
-                            request.requestJson,
-                        );
-                        const newResourceURI = `${this.baseUrl}/${name}/${
-                            newResource[this.getCollection(name).identifierName]
-                        }`;
-                        response.body = newResource;
-                        response.headers.Location = newResourceURI;
-                        response.status = 201;
+                        if (request.requestJson == null) {
+                            response.status = 400;
+                        } else {
+                            const newResource = this.addOne(
+                                name,
+                                request.requestJson,
+                            );
+                            const newResourceURI = `${this.baseUrl}/${name}/${
+                                newResource[
+                                    this.getCollection(name).identifierName
+                                ]
+                            }`;
+                            response.body = newResource;
+                            response.headers.Location = newResourceURI;
+                            response.status = 201;
+                        }
                         return this.respond(response, request);
                     }
                 } else {
-                    const id = matches[3];
+                    const id = Number.parseInt(matches[3]);
                     if (request.method === 'GET') {
                         try {
                             response.body = this.getOne(name, id, params);
@@ -203,11 +225,15 @@ export class FetchServer extends Server {
                     }
                     if (request.method === 'PUT') {
                         try {
-                            response.body = this.updateOne(
-                                name,
-                                id,
-                                request.requestJson,
-                            );
+                            if (request.requestJson == null) {
+                                response.status = 400;
+                            } else {
+                                response.body = this.updateOne(
+                                    name,
+                                    id,
+                                    request.requestJson,
+                                );
+                            }
                         } catch (error) {
                             response.status = 404;
                         }
@@ -215,11 +241,15 @@ export class FetchServer extends Server {
                     }
                     if (request.method === 'PATCH') {
                         try {
-                            response.body = this.updateOne(
-                                name,
-                                id,
-                                request.requestJson,
-                            );
+                            if (request.requestJson == null) {
+                                response.status = 400;
+                            } else {
+                                response.body = this.updateOne(
+                                    name,
+                                    id,
+                                    request.requestJson,
+                                );
+                            }
                         } catch (error) {
                             response.status = 404;
                         }
@@ -238,4 +268,25 @@ export class FetchServer extends Server {
             return this.respond(response, request);
         });
     }
+
+    getHandler() {
+        return this.handle.bind(this);
+    }
 }
+
+export type FetchMockFakeRestRequest = Partial<Request> & {
+    requestBody?: string;
+    responseText?: string;
+    requestJson?: Record<string, any>;
+    queryString?: string;
+    params?: { [key: string]: any };
+};
+
+export type FetchMockRequestInterceptor = (
+    request: FetchMockFakeRestRequest,
+) => FetchMockFakeRestRequest;
+
+export type FetchMockResponseInterceptor = (
+    response: MockResponseObject,
+    request: FetchMockFakeRestRequest,
+) => MockResponseObject;
