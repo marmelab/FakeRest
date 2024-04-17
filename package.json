@@ -11,13 +11,13 @@
     "prepare": "husky"
   },
   "type": "module",
-  "main": "dist/fakerest.min.umd.js",
-  "module": "./dist/fakerest.min.mjs",
+  "main": "dist/fakerest.min.umd.cjs",
+  "module": "./dist/fakerest.min.js",
   "types": "./dist/FakeRest.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/fakerest.min.mjs",
-      "require": "./dist/fakerest.umd.js"
+      "import": "./dist/fakerest.min.js",
+      "require": "./dist/fakerest.umd.cjs"
     }
   },
   "author": "François Zaninotto <fzaninotto@gmail.com>",
