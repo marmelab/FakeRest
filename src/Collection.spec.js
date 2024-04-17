@@ -1,4 +1,3 @@
-import expect from "expect";
 import { Collection } from "./Collection";
 import { Server } from "./Server";
 
