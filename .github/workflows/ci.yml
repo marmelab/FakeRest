@@ -26,6 +26,18 @@ jobs:
       run: npx @biomejs/biome lint src
     - name: Format Check
       run: npx @biomejs/biome format src
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js LTS
+      uses: actions/setup-node@v1
+      with:
+        node-version: '18.x'
+    - uses: bahmutov/npm-install@v1
+    - name: Typecheck
+      run: npx tsc
   unit-test:
     runs-on: ubuntu-latest
     steps:
