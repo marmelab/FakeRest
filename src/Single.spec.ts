@@ -1,6 +1,6 @@
-import { Single } from './Single';
-import { Collection } from './Collection';
-import { Server } from './Server';
+import { Single } from './Single.js';
+import { Collection } from './Collection.js';
+import { Server } from './Server.js';
 
 describe('Single', () => {
     describe('constructor', () => {
@@ -28,7 +28,7 @@ describe('Single', () => {
                 );
             });
 
-            it('should return the original object for misisng embed one', () => {
+            it('should return the original object for missing embed one', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
                 const bars = new Collection([]);
                 const server = new Server();

@@ -1,5 +1,6 @@
-import { Collection } from './Collection';
-import { Server } from './Server';
+import { Collection } from './Collection.js';
+import { Server } from './Server.js';
+import type { CollectionItem } from './types.js';
 
 describe('Collection', () => {
     describe('constructor', () => {
@@ -41,7 +42,7 @@ describe('Collection', () => {
                 { name: 'a' },
                 { name: 'b' },
             ]);
-            function filter(item) {
+            function filter(item: CollectionItem) {
                 return item.name === 'a' || item.name === 'b';
             }
             expect(collection.getCount({ filter: filter })).toEqual(2);
@@ -68,6 +69,7 @@ describe('Collection', () => {
             it('should throw an error if passed an unsupported sort argument', () => {
                 const collection = new Collection();
                 expect(() => {
+                    // @ts-expect-error
                     collection.getAll({ sort: 23 });
                 }).toThrow(new Error('Unsupported sort type'));
             });
@@ -83,7 +85,7 @@ describe('Collection', () => {
                     { name: 'b', id: 2 },
                     { name: 'c', id: 0 },
                 ];
-                function sort(a, b) {
+                function sort(a: CollectionItem, b: CollectionItem) {
                     if (a.name > b.name) {
                         return 1;
                     }
@@ -116,7 +118,7 @@ describe('Collection', () => {
                     { name: 'a' },
                     { name: 'b' },
                 ]);
-                let expected;
+                let expected: CollectionItem[];
                 expected = [
                     { name: 'a', id: 1 },
                     { name: 'b', id: 2 },
@@ -155,6 +157,7 @@ describe('Collection', () => {
             it('should throw an error if passed an unsupported filter argument', () => {
                 const collection = new Collection();
                 expect(() => {
+                    // @ts-expect-error
                     collection.getAll({ filter: 23 });
                 }).toThrow(new Error('Unsupported filter type'));
             });
@@ -169,7 +172,7 @@ describe('Collection', () => {
                     { name: 'c', id: 0 },
                     { name: 'b', id: 2 },
                 ];
-                function filter(item) {
+                function filter(item: CollectionItem) {
                     return item.name !== 'a';
                 }
                 expect(collection.getAll({ filter: filter })).toEqual(expected);
@@ -556,7 +559,7 @@ describe('Collection', () => {
                     { name: 'a' },
                     { name: 'b' },
                 ]);
-                function filter(item) {
+                function filter(item: CollectionItem) {
                     return item.name !== 'a';
                 }
                 collection.getAll({ filter: filter });
@@ -573,6 +576,7 @@ describe('Collection', () => {
             it('should throw an error if passed an unsupported range argument', () => {
                 const collection = new Collection();
                 expect(() => {
+                    // @ts-expect-error
                     collection.getAll({ range: 23 });
                 }).toThrow(new Error('Unsupported range type'));
             });
@@ -586,7 +590,7 @@ describe('Collection', () => {
             ]);
 
             it('should return a range in the collection', () => {
-                let expected;
+                let expected: CollectionItem[];
 
                 expected = [{ id: 0, name: 'a' }];
                 expect(collection.getAll({ range: [0, 0] })).toEqual(expected);
@@ -905,7 +909,9 @@ describe('Collection', () => {
         });
 
         it('should refuse insertion with existing identifier', () => {
-            const collection = new Collection([{ name: 'foo' }]);
+            const collection = new Collection<CollectionItem>([
+                { name: 'foo' },
+            ]);
             expect(() => {
                 collection.addOne({ id: 0, name: 'bar' });
             }).toThrow(
@@ -932,7 +938,9 @@ describe('Collection', () => {
         });
 
         it('should return the updated item', () => {
-            const collection = new Collection([{ name: 'foo' }]);
+            const collection = new Collection<CollectionItem>([
+                { name: 'foo' },
+            ]);
             expect(collection.updateOne(0, { id: 0, name: 'bar' })).toEqual({
                 id: 0,
                 name: 'bar',
@@ -940,7 +948,7 @@ describe('Collection', () => {
         });
 
         it('should update the item', () => {
-            const collection = new Collection([
+            const collection = new Collection<CollectionItem>([
                 { name: 'foo' },
                 { name: 'baz' },
             ]);
@@ -973,7 +981,7 @@ describe('Collection', () => {
         });
 
         it('should decrement the sequence only if the removed item is the last', () => {
-            const collection = new Collection([
+            const collection = new Collection<CollectionItem>([
                 { id: 0 },
                 { id: 1 },
                 { id: 2 },

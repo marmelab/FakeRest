@@ -1,12 +1,16 @@
-import sinon from 'sinon';
+import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
-import { Server } from './Server';
-import { Single } from './Single';
-import { Collection } from './Collection';
+import { type SinonFakeRestRequest, Server } from './Server.js';
+import { Single } from './Single.js';
+import { Collection } from './Collection.js';
 
-function getFakeXMLHTTPRequest(method, url, data) {
+function getFakeXMLHTTPRequest(
+    method: string,
+    url: string,
+    data?: any,
+): SinonFakeXMLHttpRequest | null {
     const xhr = sinon.useFakeXMLHttpRequest();
-    let request;
+    let request: SinonFakeXMLHttpRequest | null = null;
     xhr.onCreate = (xhr) => {
         request = xhr;
     };
@@ -159,11 +163,16 @@ describe('Server', () => {
         it('should allow request transformation', () => {
             const server = new Server();
             server.addRequestInterceptor((request) => {
-                const start = request.params._start - 1 || 0;
+                const start = request.params?._start
+                    ? request.params._start - 1
+                    : 0;
                 const end =
-                    request.params._end !== undefined
+                    request.params?._end !== undefined
                         ? request.params._end - 1
                         : 19;
+                if (!request.params) {
+                    request.params = {};
+                }
                 request.params.range = [start, end];
                 return request;
             });
@@ -174,19 +183,25 @@ describe('Server', () => {
                     { id: 2, name: 'bar' },
                 ]),
             );
-            let request;
+            let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=1&_end=1');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
-            expect(request.status).toEqual(206);
-            expect(request.responseText).toEqual('[{"id":1,"name":"foo"}]');
-            expect(request.getResponseHeader('Content-Range')).toEqual(
+            expect(request?.status).toEqual(206);
+            expect((request as SinonFakeRestRequest)?.responseText).toEqual(
+                '[{"id":1,"name":"foo"}]',
+            );
+            expect(request?.getResponseHeader('Content-Range')).toEqual(
                 'items 0-0/2',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=2&_end=2');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
-            expect(request.status).toEqual(206);
-            expect(request.responseText).toEqual('[{"id":2,"name":"bar"}]');
-            expect(request.getResponseHeader('Content-Range')).toEqual(
+            expect(request?.status).toEqual(206);
+            expect((request as SinonFakeRestRequest)?.responseText).toEqual(
+                '[{"id":2,"name":"bar"}]',
+            );
+            expect(request?.getResponseHeader('Content-Range')).toEqual(
                 'items 1-1/2',
             );
         });
@@ -214,16 +229,17 @@ describe('Server', () => {
                 ]),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(418);
-            expect(request.responseText).toEqual(
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
                 '{"data":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}],"status":200}',
             );
         });
 
         it('should pass request in response interceptor', () => {
             const server = new Server();
-            let requestUrl;
+            let requestUrl: string | undefined;
             server.addResponseInterceptor((response, request) => {
                 requestUrl = request.url;
                 return response;
@@ -231,6 +247,7 @@ describe('Server', () => {
             server.addCollection('foo', new Collection());
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
 
             expect(requestUrl).toEqual('/foo');
@@ -241,6 +258,7 @@ describe('Server', () => {
         it('should not respond to GET /whatever on non existing collection', () => {
             const server = new Server();
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(0); // not responded
         });
@@ -255,9 +273,10 @@ describe('Server', () => {
                 ]),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual(
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
                 '[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]',
             );
             expect(request.getResponseHeader('Content-Type')).toEqual(
@@ -286,9 +305,10 @@ describe('Server', () => {
                 'GET',
                 '/foos?filter={"arg":true}&sort=name&slice=[0,10]&embed=["bars"]',
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual(
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
                 '[{"id":2,"name":"a","arg":true,"bars":[]},{"id":1,"name":"b","arg":true,"bars":[{"id":0,"name":"a","foo_id":1}]}]',
             );
             expect(request.getResponseHeader('Content-Type')).toEqual(
@@ -305,26 +325,30 @@ describe('Server', () => {
                 'foo',
                 new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
             ); // 11 items
-            let request;
+            let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-10/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-4/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 5-9/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
@@ -336,9 +360,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('[]');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '[]',
+            );
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items */0',
             );
@@ -358,9 +385,12 @@ describe('Server', () => {
                 '/foo',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(201);
-            expect(request.responseText).toEqual('{"name":"baz","id":3}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"name":"baz","id":3}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -379,9 +409,12 @@ describe('Server', () => {
                 '/foo',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(201);
-            expect(request.responseText).toEqual('{"name":"baz","id":0}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"name":"baz","id":0}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -399,9 +432,12 @@ describe('Server', () => {
                 ]),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo/2');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"id":2,"name":"bar"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -411,6 +447,7 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo/3');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(404);
         });
@@ -429,9 +466,12 @@ describe('Server', () => {
                 '/foo/2',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"id":2,"name":"baz"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -449,6 +489,7 @@ describe('Server', () => {
                 '/foo/3',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(404);
         });
@@ -467,9 +508,12 @@ describe('Server', () => {
                 '/foo/2',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"id":2,"name":"baz"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -487,6 +531,7 @@ describe('Server', () => {
                 '/foo/3',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(404);
         });
@@ -501,9 +546,12 @@ describe('Server', () => {
                 ]),
             );
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/2');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"id":2,"name":"bar"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -514,6 +562,7 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection('foo', new Collection([]));
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(404);
         });
@@ -523,9 +572,12 @@ describe('Server', () => {
             server.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"name":"foo"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"name":"foo"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -540,9 +592,12 @@ describe('Server', () => {
                 '/foo/',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"name":"baz"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"name":"baz"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -558,9 +613,12 @@ describe('Server', () => {
                 '/foo/',
                 JSON.stringify({ name: 'baz' }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(200);
-            expect(request.responseText).toEqual('{"name":"baz"}');
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                '{"name":"baz"}',
+            );
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -579,13 +637,16 @@ describe('Server', () => {
                 return { range: [2, 4] };
             });
             const request = getFakeXMLHTTPRequest('GET', '/foo');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 2-4/10',
             );
             const expected = [{ id: 2 }, { id: 3 }, { id: 4 }];
-            expect(request.responseText).toEqual(JSON.stringify(expected));
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                JSON.stringify(expected),
+            );
         });
 
         it('should not override any provided query string', () => {
@@ -596,6 +657,7 @@ describe('Server', () => {
             ); // 10 items
             server.setDefaultQuery((name) => ({ range: [2, 4] }));
             const request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
+            if (request == null) throw new Error('request is null');
             server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
@@ -608,7 +670,9 @@ describe('Server', () => {
                 { id: 3 },
                 { id: 4 },
             ];
-            expect(request.responseText).toEqual(JSON.stringify(expected));
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
+                JSON.stringify(expected),
+            );
         });
     });
 
@@ -631,8 +695,9 @@ describe('Server', () => {
                     biz: '/biz',
                 }),
             );
+            if (request == null) throw new Error('request is null');
             server.handle(request);
-            expect(request.responseText).toEqual(
+            expect((request as SinonFakeRestRequest).responseText).toEqual(
                 JSON.stringify({
                     foo0: {
                         code: 200,
