@@ -2,10 +2,10 @@ export function parseQueryString(queryString) {
     if (!queryString) {
         return {};
     }
-    let queryObject = {};
-    let queryElements = queryString.split('&');
+    const queryObject = {};
+    const queryElements = queryString.split('&');
 
-    queryElements.map(function(queryElement) {
+    queryElements.map((queryElement) => {
         if (queryElement.indexOf('=') === -1) {
             queryObject[queryElement] = true;
         } else {

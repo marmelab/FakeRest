@@ -12,6 +12,20 @@ on:
       - 'docs/**'
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js LTS
+      uses: actions/setup-node@v1
+      with:
+        node-version: '18.x'
+    - uses: bahmutov/npm-install@v1
+    - name: Lint Check
+      run: npx @biomejs/biome lint src
+    - name: Format Check
+      run: npx @biomejs/biome format src
   unit-test:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +34,7 @@ jobs:
     - name: Use Node.js LTS
       uses: actions/setup-node@v1
       with:
-        node-version: '16.x'
+        node-version: '18.x'
     - uses: bahmutov/npm-install@v1
     - name: Unit Tests
       run: make test

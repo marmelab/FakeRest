@@ -5,13 +5,19 @@ install:
 	@bower install
 
 build-dev:
-	@${CURDIR}/node_modules/.bin/webpack
+	@NODE_ENV=development npm run build
 
 build:
-	@${CURDIR}/node_modules/.bin/webpack --mode=production 
+	@NODE_ENV=production npm run build
 
 watch:
-	@${CURDIR}/node_modules/.bin/webpack --watch
+	@NODE_ENV=development npm run build --watch
 
 test:
 	@npm run test
+
+format:
+	@npm run format
+
+lint:
+	@npm run lint

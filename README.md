@@ -2,6 +2,8 @@
 
 Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHTTPRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
 
+See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
+
 ## Usage
 
 ### Fake XMLHTTPRequest
