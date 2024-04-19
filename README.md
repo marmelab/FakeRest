@@ -377,6 +377,8 @@ server.respondWith(restServer2.getHandler());
 ```sh
 # Install dependencies
 make install
+# Run the demo
+make run
 # Watch source files and recompile dist/FakeRest.js when anything is modified
 make watch
 # Run tests

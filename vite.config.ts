@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     build: {
@@ -26,9 +27,16 @@ export default defineConfig({
             },
         },
     },
-    plugins: [dts()],
+    plugins: [react(), dts()],
+    base: './',
+    root: './example',
     test: {
         globals: true,
         environment: 'happy-dom',
+    },
+    resolve: {
+        alias: {
+            fakerest: resolve(__dirname, 'src/FakeRest.ts'),
+        },
     },
 });
