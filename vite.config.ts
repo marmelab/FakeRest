@@ -28,8 +28,6 @@ export default defineConfig({
         },
     },
     plugins: [react(), dts()],
-    base: './',
-    root: './example',
     test: {
         globals: true,
         environment: 'happy-dom',
