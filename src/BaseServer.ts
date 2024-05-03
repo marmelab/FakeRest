@@ -204,151 +204,158 @@ export class BaseServer {
         }
 
         // handle collections
-        for (const name of this.getCollectionNames()) {
-            const matches = request.url?.match(
-                new RegExp(`^${this.baseUrl}\\/(${name})(\\/(\\d+))?(\\?.*)?$`),
-            );
-            if (!matches) continue;
-            const params = Object.assign(
-                {},
-                this.defaultQuery(name),
-                request.params,
-            );
-            if (!matches[2]) {
-                if (request.method === 'GET') {
-                    const count = this.getCount(
-                        name,
-                        params.filter ? { filter: params.filter } : {},
-                    );
-                    if (count > 0) {
-                        const items = this.getAll(name, params);
-                        const first = params.range ? params.range[0] : 0;
-                        const last =
-                            params.range && params.range.length === 2
-                                ? Math.min(
-                                      items.length - 1 + first,
-                                      params.range[1],
-                                  )
-                                : items.length - 1;
-
-                        return {
-                            status: items.length === count ? 200 : 206,
-                            body: items,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Content-Range': `items ${first}-${last}/${count}`,
-                            },
-                        };
-                    }
+        const matches = request.url?.match(
+            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\d+))?(\\?.*)?$`),
+        );
+        if (!matches) {
+            return { status: 404, headers: {} };
+        }
+        const name = matches[1];
+        const params = Object.assign(
+            {},
+            this.defaultQuery(name),
+            request.params,
+        );
+        if (!matches[2]) {
+            if (request.method === 'GET') {
+                if (!this.getCollection(name)) {
+                    return { status: 404, headers: {} };
+                }
+                const count = this.getCount(
+                    name,
+                    params.filter ? { filter: params.filter } : {},
+                );
+                if (count > 0) {
+                    const items = this.getAll(name, params);
+                    const first = params.range ? params.range[0] : 0;
+                    const last =
+                        params.range && params.range.length === 2
+                            ? Math.min(
+                                  items.length - 1 + first,
+                                  params.range[1],
+                              )
+                            : items.length - 1;
 
                     return {
-                        status: 200,
-                        body: [],
+                        status: items.length === count ? 200 : 206,
+                        body: items,
                         headers: {
                             'Content-Type': 'application/json',
-                            'Content-Range': 'items */0',
+                            'Content-Range': `items ${first}-${last}/${count}`,
                         },
                     };
                 }
-                if (request.method === 'POST') {
+
+                return {
+                    status: 200,
+                    body: [],
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Range': 'items */0',
+                    },
+                };
+            }
+            if (request.method === 'POST') {
+                if (request.requestJson == null) {
+                    return {
+                        status: 400,
+                        headers: {},
+                    };
+                }
+
+                const newResource = this.addOne(name, request.requestJson);
+                const newResourceURI = `${this.baseUrl}/${name}/${
+                    newResource[this.getCollection(name).identifierName]
+                }`;
+
+                return {
+                    status: 201,
+                    body: newResource,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Location: newResourceURI,
+                    },
+                };
+            }
+        } else {
+            if (!this.getCollection(name)) {
+                return { status: 404, headers: {} };
+            }
+            const id = Number.parseInt(matches[3]);
+            if (request.method === 'GET') {
+                try {
+                    return {
+                        status: 200,
+                        body: this.getOne(name, id, params),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    };
+                } catch (error) {
+                    return {
+                        status: 404,
+                        headers: {},
+                    };
+                }
+            }
+            if (request.method === 'PUT') {
+                try {
                     if (request.requestJson == null) {
                         return {
                             status: 400,
                             headers: {},
                         };
                     }
-
-                    const newResource = this.addOne(name, request.requestJson);
-                    const newResourceURI = `${this.baseUrl}/${name}/${
-                        newResource[this.getCollection(name).identifierName]
-                    }`;
-
                     return {
-                        status: 201,
-                        body: newResource,
+                        status: 200,
+                        body: this.updateOne(name, id, request.requestJson),
                         headers: {
                             'Content-Type': 'application/json',
-                            Location: newResourceURI,
                         },
                     };
+                } catch (error) {
+                    return {
+                        status: 404,
+                        headers: {},
+                    };
                 }
-            } else {
-                const id = Number.parseInt(matches[3]);
-                if (request.method === 'GET') {
-                    try {
+            }
+            if (request.method === 'PATCH') {
+                try {
+                    if (request.requestJson == null) {
                         return {
-                            status: 200,
-                            body: this.getOne(name, id, params),
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        };
-                    } catch (error) {
-                        return {
-                            status: 404,
+                            status: 400,
                             headers: {},
                         };
                     }
+                    return {
+                        status: 200,
+                        body: this.updateOne(name, id, request.requestJson),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    };
+                } catch (error) {
+                    return {
+                        status: 404,
+                        headers: {},
+                    };
                 }
-                if (request.method === 'PUT') {
-                    try {
-                        if (request.requestJson == null) {
-                            return {
-                                status: 400,
-                                headers: {},
-                            };
-                        }
-                        return {
-                            status: 200,
-                            body: this.updateOne(name, id, request.requestJson),
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        };
-                    } catch (error) {
-                        return {
-                            status: 404,
-                            headers: {},
-                        };
-                    }
-                }
-                if (request.method === 'PATCH') {
-                    try {
-                        if (request.requestJson == null) {
-                            return {
-                                status: 400,
-                                headers: {},
-                            };
-                        }
-                        return {
-                            status: 200,
-                            body: this.updateOne(name, id, request.requestJson),
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        };
-                    } catch (error) {
-                        return {
-                            status: 404,
-                            headers: {},
-                        };
-                    }
-                }
-                if (request.method === 'DELETE') {
-                    try {
-                        return {
-                            status: 200,
-                            body: this.removeOne(name, id),
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        };
-                    } catch (error) {
-                        return {
-                            status: 404,
-                            headers: {},
-                        };
-                    }
+            }
+            if (request.method === 'DELETE') {
+                try {
+                    return {
+                        status: 200,
+                        body: this.removeOne(name, id),
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    };
+                } catch (error) {
+                    return {
+                        status: 404,
+                        headers: {},
+                    };
                 }
             }
         }
