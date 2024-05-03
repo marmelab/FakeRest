@@ -995,4 +995,54 @@ describe('Collection', () => {
             expect(r.id).toEqual(2);
         });
     });
+
+    describe('custom identifier generation', () => {
+        test('should use the custom identifier provided at initialization', () => {
+            const collection = new Collection(
+                [
+                    {
+                        id: '6090eb22-e140-4720-b7b2-e1416a3d2447',
+                        name: 'foo',
+                    },
+                    {
+                        id: 'fb1c2ce1-5df7-4af8-be1c-7af234b67f7d',
+                        name: 'baz',
+                    },
+                ],
+                'id',
+            );
+
+            expect(
+                collection.getOne('6090eb22-e140-4720-b7b2-e1416a3d2447'),
+            ).toEqual({
+                id: '6090eb22-e140-4720-b7b2-e1416a3d2447',
+                name: 'foo',
+            });
+        });
+
+        test('should use the custom identifier provided at insertion', () => {
+            const collection = new Collection<CollectionItem>([], 'id');
+
+            const item = collection.addOne({
+                id: '6090eb22-e140-4720-b7b2-e1416a3d2447',
+                name: 'foo',
+            });
+
+            expect(item.id).toEqual('6090eb22-e140-4720-b7b2-e1416a3d2447');
+        });
+
+        test('should use the custom identifier generation function at insertion', () => {
+            const collection = new Collection<CollectionItem>(
+                [],
+                'id',
+                () => '6090eb22-e140-4720-b7b2-e1416a3d2447',
+            );
+
+            const item = collection.addOne({
+                name: 'foo',
+            });
+
+            expect(item.id).toEqual('6090eb22-e140-4720-b7b2-e1416a3d2447');
+        });
+    });
 });

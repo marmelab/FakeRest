@@ -9,9 +9,11 @@ export class BaseServer {
     batchUrl: string | null = null;
     collections: Record<string, Collection<any>> = {};
     singles: Record<string, Single<any>> = {};
+    getNewId?: () => number | string;
 
-    constructor(baseUrl = '') {
+    constructor(baseUrl = '', getNewId?: () => number | string) {
         this.baseUrl = baseUrl;
+        this.getNewId = getNewId;
     }
 
     /**
@@ -21,7 +23,10 @@ export class BaseServer {
         for (const name in data) {
             const value = data[name];
             if (Array.isArray(value)) {
-                this.addCollection(name, new Collection(value, 'id'));
+                this.addCollection(
+                    name,
+                    new Collection(value, 'id', this.getNewId),
+                );
             } else {
                 this.addSingle(name, new Single(value));
             }
@@ -103,7 +108,7 @@ export class BaseServer {
         return this.collections[name].getAll(params);
     }
 
-    getOne(name: string, identifier: number, params?: Query) {
+    getOne(name: string, identifier: string | number, params?: Query) {
         return this.collections[name].getOne(identifier, params);
     }
 
@@ -111,17 +116,17 @@ export class BaseServer {
         if (!Object.prototype.hasOwnProperty.call(this.collections, name)) {
             this.addCollection(
                 name,
-                new Collection([] as CollectionItem[], 'id'),
+                new Collection([] as CollectionItem[], 'id', this.getNewId),
             );
         }
         return this.collections[name].addOne(item);
     }
 
-    updateOne(name: string, identifier: number, item: CollectionItem) {
+    updateOne(name: string, identifier: string | number, item: CollectionItem) {
         return this.collections[name].updateOne(identifier, item);
     }
 
-    removeOne(name: string, identifier: number) {
+    removeOne(name: string, identifier: string | number) {
         return this.collections[name].removeOne(identifier);
     }
 
