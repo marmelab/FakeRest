@@ -210,7 +210,7 @@ export class BaseServer {
 
         // handle collections
         const matches = request.url?.match(
-            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\d+))?(\\?.*)?$`),
+            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
         );
         if (!matches) {
             return { status: 404, headers: {} };
