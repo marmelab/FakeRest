@@ -429,8 +429,11 @@ server.respondWith(restServer2.getHandler());
 ```sh
 # Install dependencies
 make install
-# Run the demo
-make run
+# Run the demo with MSW
+make run-msw
+
+# Run the demo with fetch-mock
+make run-fetch-mock
 # Watch source files and recompile dist/FakeRest.js when anything is modified
 make watch
 # Run tests
@@ -439,6 +442,8 @@ make test
 make build
 ```
 
+To test the Sinon integration, build the library then run the demo to start Vite and visit http://localhost:5173/sinon.html
+
 ## License
 
-FakeRest is licensed under the [MIT Licence](LICENSE), sponsored by [marmelab](http://marmelab.com).
+FakeRest is licensed under the [MIT License](LICENSE), sponsored by [marmelab](http://marmelab.com).

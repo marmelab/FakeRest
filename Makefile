@@ -10,8 +10,13 @@ build-dev:
 build:
 	@NODE_ENV=production npm run build
 
-run:
-	@NODE_ENV=development npm run dev
+run: run-msw
+
+run-msw:
+	@NODE_ENV=development VITE_MOCK=msw npm run dev
+
+run-fetch-mock:
+	@NODE_ENV=development VITE_MOCK=fetch-mock npm run dev
 
 watch:
 	@NODE_ENV=development npm run build --watch
