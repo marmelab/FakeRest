@@ -5,11 +5,13 @@ import { BaseServer } from './BaseServer.js';
 export const getMswHandlers = ({
     baseUrl = 'http://localhost:3000',
     data,
+    getNewId,
 }: {
     baseUrl?: string;
     data: Record<string, CollectionItem[] | CollectionItem>;
+    getNewId?: () => number | string;
 }) => {
-    const server = new BaseServer(baseUrl);
+    const server = new BaseServer(baseUrl, getNewId);
     server.init(data);
 
     const collections = Object.keys(data);
