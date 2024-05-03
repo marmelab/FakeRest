@@ -349,7 +349,7 @@ restServer.setDefaultQuery(function(resourceName) {
     if (resourceName == 'books') return { filter: { published: true } }
     return {};
 })
-// enable batch request handler, i.e. allow API clients to query several resourecs into a single request
+// enable batch request handler, i.e. allow API clients to query several resources into a single request
 // see [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
 restServer.setBatchUrl('/batch');
 
@@ -377,6 +377,8 @@ server.respondWith(restServer2.getHandler());
 ```sh
 # Install dependencies
 make install
+# Run the demo
+make run
 # Watch source files and recompile dist/FakeRest.js when anything is modified
 make watch
 # Run tests

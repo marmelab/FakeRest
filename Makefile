@@ -10,6 +10,9 @@ build-dev:
 build:
 	@NODE_ENV=production npm run build
 
+run:
+	@NODE_ENV=development npm run dev
+
 watch:
 	@NODE_ENV=development npm run build --watch
 

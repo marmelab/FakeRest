@@ -4,30 +4,42 @@
   "repository": "https://github.com/marmelab/FakeRest",
   "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {
+    "dev": "vite",
     "build": "vite build && vite build -c vite.config.min.ts",
     "format": "biome format --write src",
     "lint": "biome lint --apply src",
     "test": "vitest",
     "prepare": "husky"
   },
-  "main": "dist/fakerest.min.umd.js",
-  "module": "./dist/fakerest.min.mjs",
+  "type": "module",
+  "main": "dist/fakerest.min.umd.cjs",
+  "module": "./dist/fakerest.min.js",
+  "types": "./dist/FakeRest.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/fakerest.min.mjs",
-      "require": "./dist/fakerest.umd.js"
+      "import": "./dist/fakerest.min.js",
+      "require": "./dist/fakerest.umd.cjs"
     }
   },
   "author": "François Zaninotto <fzaninotto@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "1.7.0",
+    "@types/lodash": "^4.17.0",
+    "@types/sinon": "^17.0.3",
+    "@vitejs/plugin-react": "^4.2.1",
     "fetch-mock": "^9.11.0",
     "happy-dom": "^14.7.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "sinon": "~1.14.1",
+    "ra-data-simple-rest": "^4.16.15",
+    "react": "^17.0.2",
+    "react-admin": "^4.16.15",
+    "react-dom": "^17.0.2",
+    "sinon": "~17.0.1",
+    "typescript": "^5.4.5",
     "vite": "^5.2.9",
+    "vite-plugin-dts": "^3.8.3",
     "vitest": "^1.5.0"
   },
   "dependencies": {
