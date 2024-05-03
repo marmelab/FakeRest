@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 import { App } from './App';
+import { worker } from './msw';
 
-ReactDom.render(<App />, document.getElementById('root'));
+worker.start().then(() => {
+    ReactDom.render(<App />, document.getElementById('root'));
+});

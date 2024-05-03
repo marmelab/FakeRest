@@ -6,6 +6,57 @@ See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](
 
 ## Usage
 
+### MSW
+
+We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the developer devtool network tab.
+
+First, install msw and initialize it:
+
+```sh
+npm install msw@latest --save-dev
+npx msw init <PUBLIC_DIR> # eg: public
+```
+
+```js
+// in ./src/msw.js
+import { setupWorker } from "msw/browser";
+import { getMswHandlers } from "fakerest";
+
+const data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+
+export const worker = setupWorker(...getMswHandlers({
+    data
+}));
+```
+
+Then call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
+
+```js
+import React from "react";
+import ReactDom from "react-dom";
+import { App } from "./App";
+import { worker } from "./msw";
+
+worker.start().then(() => {
+  ReactDom.render(<App />, document.getElementById("root"));
+});
+```
+
 ### Fake XMLHTTPRequest
 
 ```html
@@ -43,7 +94,8 @@ server.respondWith(restServer.getHandler());
 ```js
 import fetchMock from 'fetch-mock';
 import FakeRest from 'fakerest';
-var data = {
+
+const data = {
     'authors': [
         { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
         { id: 1, first_name: 'Jane', last_name: 'Austen' }
