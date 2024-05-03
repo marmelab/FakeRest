@@ -1,7 +1,6 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
 import { BaseServer } from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
-import type { CollectionItem } from './types.js';
 
 export class Server extends BaseServer {
     requestInterceptors: SinonRequestInterceptor[] = [];

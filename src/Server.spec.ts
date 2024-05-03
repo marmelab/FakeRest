@@ -255,12 +255,12 @@ describe('Server', () => {
     });
 
     describe('handle', () => {
-        it('should not respond to GET /whatever on non existing collection', () => {
+        it('should respond a 404 to GET /whatever on non existing collection', () => {
             const server = new Server();
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
             server.handle(request);
-            expect(request.status).toEqual(0); // not responded
+            expect(request.status).toEqual(404); // not responded
         });
 
         it('should respond to GET /foo by sending all items in collection foo', () => {
@@ -712,14 +712,16 @@ describe('Server', () => {
                     allbar: {
                         code: 200,
                         headers: [
-                            { name: 'Content-Range', value: 'items 0-1/2' },
                             { name: 'Content-Type', value: 'application/json' },
+                            { name: 'Content-Range', value: 'items 0-1/2' },
                         ],
                         body: '[{"b":true,"id":0},{"b":false,"id":1}]',
                     },
                     baz0: {
                         code: 404,
-                        headers: [],
+                        headers: [
+                            { name: 'Content-Type', value: 'application/json' },
+                        ],
                         body: {},
                     },
                     biz: {
