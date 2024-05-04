@@ -8,7 +8,7 @@ See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](
 
 ### MSW
 
-We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the developer devtool network tab.
+We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
 
 First, install msw and initialize it:
 
