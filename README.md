@@ -57,7 +57,7 @@ worker.start().then(() => {
 });
 ```
 
-### Fake XMLHTTPRequest
+### Sinon
 
 ```html
 <script src="/path/to/FakeRest.min.js"></script>
@@ -89,7 +89,7 @@ server.respondWith(restServer.getHandler());
 </script>
 ```
 
-### Fake fetch
+### fetch-mock
 
 ```js
 import fetchMock from 'fetch-mock';
