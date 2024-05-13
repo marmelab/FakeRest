@@ -6,7 +6,58 @@ See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](
 
 ## Usage
 
-### Fake XMLHTTPRequest
+### MSW
+
+We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
+
+First, install msw and initialize it:
+
+```sh
+npm install msw@latest --save-dev
+npx msw init <PUBLIC_DIR> # eg: public
+```
+
+```js
+// in ./src/msw.js
+import { setupWorker } from "msw/browser";
+import { getMswHandlers } from "fakerest";
+
+const data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+
+export const worker = setupWorker(...getMswHandlers({
+    data
+}));
+```
+
+Then call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
+
+```js
+import React from "react";
+import ReactDom from "react-dom";
+import { App } from "./App";
+import { worker } from "./msw";
+
+worker.start().then(() => {
+  ReactDom.render(<App />, document.getElementById("root"));
+});
+```
+
+### Sinon
 
 ```html
 <script src="/path/to/FakeRest.min.js"></script>
@@ -38,12 +89,13 @@ server.respondWith(restServer.getHandler());
 </script>
 ```
 
-### Fake fetch
+### fetch-mock
 
 ```js
 import fetchMock from 'fetch-mock';
 import FakeRest from 'fakerest';
-var data = {
+
+const data = {
     'authors': [
         { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
         { id: 1, first_name: 'Jane', last_name: 'Austen' }
@@ -377,8 +429,11 @@ server.respondWith(restServer2.getHandler());
 ```sh
 # Install dependencies
 make install
-# Run the demo
-make run
+# Run the demo with MSW
+make run-msw
+
+# Run the demo with fetch-mock
+make run-fetch-mock
 # Watch source files and recompile dist/FakeRest.js when anything is modified
 make watch
 # Run tests
@@ -387,6 +442,8 @@ make test
 make build
 ```
 
+To test the Sinon integration, build the library then run the demo to start Vite and visit http://localhost:5173/sinon.html
+
 ## License
 
-FakeRest is licensed under the [MIT Licence](LICENSE), sponsored by [marmelab](http://marmelab.com).
+FakeRest is licensed under the [MIT License](LICENSE), sponsored by [marmelab](http://marmelab.com).

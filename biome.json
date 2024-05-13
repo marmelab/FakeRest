@@ -6,7 +6,8 @@
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 4
+    "indentWidth": 4,
+    "ignore": ["public/*.js"]
   },
   "javascript": {
     "formatter": {
@@ -20,6 +21,7 @@
       "suspicious": {
         "noExplicitAny": "off"
       }
-    }
+    },
+    "ignore": ["public/*.js"]
   }
 }

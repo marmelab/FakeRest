@@ -32,6 +32,7 @@
     "happy-dom": "^14.7.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
+    "msw": "^2.2.14",
     "ra-data-simple-rest": "^4.16.15",
     "react": "^17.0.2",
     "react-admin": "^4.16.15",
@@ -50,6 +51,11 @@
     "*.{js,jsx,ts,tsx}": [
       "biome lint --apply",
       "biome format --write"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
     ]
   }
 }

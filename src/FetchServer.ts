@@ -88,16 +88,6 @@ export class FetchServer extends BaseServer {
      */
     handle(req: Request, opts?: RequestInit) {
         return this.decode(req, opts).then((request) => {
-            const defaultHeader: Record<string, string> = {
-                'Content-Type': 'application/json',
-            };
-            const response: MockResponseObject &
-                Required<Pick<MockResponseObject, 'headers'>> = {
-                headers: defaultHeader,
-                status: 200,
-                body: '',
-            };
-
             // handle batch request
             if (
                 this.batchUrl &&
@@ -107,164 +97,13 @@ export class FetchServer extends BaseServer {
                 return this.batch(request);
             }
 
-            // Handle Single Objects
-            for (const name of this.getSingleNames()) {
-                const matches = request.url?.match(
-                    new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
-                );
-                if (!matches) continue;
+            const response = this.handleRequest({
+                url: request.url,
+                method: request.method,
+                requestJson: request.requestJson,
+                params: request.params,
+            });
 
-                if (request.method === 'GET') {
-                    try {
-                        response.body = this.getOnly(name);
-                    } catch (error) {
-                        response.status = 404;
-                    }
-                    return this.respond(response, request);
-                }
-                if (request.method === 'PUT') {
-                    try {
-                        if (request.requestJson == null) {
-                            response.status = 400;
-                        } else {
-                            response.body = this.updateOnly(
-                                name,
-                                request.requestJson,
-                            );
-                        }
-                    } catch (error) {
-                        response.status = 404;
-                    }
-                    return this.respond(response, request);
-                }
-                if (request.method === 'PATCH') {
-                    try {
-                        if (request.requestJson == null) {
-                            response.status = 400;
-                        } else {
-                            response.body = this.updateOnly(
-                                name,
-                                request.requestJson,
-                            );
-                        }
-                    } catch (error) {
-                        response.status = 404;
-                    }
-                    return this.respond(response, request);
-                }
-            }
-
-            // handle collections
-            for (const name of this.getCollectionNames()) {
-                const matches = request.url?.match(
-                    new RegExp(
-                        `^${this.baseUrl}\\/(${name})(\\/(\\d+))?(\\?.*)?$`,
-                    ),
-                );
-                if (!matches) continue;
-                const params = Object.assign(
-                    {},
-                    this.defaultQuery(name),
-                    request.params,
-                );
-                if (!matches[2]) {
-                    if (request.method === 'GET') {
-                        const count = this.getCount(
-                            name,
-                            params.filter ? { filter: params.filter } : {},
-                        );
-                        if (count > 0) {
-                            const items = this.getAll(name, params);
-                            const first = params.range ? params.range[0] : 0;
-                            const last =
-                                params.range && params.range.length === 2
-                                    ? Math.min(
-                                          items.length - 1 + first,
-                                          params.range[1],
-                                      )
-                                    : items.length - 1;
-                            response.body = items;
-                            response.headers['Content-Range'] =
-                                `items ${first}-${last}/${count}`;
-                            response.status =
-                                items.length === count ? 200 : 206;
-                        } else {
-                            response.body = [];
-                            response.headers['Content-Range'] = 'items */0';
-                        }
-                        return this.respond(response, request);
-                    }
-                    if (request.method === 'POST') {
-                        if (request.requestJson == null) {
-                            response.status = 400;
-                        } else {
-                            const newResource = this.addOne(
-                                name,
-                                request.requestJson,
-                            );
-                            const newResourceURI = `${this.baseUrl}/${name}/${
-                                newResource[
-                                    this.getCollection(name).identifierName
-                                ]
-                            }`;
-                            response.body = newResource;
-                            response.headers.Location = newResourceURI;
-                            response.status = 201;
-                        }
-                        return this.respond(response, request);
-                    }
-                } else {
-                    const id = Number.parseInt(matches[3]);
-                    if (request.method === 'GET') {
-                        try {
-                            response.body = this.getOne(name, id, params);
-                        } catch (error) {
-                            response.status = 404;
-                        }
-                        return this.respond(response, request);
-                    }
-                    if (request.method === 'PUT') {
-                        try {
-                            if (request.requestJson == null) {
-                                response.status = 400;
-                            } else {
-                                response.body = this.updateOne(
-                                    name,
-                                    id,
-                                    request.requestJson,
-                                );
-                            }
-                        } catch (error) {
-                            response.status = 404;
-                        }
-                        return this.respond(response, request);
-                    }
-                    if (request.method === 'PATCH') {
-                        try {
-                            if (request.requestJson == null) {
-                                response.status = 400;
-                            } else {
-                                response.body = this.updateOne(
-                                    name,
-                                    id,
-                                    request.requestJson,
-                                );
-                            }
-                        } catch (error) {
-                            response.status = 404;
-                        }
-                        return this.respond(response, request);
-                    }
-                    if (request.method === 'DELETE') {
-                        try {
-                            response.body = this.removeOne(name, id);
-                        } catch (error) {
-                            response.status = 404;
-                        }
-                        return this.respond(response, request);
-                    }
-                }
-            }
             return this.respond(response, request);
         });
     }
