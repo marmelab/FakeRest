@@ -11,7 +11,7 @@ export const getMswHandlers = ({
     data: Record<string, CollectionItem[] | CollectionItem>;
     getNewId?: () => number | string;
 }) => {
-    const server = new BaseServer(baseUrl, getNewId);
+    const server = new BaseServer({ baseUrl, getNewId });
     server.init(data);
 
     const collections = Object.keys(data);

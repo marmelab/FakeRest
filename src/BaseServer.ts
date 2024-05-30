@@ -11,7 +11,13 @@ export class BaseServer {
     singles: Record<string, Single<any>> = {};
     getNewId?: () => number | string;
 
-    constructor(baseUrl = '', getNewId?: () => number | string) {
+    constructor({
+        baseUrl = '',
+        getNewId,
+    }: {
+        baseUrl?: string;
+        getNewId?: () => number | string;
+    } = {}) {
         this.baseUrl = baseUrl;
         this.getNewId = getNewId;
     }
@@ -25,7 +31,11 @@ export class BaseServer {
             if (Array.isArray(value)) {
                 this.addCollection(
                     name,
-                    new Collection(value, 'id', this.getNewId),
+                    new Collection({
+                        items: value,
+                        identifierName: 'id',
+                        getNewId: this.getNewId,
+                    }),
                 );
             } else {
                 this.addSingle(name, new Single(value));
@@ -116,7 +126,11 @@ export class BaseServer {
         if (!Object.prototype.hasOwnProperty.call(this.collections, name)) {
             this.addCollection(
                 name,
-                new Collection([] as CollectionItem[], 'id', this.getNewId),
+                new Collection({
+                    items: [],
+                    identifierName: 'id',
+                    getNewId: this.getNewId,
+                }),
             );
         }
         return this.collections[name].addOne(item);

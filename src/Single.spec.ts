@@ -30,7 +30,7 @@ describe('Single', () => {
 
             it('should return the original object for missing embed one', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
-                const bars = new Collection([]);
+                const bars = new Collection({ items: [] });
                 const server = new Server();
                 server.addSingle('foo', foo);
                 server.addCollection('bars', bars);
@@ -40,11 +40,13 @@ describe('Single', () => {
 
             it('should return the object with the reference object for embed one', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
-                const bars = new Collection([
-                    { id: 1, bar: 'nobody wants me' },
-                    { id: 123, bar: 'baz' },
-                    { id: 456, bar: 'bazz' },
-                ]);
+                const bars = new Collection({
+                    items: [
+                        { id: 1, bar: 'nobody wants me' },
+                        { id: 123, bar: 'baz' },
+                        { id: 456, bar: 'bazz' },
+                    ],
+                });
                 const server = new Server();
                 server.addSingle('foo', foo);
                 server.addCollection('bars', bars);
@@ -69,11 +71,13 @@ describe('Single', () => {
 
             it('should return the object with an array of references for embed many using inner array', () => {
                 const foo = new Single({ name: 'foo', bars: [1, 3] });
-                const bars = new Collection([
-                    { id: 1, bar: 'baz' },
-                    { id: 2, bar: 'biz' },
-                    { id: 3, bar: 'boz' },
-                ]);
+                const bars = new Collection({
+                    items: [
+                        { id: 1, bar: 'baz' },
+                        { id: 2, bar: 'biz' },
+                        { id: 3, bar: 'boz' },
+                    ],
+                });
                 const server = new Server();
                 server.addSingle('foo', foo);
                 server.addCollection('bars', bars);
@@ -93,16 +97,20 @@ describe('Single', () => {
                     bars: [1, 3],
                     bazs: [4, 5],
                 });
-                const bars = new Collection([
-                    { id: 1, name: 'bar1' },
-                    { id: 2, name: 'bar2' },
-                    { id: 3, name: 'bar3' },
-                ]);
-                const bazs = new Collection([
-                    { id: 4, name: 'baz1' },
-                    { id: 5, name: 'baz2' },
-                    { id: 6, name: 'baz3' },
-                ]);
+                const bars = new Collection({
+                    items: [
+                        { id: 1, name: 'bar1' },
+                        { id: 2, name: 'bar2' },
+                        { id: 3, name: 'bar3' },
+                    ],
+                });
+                const bazs = new Collection({
+                    items: [
+                        { id: 4, name: 'baz1' },
+                        { id: 5, name: 'baz2' },
+                        { id: 6, name: 'baz3' },
+                    ],
+                });
                 const server = new Server();
                 server.addSingle('foo', foo);
                 server.addCollection('bars', bars);

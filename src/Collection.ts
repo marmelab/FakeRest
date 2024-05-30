@@ -19,11 +19,15 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     identifierName = 'id';
     getNewId: () => number | string;
 
-    constructor(
-        items: T[] = [],
+    constructor({
+        items = [],
         identifierName = 'id',
-        getNewId?: () => number | string,
-    ) {
+        getNewId,
+    }: {
+        items?: T[];
+        identifierName?: string;
+        getNewId?: () => number | string;
+    } = {}) {
         if (!Array.isArray(items)) {
             throw new Error(
                 "Can't initialize a Collection with anything else than an array of items",
