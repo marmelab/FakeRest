@@ -1,5 +1,5 @@
 import { Collection } from './Collection.js';
-import { Server } from './Server.js';
+import { Server } from './SinonServer.js';
 import type { CollectionItem } from './types.js';
 
 describe('Collection', () => {
