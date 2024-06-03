@@ -1,55 +1,58 @@
-import { BaseServer, type BaseServerOptions } from './BaseServer.js';
+import type { MockResponseObject, MockMatcherFunction } from 'fetch-mock';
+import { BaseServer } from './BaseServer.js';
+import type {
+    BaseResponse,
+    BaseServerOptions,
+    FakeRestContext,
+} from './InternalServer.js';
 import { parseQueryString } from './parseQueryString.js';
-import type { MockResponse, MockResponseObject } from 'fetch-mock';
 
-export class FetchMockServer extends BaseServer {
-    requestInterceptors: FetchMockRequestInterceptor[] = [];
-    responseInterceptors: FetchMockResponseInterceptor[] = [];
-
-    decode(request: Request, opts?: RequestInit) {
-        const req: FetchMockFakeRestRequest =
-            typeof request === 'string' ? new Request(request, opts) : request;
-        req.queryString = req.url
+export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
+    async extractContext(request: Request) {
+        const req =
+            typeof request === 'string' ? new Request(request) : request;
+        const queryString = req.url
             ? decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1))
             : '';
-        req.params = parseQueryString(req.queryString);
-        return (req as Request)
-            .text()
-            .then((text) => {
-                req.requestBody = text;
-                try {
-                    req.requestJson = JSON.parse(text);
-                } catch (e) {
-                    // not JSON, no big deal
-                }
-            })
-            .then(() =>
-                this.requestInterceptors.reduce(
-                    (previous, current) => current(previous),
-                    req,
-                ),
-            );
+        const params = parseQueryString(queryString);
+        const text = await req.text();
+        let requestJson: Record<string, any> | undefined = undefined;
+        try {
+            requestJson = JSON.parse(text);
+        } catch (e) {
+            // not JSON, no big deal
+        }
+
+        return {
+            url: req.url,
+            params,
+            requestJson,
+            method: req.method,
+        };
     }
 
-    respond(response: MockResponseObject, request: FetchMockFakeRestRequest) {
-        const resp = this.responseInterceptors.reduce(
-            (previous, current) => current(previous, request),
-            response,
-        );
-        this.log(request, resp);
-
-        return resp;
+    async respond(
+        response: BaseResponse,
+        request: FetchMockFakeRestRequest,
+        context: FakeRestContext,
+    ) {
+        this.log(request, response, context);
+        return response;
     }
 
-    log(request: FetchMockFakeRestRequest, response: MockResponseObject) {
+    log(
+        request: FetchMockFakeRestRequest,
+        response: MockResponseObject,
+        context: FakeRestContext,
+    ) {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
-            console.groupCollapsed(request.method, request.url, '(FakeRest)');
+            console.groupCollapsed(context.method, context.url, '(FakeRest)');
             console.group('request');
-            console.log(request.method, request.url);
+            console.log(context.method, context.url);
             console.log('headers', request.headers);
-            console.log('body   ', request.requestBody);
+            console.log('body   ', request.requestJson);
             console.groupEnd();
             console.group('response', response.status);
             console.log('headers', response.headers);
@@ -59,12 +62,12 @@ export class FetchMockServer extends BaseServer {
         } else {
             console.log(
                 'FakeRest request ',
-                request.method,
-                request.url,
+                context.method,
+                context.url,
                 'headers',
                 request.headers,
                 'body',
-                request.requestBody,
+                request.requestJson,
             );
             console.log(
                 'FakeRest response',
@@ -77,39 +80,12 @@ export class FetchMockServer extends BaseServer {
         }
     }
 
-    batch(request: any) {
-        throw new Error('not implemented');
-    }
-
-    /**
-     * @param {Request} fetch request
-     * @param {Object} options
-     *
-     */
-    handle(req: Request, opts?: RequestInit) {
-        return this.decode(req, opts).then((request) => {
-            // handle batch request
-            if (
-                this.batchUrl &&
-                this.batchUrl === request.url &&
-                request.method === 'POST'
-            ) {
-                return this.batch(request);
-            }
-
-            const response = this.handleRequest({
-                url: request.url,
-                method: request.method,
-                requestJson: request.requestJson,
-                params: request.params,
-            });
-
-            return this.respond(response, request);
-        });
-    }
-
     getHandler() {
-        return this.handle.bind(this);
+        const handler = (url: string, options: RequestInit) => {
+            return this.handle(new Request(url, options));
+        };
+
+        return handler;
     }
 }
 

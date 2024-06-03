@@ -1,7 +1,46 @@
 import { http, HttpResponse } from 'msw';
-import { BaseServer, type BaseServerOptions } from './BaseServer.js';
+import { BaseServer } from './BaseServer.js';
+import type {
+    BaseRequest,
+    BaseResponse,
+    BaseServerOptions,
+} from './InternalServer.js';
 
-export class MswServer extends BaseServer {
+export class MswServer extends BaseServer<Request, Response> {
+    async respond(response: BaseResponse) {
+        return HttpResponse.json(response.body, {
+            status: response.status,
+            headers: response.headers,
+        });
+    }
+
+    async extractContext(request: Request) {
+        const url = new URL(request.url);
+        const params = Object.fromEntries(
+            Array.from(new URLSearchParams(url.search).entries()).map(
+                ([key, value]) => [key, JSON.parse(value)],
+            ),
+        );
+        let requestJson: Record<string, any> | undefined = undefined;
+        try {
+            const text = await request.text();
+            requestJson = JSON.parse(text);
+        } catch (e) {
+            // not JSON, no big deal
+        }
+
+        const req: MswFakeRestRequest = request;
+        req.requestJson = requestJson;
+        req.params = params;
+
+        return {
+            url: request.url,
+            params,
+            requestJson,
+            method: request.method,
+        };
+    }
+
     getHandlers() {
         return Object.keys(this.collections).map((collectionName) =>
             getCollectionHandlers({
@@ -25,36 +64,22 @@ const getCollectionHandlers = ({
 }: {
     baseUrl: string;
     collectionName: string;
-    server: BaseServer;
+    server: MswServer;
 }) => {
     return http.all(
         // Using a regex ensures we match all URLs that start with the collection name
         new RegExp(`${baseUrl}/${collectionName}`),
-        async ({ request }) => {
-            const url = new URL(request.url);
-            const params = Object.fromEntries(
-                Array.from(new URLSearchParams(url.search).entries()).map(
-                    ([key, value]) => [key, JSON.parse(value)],
-                ),
-            );
-            let requestJson: Record<string, any> | undefined = undefined;
-            try {
-                const text = await request.text();
-                requestJson = JSON.parse(text);
-            } catch (e) {
-                // not JSON, no big deal
-            }
-            const response = server.handleRequest({
-                url: request.url.split('?')[0],
-                method: request.method,
-                requestJson,
-                params,
-            });
-
-            return HttpResponse.json(response.body, {
-                status: response.status,
-                headers: response.headers,
-            });
-        },
+        ({ request }) => server.handle(request),
     );
 };
+
+export type MswFakeRestRequest = Partial<Request> & BaseRequest;
+
+export type MswRequestInterceptor = (
+    request: MswFakeRestRequest,
+) => MswFakeRestRequest;
+
+export type MswResponseInterceptor = (
+    response: HttpResponse,
+    request: Request,
+) => HttpResponse;

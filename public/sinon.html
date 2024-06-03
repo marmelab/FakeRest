@@ -61,18 +61,22 @@ server.respondWith(restServer.getHandler());
 // Now query the fake REST server
 var req = new XMLHttpRequest();
 req.open("GET", "/authors", false);
-req.send(null);
-document.getElementById('req1').value = req.responseText;
+req.send();
+req.onload = function() {
+    document.getElementById('req1').value = req.responseText;
+};
 
-var req = new XMLHttpRequest();
-req.open("GET", "/books/3", false);
-req.send(null);
-document.getElementById('req2').value = req.responseText;
+// var req = new XMLHttpRequest();
+// req.open("GET", "/books/3", false);
+// req.send();
+// req.onload = function() {
+//     document.getElementById('req2').value = req.responseText;
+// };
 
-var req = new XMLHttpRequest();
-req.open("POST", "/books", false);
-req.send(JSON.stringify({ author_id: 1, title: 'Emma' }));
-document.getElementById('req3').value = req.responseText;
+// var req = new XMLHttpRequest();
+// req.open("POST", "/books", false);
+// req.send(JSON.stringify({ author_id: 1, title: 'Emma' }));
+// document.getElementById('req3').value = req.responseText;
 
 // restore native XHR constructor
 server.restore();

@@ -7,11 +7,24 @@ import {
     Resource,
     ShowGuesser,
 } from 'react-admin';
+import { QueryClient } from 'react-query';
 import { dataProvider } from './dataProvider';
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+        },
+    },
+});
 
 export const App = () => {
     return (
-        <Admin dataProvider={dataProvider}>
+        <Admin
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            queryClient={queryClient}
+        >
             <Resource
                 name="books"
                 list={ListGuesser}
@@ -24,12 +37,16 @@ export const App = () => {
                 list={ListGuesser}
                 edit={EditGuesser}
                 show={ShowGuesser}
+                recordRepresentation={(record) =>
+                    `${record.first_name} ${record.last_name}`
+                }
             />
         </Admin>
     );
 };
 
 import { Edit, ReferenceInput, SimpleForm, TextInput } from 'react-admin';
+import authProvider from './authProvider';
 
 export const BookCreate = () => (
     <Create>

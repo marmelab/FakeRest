@@ -1,6 +1,6 @@
 import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
-import { type SinonFakeRestRequest, Server } from './SinonServer.js';
+import { Server } from './SinonServer.js';
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
 
@@ -168,21 +168,21 @@ describe('Server', () => {
     });
 
     describe('addRequestInterceptor', () => {
-        it('should allow request transformation', () => {
+        it('should allow request transformation', async () => {
             const server = new Server();
-            server.addRequestInterceptor((request) => {
-                const start = request.params?._start
-                    ? request.params._start - 1
+            server.addMiddleware((request, context, next) => {
+                const start = context.params?._start
+                    ? context.params._start - 1
                     : 0;
                 const end =
-                    request.params?._end !== undefined
-                        ? request.params._end - 1
+                    context.params?._end !== undefined
+                        ? context.params._end - 1
                         : 19;
-                if (!request.params) {
-                    request.params = {};
+                if (!context.params) {
+                    context.params = {};
                 }
-                request.params.range = [start, end];
-                return request;
+                context.params.range = [start, end];
+                return next(request, context);
             });
             server.addCollection(
                 'foo',
@@ -196,21 +196,19 @@ describe('Server', () => {
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=1&_end=1');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request?.status).toEqual(206);
-            expect((request as SinonFakeRestRequest)?.responseText).toEqual(
-                '[{"id":1,"name":"foo"}]',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('[{"id":1,"name":"foo"}]');
             expect(request?.getResponseHeader('Content-Range')).toEqual(
                 'items 0-0/2',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=2&_end=2');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request?.status).toEqual(206);
-            expect((request as SinonFakeRestRequest)?.responseText).toEqual(
-                '[{"id":2,"name":"bar"}]',
-            );
+            // @ts-ignore
+            expect(request?.responseText).toEqual('[{"id":2,"name":"bar"}]');
             expect(request?.getResponseHeader('Content-Range')).toEqual(
                 'items 1-1/2',
             );
@@ -218,19 +216,21 @@ describe('Server', () => {
     });
 
     describe('addResponseInterceptor', () => {
-        it('should allow response transformation', () => {
+        it('should allow response transformation', async () => {
             const server = new Server();
-            server.addResponseInterceptor((response) => {
+            server.addMiddleware(async (request, context, next) => {
+                const response = await next(request, context);
+                response.status = 418;
+                return response;
+            });
+            server.addMiddleware(async (request, context, next) => {
+                const response = await next(request, context);
                 response.body = {
                     data: response.body,
                     status: response.status,
                 };
                 return response;
             });
-            server.addResponseInterceptor((response) => {
-                response.status = 418;
-                return response;
-            });
             server.addCollection(
                 'foo',
                 new Collection({
@@ -242,40 +242,41 @@ describe('Server', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(418);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
+            // @ts-ignore
+            expect(request.responseText).toEqual(
                 '{"data":[{"id":1,"name":"foo"},{"id":2,"name":"bar"}],"status":200}',
             );
         });
 
-        it('should pass request in response interceptor', () => {
+        it('should pass request in response interceptor', async () => {
             const server = new Server();
             let requestUrl: string | undefined;
-            server.addResponseInterceptor((response, request) => {
+            server.addMiddleware((request, context, next) => {
                 requestUrl = request.url;
-                return response;
+                return next(request, context);
             });
             server.addCollection('foo', new Collection());
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
 
             expect(requestUrl).toEqual('/foo');
         });
     });
 
     describe('handle', () => {
-        it('should respond a 404 to GET /whatever on non existing collection', () => {
+        it('should respond a 404 to GET /whatever on non existing collection', async () => {
             const server = new Server();
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(404); // not responded
         });
 
-        it('should respond to GET /foo by sending all items in collection foo', () => {
+        it('should respond to GET /foo by sending all items in collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -288,9 +289,10 @@ describe('Server', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
+            // @ts-ignore
+            expect(request.responseText).toEqual(
                 '[{"id":1,"name":"foo"},{"id":2,"name":"bar"}]',
             );
             expect(request.getResponseHeader('Content-Type')).toEqual(
@@ -301,7 +303,7 @@ describe('Server', () => {
             );
         });
 
-        it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', () => {
+        it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', async () => {
             const server = new Server();
             server.addCollection(
                 'foos',
@@ -322,9 +324,10 @@ describe('Server', () => {
                 '/foos?filter={"arg":true}&sort=name&slice=[0,10]&embed=["bars"]',
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
+            // @ts-ignore
+            expect(request.responseText).toEqual(
                 '[{"id":2,"name":"a","arg":true,"bars":[]},{"id":1,"name":"b","arg":true,"bars":[{"id":0,"name":"a","foo_id":1}]}]',
             );
             expect(request.getResponseHeader('Content-Type')).toEqual(
@@ -335,7 +338,7 @@ describe('Server', () => {
             );
         });
 
-        it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', () => {
+        it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -346,50 +349,49 @@ describe('Server', () => {
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-10/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-4/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 5-9/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 10-10/11',
             );
         });
 
-        it('should respond to GET /foo on an empty collection with a []', () => {
+        it('should respond to GET /foo on an empty collection with a []', async () => {
             const server = new Server();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '[]',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('[]');
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items */0',
             );
         });
 
-        it('should respond to POST /foo by adding an item to collection foo', () => {
+        it('should respond to POST /foo by adding an item to collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -406,11 +408,10 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(201);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"name":"baz","id":3}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"name":"baz","id":3}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -422,7 +423,7 @@ describe('Server', () => {
             ]);
         });
 
-        it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', () => {
+        it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', async () => {
             const server = new Server();
             const request = getFakeXMLHTTPRequest(
                 'POST',
@@ -430,11 +431,10 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(201);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"name":"baz","id":0}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"name":"baz","id":0}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -442,7 +442,7 @@ describe('Server', () => {
             expect(server.getAll('foo')).toEqual([{ id: 0, name: 'baz' }]);
         });
 
-        it('should respond to GET /foo/:id by sending element of identifier id in collection foo', () => {
+        it('should respond to GET /foo/:id by sending element of identifier id in collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -455,26 +455,25 @@ describe('Server', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo/2');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"id":2,"name":"bar"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
         });
 
-        it('should respond to GET /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to GET /foo/:id on a non-existing id with a 404', async () => {
             const server = new Server();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo/3');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', () => {
+        it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -491,11 +490,10 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"id":2,"name":"baz"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -505,7 +503,7 @@ describe('Server', () => {
             ]);
         });
 
-        it('should respond to PUT /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to PUT /foo/:id on a non-existing id with a 404', async () => {
             const server = new Server();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
@@ -514,11 +512,11 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', () => {
+        it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -535,11 +533,10 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"id":2,"name":"baz"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -549,7 +546,7 @@ describe('Server', () => {
             ]);
         });
 
-        it('should respond to PATCH /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to PATCH /foo/:id on a non-existing id with a 404', async () => {
             const server = new Server();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
@@ -558,11 +555,11 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', () => {
+        it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -575,43 +572,41 @@ describe('Server', () => {
             );
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/2');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"id":2,"name":"bar"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
             expect(server.getAll('foo')).toEqual([{ id: 1, name: 'foo' }]);
         });
 
-        it('should respond to DELETE /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to DELETE /foo/:id on a non-existing id with a 404', async () => {
             const server = new Server();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to GET /foo/ with single item', () => {
+        it('should respond to GET /foo/ with single item', async () => {
             const server = new Server();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"name":"foo"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"name":"foo"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
         });
 
-        it('should respond to PUT /foo/ by updating the singleton record', () => {
+        it('should respond to PUT /foo/ by updating the singleton record', async () => {
             const server = new Server();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
@@ -621,18 +616,17 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"name":"baz"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"name":"baz"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
             expect(server.getOnly('foo')).toEqual({ name: 'baz' });
         });
 
-        it('should respond to PATCH /foo/ by updating the singleton record', () => {
+        it('should respond to PATCH /foo/ by updating the singleton record', async () => {
             const server = new Server();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
@@ -642,11 +636,10 @@ describe('Server', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                '{"name":"baz"}',
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual('{"name":"baz"}');
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
@@ -655,7 +648,7 @@ describe('Server', () => {
     });
 
     describe('setDefaultQuery', () => {
-        it('should set the default query string', () => {
+        it('should set the default query string', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -668,18 +661,17 @@ describe('Server', () => {
             });
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 2-4/10',
             );
             const expected = [{ id: 2 }, { id: 3 }, { id: 4 }];
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                JSON.stringify(expected),
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual(JSON.stringify(expected));
         });
 
-        it('should not override any provided query string', () => {
+        it('should not override any provided query string', async () => {
             const server = new Server();
             server.addCollection(
                 'foo',
@@ -690,7 +682,7 @@ describe('Server', () => {
             server.setDefaultQuery((name) => ({ range: [2, 4] }));
             const request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
             if (request == null) throw new Error('request is null');
-            server.handle(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-4/10',
@@ -702,72 +694,8 @@ describe('Server', () => {
                 { id: 3 },
                 { id: 4 },
             ];
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                JSON.stringify(expected),
-            );
-        });
-    });
-
-    describe('batch', () => {
-        it('should return batch response', () => {
-            const server = new Server();
-            server.init({
-                foo: [{ a: 1 }, { a: 2 }, { a: 3 }],
-                bar: [{ b: true }, { b: false }],
-                biz: { name: 'biz' },
-            });
-            server.setBatchUrl('/batch');
-            const request = getFakeXMLHTTPRequest(
-                'POST',
-                '/batch',
-                JSON.stringify({
-                    foo0: '/foo/0',
-                    allbar: '/bar',
-                    baz0: '/baz/0',
-                    biz: '/biz',
-                }),
-            );
-            if (request == null) throw new Error('request is null');
-            server.handle(request);
-            expect((request as SinonFakeRestRequest).responseText).toEqual(
-                JSON.stringify({
-                    foo0: {
-                        code: 200,
-                        headers: [
-                            {
-                                name: 'Content-Type',
-                                value: 'application/json',
-                            },
-                        ],
-                        body: '{"a":1,"id":0}',
-                    },
-                    allbar: {
-                        code: 200,
-                        headers: [
-                            { name: 'Content-Type', value: 'application/json' },
-                            { name: 'Content-Range', value: 'items 0-1/2' },
-                        ],
-                        body: '[{"b":true,"id":0},{"b":false,"id":1}]',
-                    },
-                    baz0: {
-                        code: 404,
-                        headers: [
-                            { name: 'Content-Type', value: 'application/json' },
-                        ],
-                        body: {},
-                    },
-                    biz: {
-                        code: 200,
-                        headers: [
-                            {
-                                name: 'Content-Type',
-                                value: 'application/json',
-                            },
-                        ],
-                        body: '{"name":"biz"}',
-                    },
-                }),
-            );
+            // @ts-ignore
+            expect(request.responseText).toEqual(JSON.stringify(expected));
         });
     });
 });
