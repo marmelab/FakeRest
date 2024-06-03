@@ -1,4 +1,4 @@
-import { BaseServer } from './BaseServer.js';
+import { BaseServer, type BaseServerOptions } from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
 import type { MockResponse, MockResponseObject } from 'fetch-mock';
 
@@ -112,6 +112,11 @@ export class FetchMockServer extends BaseServer {
         return this.handle.bind(this);
     }
 }
+
+export const getFetchMockHandler = (options: BaseServerOptions) => {
+    const server = new FetchMockServer(options);
+    return server.getHandler();
+};
 
 /**
  * @deprecated Use FetchServer instead

@@ -1,17 +1,35 @@
-import { Server, SinonServer } from './SinonServer.js';
-import { FetchServer, FetchMockServer } from './FetchMockServer.js';
+import { getSinonHandler, Server, SinonServer } from './SinonServer.js';
+import {
+    getFetchMockHandler,
+    FetchServer,
+    FetchMockServer,
+} from './FetchMockServer.js';
 import { Collection } from './Collection.js';
 import { Single } from './Single.js';
-import { getMswHandlers } from './msw.js';
-import { get } from 'lodash';
+import { getMswHandlers, MswServer } from './msw.js';
 
 export {
+    getSinonHandler,
+    getFetchMockHandler,
+    getMswHandlers,
     Server,
     SinonServer,
     FetchServer,
     FetchMockServer,
+    MswServer,
     Collection,
     Single,
-    getMswHandlers,
 };
-export default { Server, FetchServer, Collection, Single, getMswHandlers };
+
+export default {
+    getSinonHandler,
+    getFetchMockHandler,
+    getMswHandlers,
+    Server,
+    SinonServer,
+    FetchServer,
+    FetchMockServer,
+    MswServer,
+    Collection,
+    Single,
+};
