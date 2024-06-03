@@ -426,7 +426,7 @@ server.respondWith(restServer2.getHandler());
 
 ## Configure Identifiers Generation
 
-By default, FakeRest uses an auto incremented sequence for the items identifiers. If you'd rather use UUIDs for instance but would like to avoid providing them when you insert new items, you can provide your own function:
+By default, FakeRest uses an auto incremented sequence for the items identifiers. If you'd rather use another type of identifiers (e.g. UUIDs), you can provide your own `getNewId` function at the server level:
 
 ```js
 import FakeRest from 'fakerest';
