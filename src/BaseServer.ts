@@ -2,6 +2,12 @@ import { Collection } from './Collection.js';
 import { Single } from './Single.js';
 import type { CollectionItem, Query, QueryFunction } from './types.js';
 
+/**
+ * This base class does not need generics so we can reference it in Collection and Single
+ * without having to propagate mocking implementation generics nor requiring the user to specify them.
+ * The BaseServerWithMiddlewares class is the one that needs to have generic parameters which are
+ * provided by the mocking implementation server classes.
+ */
 export abstract class BaseServer {
     baseUrl = '';
     identifierName = 'id';
