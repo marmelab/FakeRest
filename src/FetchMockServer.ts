@@ -1,13 +1,16 @@
 import type { MockResponseObject, MockMatcherFunction } from 'fetch-mock';
-import { BaseServer } from './BaseServer.js';
+import { BaseServerWithMiddlewares } from './BaseServerWithMiddlewares.js';
 import type {
     BaseResponse,
     BaseServerOptions,
     FakeRestContext,
-} from './InternalServer.js';
+} from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
 
-export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
+export class FetchMockServer extends BaseServerWithMiddlewares<
+    Request,
+    MockResponseObject
+> {
     async extractContext(request: Request) {
         const req =
             typeof request === 'string' ? new Request(request) : request;

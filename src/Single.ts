@@ -1,9 +1,9 @@
-import type { InternalServer } from './InternalServer.js';
+import type { BaseServer } from './BaseServer.js';
 import type { CollectionItem, Embed, Query } from './types.js';
 
 export class Single<T extends CollectionItem = CollectionItem> {
     obj: T | null = null;
-    server: InternalServer | null = null;
+    server: BaseServer | null = null;
     name: string | null = null;
 
     constructor(obj: T) {
@@ -19,7 +19,7 @@ export class Single<T extends CollectionItem = CollectionItem> {
      * A Single may need to access other collections (e.g. for embedded
      * references) This is done through a reference to the parent server.
      */
-    setServer(server: InternalServer) {
+    setServer(server: BaseServer) {
         this.server = server;
     }
 

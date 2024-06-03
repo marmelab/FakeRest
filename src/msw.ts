@@ -1,12 +1,12 @@
 import { http, HttpResponse } from 'msw';
-import { BaseServer } from './BaseServer.js';
+import { BaseServerWithMiddlewares } from './BaseServerWithMiddlewares.js';
 import type {
     BaseRequest,
     BaseResponse,
     BaseServerOptions,
-} from './InternalServer.js';
+} from './BaseServer.js';
 
-export class MswServer extends BaseServer<Request, Response> {
+export class MswServer extends BaseServerWithMiddlewares<Request, Response> {
     async respond(response: BaseResponse) {
         return HttpResponse.json(response.body, {
             status: response.status,

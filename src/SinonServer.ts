@@ -1,9 +1,9 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
-import { BaseServer } from './BaseServer.js';
+import { BaseServerWithMiddlewares } from './BaseServerWithMiddlewares.js';
 import { parseQueryString } from './parseQueryString.js';
-import type { BaseResponse, BaseServerOptions } from './InternalServer.js';
+import type { BaseResponse, BaseServerOptions } from './BaseServer.js';
 
-export class SinonServer extends BaseServer<
+export class SinonServer extends BaseServerWithMiddlewares<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {

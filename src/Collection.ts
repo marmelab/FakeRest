@@ -1,6 +1,6 @@
 import get from 'lodash/get.js';
 import matches from 'lodash/matches.js';
-import type { InternalServer } from './InternalServer.js';
+import type { BaseServer } from './BaseServer.js';
 import type {
     CollectionItem,
     Embed,
@@ -14,7 +14,7 @@ import type {
 export class Collection<T extends CollectionItem = CollectionItem> {
     sequence = 0;
     items: T[] = [];
-    server: InternalServer | null = null;
+    server: BaseServer | null = null;
     name: string | null = null;
     identifierName = 'id';
     getNewId: () => number | string;
@@ -42,7 +42,7 @@ export class Collection<T extends CollectionItem = CollectionItem> {
      * A Collection may need to access other collections (e.g. for embedding references)
      * This is done through a reference to the parent server.
      */
-    setServer(server: InternalServer) {
+    setServer(server: BaseServer) {
         this.server = server;
     }
 
