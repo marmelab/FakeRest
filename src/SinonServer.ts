@@ -61,6 +61,12 @@ export class SinonServer extends BaseServer<
             sinonResponse.headers['Content-Type'] = 'application/json';
         }
 
+        // This is an internal property of SinonFakeXMLHttpRequest but we have to reset it to 1
+        // to allow the request to be resolved by Sinon.
+        // See https://github.com/sinonjs/sinon/issues/637
+        // @ts-expect-error
+        request.readyState = 1;
+
         request.respond(
             sinonResponse.status,
             sinonResponse.headers,
@@ -114,7 +120,7 @@ export class SinonServer extends BaseServer<
 
     getHandler() {
         return (request: SinonFakeXMLHttpRequest) => {
-            return this.handle(request);
+            this.handle(request);
         };
     }
 }
