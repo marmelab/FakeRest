@@ -4,6 +4,7 @@ import type { CollectionItem, Query, QueryFunction } from './types.js';
 
 export class BaseServer {
     baseUrl: string | null = null;
+    identifierName = 'id';
     loggingEnabled = false;
     defaultQuery: QueryFunction = () => ({});
     batchUrl: string | null = null;
@@ -13,17 +14,35 @@ export class BaseServer {
 
     constructor({
         baseUrl = '',
+        batchUrl = null,
+        data,
+        defaultQuery = () => ({}),
+        identifierName = 'id',
         getNewId,
+        loggingEnabled = false,
     }: {
         baseUrl?: string;
+        batchUrl?: string | null;
+        data?: Record<string, CollectionItem[] | CollectionItem>;
+        defaultQuery?: QueryFunction;
+        identifierName?: string;
         getNewId?: () => number | string;
+        loggingEnabled?: boolean;
     } = {}) {
         this.baseUrl = baseUrl;
+        this.batchUrl = batchUrl;
         this.getNewId = getNewId;
+        this.loggingEnabled = loggingEnabled;
+        this.identifierName = identifierName;
+        this.defaultQuery = defaultQuery;
+
+        if (data) {
+            this.init(data);
+        }
     }
 
     /**
-     * Shortcut for adding several collections if identifierName is always 'id'
+     * Shortcut for adding several collections if identifierName is always the same
      */
     init(data: Record<string, CollectionItem[] | CollectionItem>) {
         for (const name in data) {
@@ -33,7 +52,7 @@ export class BaseServer {
                     name,
                     new Collection({
                         items: value,
-                        identifierName: 'id',
+                        identifierName: this.identifierName,
                         getNewId: this.getNewId,
                     }),
                 );

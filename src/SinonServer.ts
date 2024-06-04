@@ -2,7 +2,7 @@ import type { SinonFakeXMLHttpRequest } from 'sinon';
 import { BaseServer } from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
 
-export class Server extends BaseServer {
+export class SinonServer extends BaseServer {
     requestInterceptors: SinonRequestInterceptor[] = [];
     responseInterceptors: SinonResponseInterceptor[] = [];
 
@@ -207,6 +207,11 @@ export class Server extends BaseServer {
         return this.handle.bind(this);
     }
 }
+
+/**
+ * @deprecated Use SinonServer instead
+ */
+export const Server = SinonServer;
 
 export type SinonFakeRestRequest = Partial<SinonFakeXMLHttpRequest> & {
     requestBody?: string;

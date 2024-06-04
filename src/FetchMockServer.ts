@@ -2,7 +2,7 @@ import { BaseServer } from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
 import type { MockResponse, MockResponseObject } from 'fetch-mock';
 
-export class FetchServer extends BaseServer {
+export class FetchMockServer extends BaseServer {
     requestInterceptors: FetchMockRequestInterceptor[] = [];
     responseInterceptors: FetchMockResponseInterceptor[] = [];
 
@@ -112,6 +112,11 @@ export class FetchServer extends BaseServer {
         return this.handle.bind(this);
     }
 }
+
+/**
+ * @deprecated Use FetchServer instead
+ */
+export const FetchServer = FetchMockServer;
 
 export type FetchMockFakeRestRequest = Partial<Request> & {
     requestBody?: string;

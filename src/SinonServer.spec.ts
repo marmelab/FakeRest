@@ -1,6 +1,6 @@
 import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
-import { type SinonFakeRestRequest, Server } from './Server.js';
+import { type SinonFakeRestRequest, Server } from './SinonServer.js';
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
 

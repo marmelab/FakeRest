@@ -80,7 +80,7 @@ var data = {
     }
 };
 // initialize fake REST server
-var restServer = new FakeRest.Server();
+var restServer = new FakeRest.SinonServer();
 restServer.init(data);
 
 // use sinon.js to monkey-patch XmlHttpRequest
@@ -111,7 +111,7 @@ const data = {
         preferred_format: 'hardback',
     }
 };
-const restServer = new FakeRest.FetchServer({ baseUrl: 'http://localhost:3000' });
+const restServer = new FakeRest.FetchMockServer({ baseUrl: 'http://localhost:3000' });
 restServer.init(data);
 fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
 ```
@@ -366,7 +366,7 @@ Operators are specified as suffixes on each filtered field. For instance, applyi
 
 ```js
 // initialize a rest server with a custom base URL
-const restServer = new FakeRest.Server({ baseUrl: 'http://my.custom.domain' }); // only URLs starting with my.custom.domain will be intercepted
+const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain' }); // only URLs starting with my.custom.domain will be intercepted
 restServer.toggleLogging(); // logging is off by default, enable it to see network calls in the console
 // Set all JSON data at once - only if identifier name is 'id'
 restServer.init(json);
@@ -406,7 +406,7 @@ restServer.setDefaultQuery(function(resourceName) {
 restServer.setBatchUrl('/batch');
 
 // you can create more than one fake server to listen to several domains
-const restServer2 = new FakeRest.Server({ baseUrl: 'http://my.other.domain' });
+const restServer2 = new FakeRest.SinonServer({ baseUrl: 'http://my.other.domain' });
 // Set data collection by collection - allows to customize the identifier name
 const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '_id' });
 authorsCollection.addOne({ first_name: 'Leo', last_name: 'Tolstoi' }); // { _id: 0, first_name: 'Leo', last_name: 'Tolstoi' }
@@ -432,7 +432,7 @@ By default, FakeRest uses an auto incremented sequence for the items identifiers
 import FakeRest from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new FakeRest.Server({ baseUrl: 'http://my.custom.domain', getNewId: () => uuid.v5() });
+const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain', getNewId: () => uuid.v5() });
 ```
 
 This can also be specified at the collection level:
@@ -441,7 +441,7 @@ This can also be specified at the collection level:
 import FakeRest from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new FakeRest.Server({ baseUrl: 'http://my.custom.domain' });
+const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain' });
 const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '_id', getNewId: () => uuid.v5() });
 ```
 
