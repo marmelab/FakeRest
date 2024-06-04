@@ -3,7 +3,7 @@ import { Single } from './Single.js';
 import type { CollectionItem, Query, QueryFunction } from './types.js';
 
 export class BaseServer {
-    baseUrl: string | null = null;
+    baseUrl = '';
     identifierName = 'id';
     loggingEnabled = false;
     defaultQuery: QueryFunction = () => ({});
@@ -20,15 +20,7 @@ export class BaseServer {
         identifierName = 'id',
         getNewId,
         loggingEnabled = false,
-    }: {
-        baseUrl?: string;
-        batchUrl?: string | null;
-        data?: Record<string, CollectionItem[] | CollectionItem>;
-        defaultQuery?: QueryFunction;
-        identifierName?: string;
-        getNewId?: () => number | string;
-        loggingEnabled?: boolean;
-    } = {}) {
+    }: BaseServerOptions = {}) {
         this.baseUrl = baseUrl;
         this.batchUrl = batchUrl;
         this.getNewId = getNewId;
@@ -403,6 +395,16 @@ export class BaseServer {
         };
     }
 }
+
+export type BaseServerOptions = {
+    baseUrl?: string;
+    batchUrl?: string | null;
+    data?: Record<string, CollectionItem[] | CollectionItem>;
+    defaultQuery?: QueryFunction;
+    identifierName?: string;
+    getNewId?: () => number | string;
+    loggingEnabled?: boolean;
+};
 
 type BaseRequest = {
     url?: string;

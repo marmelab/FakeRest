@@ -1,23 +1,21 @@
 import { http, HttpResponse } from 'msw';
-import type { CollectionItem } from './types.js';
-import { BaseServer } from './BaseServer.js';
+import { BaseServer, type BaseServerOptions } from './BaseServer.js';
 
-export const getMswHandlers = ({
-    baseUrl = 'http://localhost:3000',
-    data,
-    getNewId,
-}: {
-    baseUrl?: string;
-    data: Record<string, CollectionItem[] | CollectionItem>;
-    getNewId?: () => number | string;
-}) => {
-    const server = new BaseServer({ baseUrl, getNewId });
-    server.init(data);
+export class MswServer extends BaseServer {
+    getHandlers() {
+        return Object.keys(this.collections).map((collectionName) =>
+            getCollectionHandlers({
+                baseUrl: this.baseUrl,
+                collectionName,
+                server: this,
+            }),
+        );
+    }
+}
 
-    const collections = Object.keys(data);
-    return collections.map((collectionName) =>
-        getCollectionHandlers({ baseUrl, collectionName, server }),
-    );
+export const getMswHandlers = (options: BaseServerOptions) => {
+    const server = new MswServer(options);
+    return server.getHandlers();
 };
 
 const getCollectionHandlers = ({

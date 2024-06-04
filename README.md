@@ -17,6 +17,8 @@ npm install msw@latest --save-dev
 npx msw init <PUBLIC_DIR> # eg: public
 ```
 
+Then configure it:
+
 ```js
 // in ./src/msw.js
 import { setupWorker } from "msw/browser";
@@ -44,7 +46,7 @@ export const worker = setupWorker(...getMswHandlers({
 }));
 ```
 
-Then call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
+Finally call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
 
 ```js
 import React from "react";
@@ -57,7 +59,66 @@ worker.start().then(() => {
 });
 ```
 
+Another option is to use the `MswServer` class. This is useful if you must conditionally include data:
+
+```js
+// in ./src/msw.js
+import { setupWorker } from "msw/browser";
+import { MswServer } from "fakerest";
+
+const data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+
+const restServer = new MswServer();
+restServer.init(data);
+
+export const worker = setupWorker(...restServer.getHandlers());
+```
+
 ### Sinon
+
+```html
+<script src="/path/to/FakeRest.min.js"></script>
+<script src="/path/to/sinon.js"></script>
+<script type="text/javascript">
+var data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+
+// use sinon.js to monkey-patch XmlHttpRequest
+var server = sinon.fakeServer.create();
+server.respondWith(FakeRest.getSinonHandler({ data }));
+</script>
+```
+
+Another option is to use the `SinonServer` class. This is useful if you must conditionally include data or interceptors:
 
 ```html
 <script src="/path/to/FakeRest.min.js"></script>
@@ -90,6 +151,35 @@ server.respondWith(restServer.getHandler());
 ```
 
 ### fetch-mock
+
+```js
+import fetchMock from 'fetch-mock';
+import FakeRest from 'fakerest';
+
+const data = {
+    'authors': [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+        { id: 1, first_name: 'Jane', last_name: 'Austen' }
+    ],
+    'books': [
+        { id: 0, author_id: 0, title: 'Anna Karenina' },
+        { id: 1, author_id: 0, title: 'War and Peace' },
+        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+    ],
+    'settings': {
+        language: 'english',
+        preferred_format: 'hardback',
+    }
+};
+
+fetchMock.mock(
+    'begin:http://localhost:3000',
+    FakeRest.getFetchMockHandler({ baseUrl: 'http://localhost:3000', data })
+);
+```
+
+Another option is to use the `FetchMockServer` class. This is useful if you must conditionally include data or interceptors:
 
 ```js
 import fetchMock from 'fetch-mock';

@@ -4,6 +4,7 @@ import { data } from './data';
 
 export const worker = setupWorker(
     ...getMswHandlers({
+        baseUrl: 'http://localhost:3000',
         data,
     }),
 );

@@ -1,5 +1,5 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
-import { BaseServer } from './BaseServer.js';
+import { BaseServer, type BaseServerOptions } from './BaseServer.js';
 import { parseQueryString } from './parseQueryString.js';
 
 export class SinonServer extends BaseServer {
@@ -207,6 +207,11 @@ export class SinonServer extends BaseServer {
         return this.handle.bind(this);
     }
 }
+
+export const getSinonHandler = (options: BaseServerOptions) => {
+    const server = new SinonServer(options);
+    return server.getHandler();
+};
 
 /**
  * @deprecated Use SinonServer instead
