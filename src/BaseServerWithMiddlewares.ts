@@ -9,7 +9,7 @@ export abstract class BaseServerWithMiddlewares<
     RequestType,
     ResponseType,
 > extends BaseServer {
-    middlewares: Array<Middleware<RequestType, BaseResponse>> = [];
+    middlewares: Array<Middleware<RequestType>> = [];
 
     decodeRequest(request: BaseRequest): BaseRequest {
         for (const name of this.getSingleNames()) {
@@ -103,8 +103,16 @@ export abstract class BaseServerWithMiddlewares<
             return this.handleRequest(req, ctx);
         };
 
-        const response = await next(request, context);
-        return this.respond(response, request, context);
+        try {
+            const response = await next(request, context);
+            return this.respond(response, request, context);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            return error as ResponseType;
+        }
     }
 
     handleRequest(request: RequestType, ctx: FakeRestContext): BaseResponse {
@@ -335,12 +343,12 @@ export abstract class BaseServerWithMiddlewares<
         };
     }
 
-    addMiddleware(middleware: Middleware<RequestType, BaseResponse>) {
+    addMiddleware(middleware: Middleware<RequestType>) {
         this.middlewares.push(middleware);
     }
 }
 
-export type Middleware<RequestType, BaseResponse> = (
+export type Middleware<RequestType> = (
     request: RequestType,
     context: FakeRestContext,
     next: (req: RequestType, ctx: FakeRestContext) => Promise<BaseResponse>,
