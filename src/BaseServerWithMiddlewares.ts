@@ -11,49 +11,6 @@ export abstract class BaseServerWithMiddlewares<
 > extends BaseServer {
     middlewares: Array<Middleware<RequestType>> = [];
 
-    decodeRequest(request: BaseRequest): BaseRequest {
-        for (const name of this.getSingleNames()) {
-            const matches = request.url?.match(
-                new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
-            );
-
-            if (matches) {
-                request.single = name;
-                return request;
-            }
-        }
-
-        const matches = request.url?.match(
-            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
-        );
-
-        if (matches) {
-            const name = matches[1];
-            const params = Object.assign(
-                {},
-                this.defaultQuery(name),
-                request.params,
-            );
-
-            request.collection = name;
-            request.params = params;
-            return request;
-        }
-
-        return request;
-    }
-
-    abstract extractContext(
-        request: RequestType,
-    ): Promise<
-        Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'>
-    >;
-    abstract respond(
-        response: BaseResponse,
-        request: RequestType,
-        context: FakeRestContext,
-    ): Promise<ResponseType>;
-
     addBaseContext(context: FakeRestContext): FakeRestContext {
         for (const name of this.getSingleNames()) {
             const matches = context.url?.match(
@@ -87,7 +44,37 @@ export abstract class BaseServerWithMiddlewares<
         return context;
     }
 
-    async handle(request: RequestType): Promise<ResponseType> {
+    extractContext(
+        request: RequestType,
+    ): Promise<
+        Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'>
+    > {
+        throw new Error('Not implemented');
+    }
+
+    respond(
+        response: BaseResponse | null,
+        request: RequestType,
+        context: FakeRestContext,
+    ): Promise<ResponseType> {
+        throw new Error('Not implemented');
+    }
+
+    extractContextSync(
+        request: RequestType,
+    ): Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'> {
+        throw new Error('Not implemented');
+    }
+
+    respondSync(
+        response: BaseResponse | null,
+        request: RequestType,
+        context: FakeRestContext,
+    ): ResponseType {
+        throw new Error('Not implemented');
+    }
+
+    async handle(request: RequestType): Promise<ResponseType | undefined> {
         const context = this.addBaseContext(await this.extractContext(request));
 
         // Call middlewares
@@ -105,7 +92,44 @@ export abstract class BaseServerWithMiddlewares<
 
         try {
             const response = await next(request, context);
-            return this.respond(response, request, context);
+            if (response != null) {
+                return this.respond(response, request, context);
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            return error as ResponseType;
+        }
+    }
+
+    handleSync(request: RequestType): ResponseType | undefined {
+        const context = this.addBaseContext(this.extractContextSync(request));
+
+        // Call middlewares
+        let index = 0;
+        const middlewares = [...this.middlewares];
+
+        const next = (req: RequestType, ctx: FakeRestContext) => {
+            const middleware = middlewares[index++];
+            if (middleware) {
+                return middleware(req, ctx, next);
+            }
+
+            return this.handleRequest(req, ctx);
+        };
+
+        try {
+            const response = next(request, context);
+            if (response instanceof Promise) {
+                throw new Error(
+                    'Middleware returned a promise in a sync context',
+                );
+            }
+            if (response != null) {
+                return this.respondSync(response, request, context);
+            }
         } catch (error) {
             if (error instanceof Error) {
                 throw error;
@@ -351,5 +375,8 @@ export abstract class BaseServerWithMiddlewares<
 export type Middleware<RequestType> = (
     request: RequestType,
     context: FakeRestContext,
-    next: (req: RequestType, ctx: FakeRestContext) => Promise<BaseResponse>,
-) => Promise<BaseResponse>;
+    next: (
+        req: RequestType,
+        ctx: FakeRestContext,
+    ) => Promise<BaseResponse> | BaseResponse,
+) => Promise<BaseResponse> | BaseResponse | null | Promise<null>;

@@ -7,7 +7,7 @@ export class SinonServer extends BaseServerWithMiddlewares<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {
-    async extractContext(request: SinonFakeXMLHttpRequest) {
+    extractContextSync(request: SinonFakeXMLHttpRequest) {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
 
@@ -34,7 +34,7 @@ export class SinonServer extends BaseServerWithMiddlewares<
         };
     }
 
-    async respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
+    respondSync(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
         const sinonResponse = {
             status: response.status,
             body: response.body ?? '',
@@ -120,7 +120,9 @@ export class SinonServer extends BaseServerWithMiddlewares<
 
     getHandler() {
         return (request: SinonFakeXMLHttpRequest) => {
-            this.handle(request);
+            const result = this.handleSync(request);
+            console.log(result);
+            return result;
         };
     }
 }

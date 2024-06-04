@@ -1,14 +1,15 @@
 import { setupWorker } from 'msw/browser';
+import { HttpResponse } from 'msw';
 import { MswServer, withDelay } from '../src/FakeRest';
 import { data } from './data';
-import { HttpResponse } from 'msw';
+import { dataProvider as defaultDataProvider } from './dataProvider';
 
 const restServer = new MswServer({
     baseUrl: 'http://localhost:3000',
     data,
 });
 
-restServer.addMiddleware(withDelay(5000));
+restServer.addMiddleware(withDelay(300));
 restServer.addMiddleware(async (request, context, next) => {
     if (!request.headers?.get('Authorization')) {
         throw new HttpResponse(null, { status: 401 });
@@ -29,3 +30,5 @@ restServer.addMiddleware(async (request, context, next) => {
 });
 
 export const worker = setupWorker(...restServer.getHandlers());
+
+export const dataProvider = defaultDataProvider;

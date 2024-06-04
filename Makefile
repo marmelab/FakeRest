@@ -18,6 +18,9 @@ run-msw:
 run-fetch-mock:
 	@NODE_ENV=development VITE_MOCK=fetch-mock npm run dev
 
+run-sinon:
+	@NODE_ENV=development VITE_MOCK=sinon npm run dev
+
 watch:
 	@NODE_ENV=development npm run build --watch
 

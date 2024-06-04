@@ -26,7 +26,15 @@ export const authProvider: AuthProvider = {
         localStorage.removeItem('user');
         return Promise.resolve();
     },
-    checkError: () => Promise.resolve(),
+    checkError: (error) => {
+        const status = error.status;
+        if (status === 401 || status === 403) {
+            localStorage.removeItem('auth');
+            return Promise.reject();
+        }
+        // other error code (404, 500, etc): no need to log out
+        return Promise.resolve();
+    },
     checkAuth: () =>
         localStorage.getItem('user') ? Promise.resolve() : Promise.reject(),
     getPermissions: () => {

@@ -2,13 +2,13 @@ import React from 'react';
 import {
     Admin,
     Create,
+    type DataProvider,
     EditGuesser,
     ListGuesser,
     Resource,
     ShowGuesser,
 } from 'react-admin';
 import { QueryClient } from 'react-query';
-import { dataProvider } from './dataProvider';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
     },
 });
 
-export const App = () => {
+export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     return (
         <Admin
             dataProvider={dataProvider}
