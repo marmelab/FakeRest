@@ -7,6 +7,7 @@ import {
 import { Collection } from './Collection.js';
 import { Single } from './Single.js';
 import { getMswHandlers, MswServer } from './msw.js';
+import { withDelay } from './withDelay.js';
 
 export {
     getSinonHandler,
@@ -19,6 +20,7 @@ export {
     MswServer,
     Collection,
     Single,
+    withDelay,
 };
 
 export default {
@@ -32,4 +34,5 @@ export default {
     MswServer,
     Collection,
     Single,
+    withDelay,
 };

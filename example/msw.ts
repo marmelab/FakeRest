@@ -1,5 +1,5 @@
 import { setupWorker } from 'msw/browser';
-import { MswServer } from '../src/FakeRest';
+import { MswServer, withDelay } from '../src/FakeRest';
 import { data } from './data';
 import { HttpResponse } from 'msw';
 
@@ -8,9 +8,10 @@ const restServer = new MswServer({
     data,
 });
 
+restServer.addMiddleware(withDelay(5000));
 restServer.addMiddleware(async (request, context, next) => {
     if (!request.headers?.get('Authorization')) {
-        return new HttpResponse(null, { status: 401 });
+        throw new HttpResponse(null, { status: 401 });
     }
 
     if (
@@ -18,7 +19,7 @@ restServer.addMiddleware(async (request, context, next) => {
         request.method === 'POST' &&
         !context.requestJson?.title
     ) {
-        return new HttpResponse(null, {
+        throw new HttpResponse(null, {
             status: 400,
             statusText: 'Title is required',
         });
