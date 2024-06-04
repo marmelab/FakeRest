@@ -46,10 +46,12 @@ describe('Server', () => {
     describe('addCollection', () => {
         it('should add a collection and index it by name', () => {
             const server = new Server();
-            const collection = new Collection([
-                { id: 1, name: 'foo' },
-                { id: 2, name: 'bar' },
-            ]);
+            const collection = new Collection({
+                items: [
+                    { id: 1, name: 'foo' },
+                    { id: 2, name: 'bar' },
+                ],
+            });
             server.addCollection('foo', collection);
             const newcollection = server.getCollection('foo');
             expect(newcollection).toEqual(collection);
@@ -70,14 +72,16 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             server.addCollection(
                 'baz',
-                new Collection([{ id: 1, name: 'baz' }]),
+                new Collection({ items: [{ id: 1, name: 'baz' }] }),
             );
             expect(server.getAll('foo')).toEqual([
                 { id: 1, name: 'foo' },
@@ -90,11 +94,13 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 0, name: 'c', arg: false },
-                    { id: 1, name: 'b', arg: true },
-                    { id: 2, name: 'a', arg: true },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 0, name: 'c', arg: false },
+                        { id: 1, name: 'b', arg: true },
+                        { id: 2, name: 'a', arg: true },
+                    ],
+                }),
             );
             const params = {
                 filter: { arg: true },
@@ -114,7 +120,7 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([{ id: 1, name: 'foo' }]),
+                new Collection({ items: [{ id: 1, name: 'foo' }] }),
             );
             expect(() => {
                 server.getOne('foo', 2);
@@ -125,10 +131,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             expect(server.getOne('foo', 1)).toEqual({ id: 1, name: 'foo' });
             expect(server.getOne('foo', 2)).toEqual({ id: 2, name: 'bar' });
@@ -138,13 +146,13 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection(
-                    [
+                new Collection({
+                    items: [
                         { _id: 1, name: 'foo' },
                         { _id: 2, name: 'bar' },
                     ],
-                    '_id',
-                ),
+                    identifierName: '_id',
+                }),
             );
             expect(server.getOne('foo', 1)).toEqual({ _id: 1, name: 'foo' });
             expect(server.getOne('foo', 2)).toEqual({ _id: 2, name: 'bar' });
@@ -178,10 +186,12 @@ describe('Server', () => {
             });
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=1&_end=1');
@@ -223,10 +233,12 @@ describe('Server', () => {
             });
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
@@ -267,10 +279,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
@@ -291,15 +305,17 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foos',
-                new Collection([
-                    { id: 0, name: 'c', arg: false },
-                    { id: 1, name: 'b', arg: true },
-                    { id: 2, name: 'a', arg: true },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 0, name: 'c', arg: false },
+                        { id: 1, name: 'b', arg: true },
+                        { id: 2, name: 'a', arg: true },
+                    ],
+                }),
             );
             server.addCollection(
                 'bars',
-                new Collection([{ id: 0, name: 'a', foo_id: 1 }]),
+                new Collection({ items: [{ id: 0, name: 'a', foo_id: 1 }] }),
             );
             const request = getFakeXMLHTTPRequest(
                 'GET',
@@ -323,7 +339,9 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+                new Collection({
+                    items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                }),
             ); // 11 items
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo');
@@ -375,10 +393,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest(
                 'POST',
@@ -426,10 +446,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo/2');
             if (request == null) throw new Error('request is null');
@@ -456,10 +478,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest(
                 'PUT',
@@ -483,7 +507,7 @@ describe('Server', () => {
 
         it('should respond to PUT /foo/:id on a non-existing id with a 404', () => {
             const server = new Server();
-            server.addCollection('foo', new Collection([]));
+            server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
                 'PUT',
                 '/foo/3',
@@ -498,10 +522,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest(
                 'PATCH',
@@ -525,7 +551,7 @@ describe('Server', () => {
 
         it('should respond to PATCH /foo/:id on a non-existing id with a 404', () => {
             const server = new Server();
-            server.addCollection('foo', new Collection([]));
+            server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
                 'PATCH',
                 '/foo/3',
@@ -540,10 +566,12 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ]),
+                new Collection({
+                    items: [
+                        { id: 1, name: 'foo' },
+                        { id: 2, name: 'bar' },
+                    ],
+                }),
             );
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/2');
             if (request == null) throw new Error('request is null');
@@ -560,7 +588,7 @@ describe('Server', () => {
 
         it('should respond to DELETE /foo/:id on a non-existing id with a 404', () => {
             const server = new Server();
-            server.addCollection('foo', new Collection([]));
+            server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
             if (request == null) throw new Error('request is null');
             server.handle(request);
@@ -631,7 +659,9 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+                new Collection({
+                    items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                }),
             ); // 10 items
             server.setDefaultQuery(() => {
                 return { range: [2, 4] };
@@ -653,7 +683,9 @@ describe('Server', () => {
             const server = new Server();
             server.addCollection(
                 'foo',
-                new Collection([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+                new Collection({
+                    items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                }),
             ); // 10 items
             server.setDefaultQuery((name) => ({ range: [2, 4] }));
             const request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');

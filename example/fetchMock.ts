@@ -3,7 +3,9 @@ import FakeRest from 'fakerest';
 import { data } from './data';
 
 export const initializeFetchMock = () => {
-    const restServer = new FakeRest.FetchServer('http://localhost:3000');
+    const restServer = new FakeRest.FetchServer({
+        baseUrl: 'http://localhost:3000',
+    });
     if (window) {
         // @ts-ignore
         window.restServer = restServer; // give way to update data in the console

@@ -17,14 +17,24 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     server: BaseServer | null = null;
     name: string | null = null;
     identifierName = 'id';
+    getNewId: () => number | string;
 
-    constructor(items: T[] = [], identifierName = 'id') {
+    constructor({
+        items = [],
+        identifierName = 'id',
+        getNewId,
+    }: {
+        items?: T[];
+        identifierName?: string;
+        getNewId?: () => number | string;
+    } = {}) {
         if (!Array.isArray(items)) {
             throw new Error(
                 "Can't initialize a Collection with anything else than an array of items",
             );
         }
         this.identifierName = identifierName;
+        this.getNewId = getNewId || this.getNewIdFromSequence;
         items.map(this.addOne.bind(this));
     }
 
@@ -160,14 +170,14 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         return items;
     }
 
-    getIndex(identifier: number) {
+    getIndex(identifier: number | string) {
         return this.items.findIndex(
             // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
             (item) => item[this.identifierName] == identifier,
         );
     }
 
-    getOne(identifier: number, query?: Query) {
+    getOne(identifier: number | string, query?: Query) {
         const index = this.getIndex(identifier);
         if (index === -1) {
             throw new Error(`No item with identifier ${identifier}`);
@@ -180,29 +190,30 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         return item;
     }
 
+    getNewIdFromSequence() {
+        return this.sequence++;
+    }
+
     addOne(item: T) {
         const identifier = item[this.identifierName];
-        if (identifier != null && typeof identifier !== 'number') {
-            throw new Error(
-                `Item must have an identifier of type number, got ${typeof identifier}`,
-            );
-        }
         if (identifier != null) {
             if (this.getIndex(identifier) !== -1) {
                 throw new Error(
                     `An item with the identifier ${identifier} already exists`,
                 );
             }
-            this.sequence = Math.max(this.sequence, identifier) + 1;
+            if (typeof identifier === 'number') {
+                this.sequence = Math.max(this.sequence, identifier) + 1;
+            }
         } else {
             // @ts-expect-error - For some reason, TS does not accept writing a generic types with the index signature
-            item[this.identifierName] = this.sequence++;
+            item[this.identifierName] = this.getNewId();
         }
         this.items.push(item);
         return Object.assign({}, item); // clone item to avoid returning the original;
     }
 
-    updateOne(identifier: number, item: T) {
+    updateOne(identifier: number | string, item: T) {
         const index = this.getIndex(identifier);
         if (index === -1) {
             throw new Error(`No item with identifier ${identifier}`);
@@ -213,7 +224,7 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         return Object.assign({}, this.items[index]); // clone item to avoid returning the original
     }
 
-    removeOne(identifier: number) {
+    removeOne(identifier: number | string) {
         const index = this.getIndex(identifier);
         if (index === -1) {
             throw new Error(`No item with identifier ${identifier}`);
@@ -221,7 +232,7 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         const item = this.items[index];
         this.items.splice(index, 1);
         // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
-        if (identifier == this.sequence - 1) {
+        if (typeof identifier === 'number' && identifier == this.sequence - 1) {
             this.sequence--;
         }
         return item;

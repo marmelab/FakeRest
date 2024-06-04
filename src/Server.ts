@@ -6,10 +6,6 @@ export class Server extends BaseServer {
     requestInterceptors: SinonRequestInterceptor[] = [];
     responseInterceptors: SinonResponseInterceptor[] = [];
 
-    constructor(baseUrl = '') {
-        super(baseUrl);
-    }
-
     addRequestInterceptor(interceptor: SinonRequestInterceptor) {
         this.requestInterceptors.push(interceptor);
     }
