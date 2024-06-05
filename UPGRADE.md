@@ -40,3 +40,31 @@ server.init(data);
 +    ],
 +});
 ```
+
+## Request and Response Interceptors Have Been Replaced By Middlewares
+
+Fakerest used to have request and response interceptors. We replaced those with middlewares that allows much more use cases.
+
+Migrate your request interceptors:
+
+```diff
+-restServer.addRequestInterceptor(function(request) {
++restServer.addMiddleware(async function(request, context, next) {
+    var start = (request.params._start - 1) || 0;
+    var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
+    request.params.range = [start, end];
+-    return request; // always return the modified input
++    return next(request, context);
+});
+```
+
+Migrate your response interceptors:
+
+```diff
+-restServer.addResponseInterceptor(function(response) {
++restServer.addMiddleware(async function(request, context, next) {
++    const response = await next(request, context);
+    response.body = { data: response.body, status: response.status };
+    return response;
+});
+```
