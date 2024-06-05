@@ -378,5 +378,5 @@ export type Middleware<RequestType> = (
     next: (
         req: RequestType,
         ctx: FakeRestContext,
-    ) => Promise<BaseResponse> | BaseResponse,
-) => Promise<BaseResponse> | BaseResponse | null | Promise<null>;
+    ) => Promise<BaseResponse | null> | BaseResponse | null,
+) => Promise<BaseResponse | null> | BaseResponse | null;
