@@ -11,7 +11,10 @@ const restServer = new MswServer({
 restServer.addMiddleware(withDelay(300));
 restServer.addMiddleware(async (request, context, next) => {
     if (!request.headers?.get('Authorization')) {
-        throw new Response(null, { status: 401 });
+        return {
+            status: 401,
+            headers: {},
+        };
     }
     return next(request, context);
 });

@@ -428,47 +428,34 @@ All fake servers supports middlewares that allows you to intercept requests and 
     - simulate response delays
 
 A middleware is a function that receive 3 parameters:
-    - The request object, specific to the chosen mocking solution (e.g. a [`Request`](https://developer.mozilla.org/fr/docs/Web/API/Request) for MSW and `fetch-mock`, a fake [`XMLHttpRequest`](https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest) for [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/))
-    - The FakeRest context, an object containing the data extracted from the request that FakeRest uses to build the response. It has the following properties:
+    - The `request` object, specific to the chosen mocking solution (e.g. a [`Request`](https://developer.mozilla.org/fr/docs/Web/API/Request) for MSW and `fetch-mock`, a fake [`XMLHttpRequest`](https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest) for [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/))
+    - The FakeRest `context`, an object containing the data extracted from the request that FakeRest uses to build the response. It has the following properties:
         - `url`: The request URL as a string
         - `method`: The request method as a string (`GET`, `POST`, `PATCH` or `PUT`)
         - `collection`: The name of the targeted [collection](#collection) (e.g. `posts`)
         - `single`: The name of the targeted [single](#single) (e.g. `settings`)
         - `requestJson`: The parsed request data if any
         - `params`: The request parameters from the URL search (e.g. the identifier of the requested record)
-    - A function to call the next middleware in the chain
-
-**Tip**: The middleware function for MSW and `fetch-mock` must return a promise. Those for Sinon must **not** return a promise.
+    - A `next` function to call the next middleware in the chain, to which you must pass the `request` and the `context`
 
 A middleware must return a FakeRest response either by returning the result of the `next` function or by returning its own response. A FakeRest response is an object with the following properties:
     - `status`: The response status as a number (e.g. `200`)
     - `headers`: The response HTTP headers as an object where keys are header names
     - `body`: The response body which will be stringified
 
-A middleware might also throw a response specific to the chosen mocking solution (e.g. a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for MSW, a [`MockResponseObject`](https://www.wheresrhys.co.uk/fetch-mock/#api-mockingmock_response) for `fetch-mock`) for even more control.
+Except for Sinon, a middleware might also throw a response specific to the chosen mocking solution (e.g. a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for MSW, a [`MockResponseObject`](https://www.wheresrhys.co.uk/fetch-mock/#api-mockingmock_response) or a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for `fetch-mock`) for even more control.
 
 ### Authentication Checks
 
-Here's to implement an authentication check for MSW or `fetch-mock`:
+Here's to implement an authentication check:
 
 ```js
 restServer.addMiddleware(async (request, context, next) => {
-    if (!request.headers?.get('Authorization')) {
-        throw new Response(null, { status: 401 });
-    }
-    return next(request, context);
-}
-```
-
-Here's how to do the same with Sinon:
-
-```js
-restServer.addMiddleware((request, context, next) => {
     if (request.requestHeaders.Authorization === undefined) {
-        // Uses Sinon API to respond immediately
-        request.respond(401, {}, 'Unauthorized');
-        // Avoid further processing
-        return null;
+        return {
+            status: 401,
+            headers: {},
+        };
     }
 
     return next(request, context);
@@ -477,38 +464,24 @@ restServer.addMiddleware((request, context, next) => {
 
 ### Server Side Validation
 
-Here's to implement server side validation for MSW or `fetch-mock`:
+Here's to implement server side validation:
 
 ```js
 restServer.addMiddleware(async (request, context, next) => {
-    if (
-        context.collection === 'books' &&
-        context.method === 'POST' &&
-        !context.requestJson?.title
-    ) {
-        throw new Response(null, {
-            status: 400,
-            statusText: 'Title is required',
-        });
-    }
-
-    return next(request, context);
-}
-```
-
-Here's how to do the same with Sinon:
-
-```js
-restServer.addMiddleware((request, context, next) => {
     if (
         context.collection === "books" &&
         request.method === "POST" &&
         !context.requestJson?.title
     ) {
-        // Uses Sinon API to respond immediately
-        request.respond(400, {}, "Title is required");
-        // Avoid further processing
-        return null;
+        return {
+            status: 400,
+            headers: {},
+            body: {
+                errors: {
+                    title: 'An article with this title already exists. The title must be unique.',
+                },
+            },
+        };
     }
 
     return next(request, context);
@@ -536,7 +509,7 @@ restServer.addMiddleware(async (request, context, next) => {
 
 ### Simulate Response Delays
 
-This only works with MSW and `fetch-mock`:
+Here's to simulate response delays:
 
 ```js
 restServer.addMiddleware(async (request, context, next) => {
