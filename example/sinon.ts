@@ -26,7 +26,7 @@ export const initializeSinon = () => {
     restServer.addMiddleware(async (request, context, next) => {
         if (context.collection === 'books' && request.method === 'POST') {
             if (
-                restServer.collections[context.collection].getCount({
+                restServer.database.getCount(context.collection, {
                     filter: {
                         title: context.requestBody?.title,
                     },
