@@ -43,7 +43,7 @@ server.init(data);
 
 ## Request and Response Interceptors Have Been Replaced By Middlewares
 
-Fakerest used to have request and response interceptors. We replaced those with middlewares that allows much more use cases.
+Fakerest used to have request and response interceptors. We replaced those with middlewares. They allow much more use cases.
 
 Migrate your request interceptors:
 
