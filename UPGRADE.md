@@ -46,7 +46,7 @@ import { data } from './data';
 server.init(data);
 ```
 
-## Constructor Of `Collection` Take An Object
+## Constructor Of `Collection` Takes An Object
 
 ```diff
 -const posts = new Collection([
