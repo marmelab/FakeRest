@@ -11,6 +11,20 @@ export class FetchMockServer extends BaseServerWithMiddlewares<
     Request,
     MockResponseObject
 > {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: FetchMockServerOptions) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
     async extractContext(request: Request) {
         const req =
             typeof request === 'string' ? new Request(request) : request;
@@ -101,6 +115,10 @@ export const getFetchMockHandler = (options: BaseServerOptions) => {
  * @deprecated Use FetchServer instead
  */
 export const FetchServer = FetchMockServer;
+
+export type FetchMockServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
+};
 
 export type FetchMockFakeRestRequest = Partial<Request> & {
     requestBody?: string;

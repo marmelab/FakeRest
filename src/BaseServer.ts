@@ -11,9 +11,7 @@ import type { CollectionItem, Query, QueryFunction } from './types.js';
 export abstract class BaseServer {
     baseUrl = '';
     identifierName = 'id';
-    loggingEnabled = false;
     defaultQuery: QueryFunction = () => ({});
-    batchUrl: string | null = null;
     collections: Record<string, Collection<any>> = {};
     singles: Record<string, Single<any>> = {};
     getNewId?: () => number | string;
@@ -25,12 +23,9 @@ export abstract class BaseServer {
         defaultQuery = () => ({}),
         identifierName = 'id',
         getNewId,
-        loggingEnabled = false,
     }: BaseServerOptions = {}) {
         this.baseUrl = baseUrl;
-        this.batchUrl = batchUrl;
         this.getNewId = getNewId;
-        this.loggingEnabled = loggingEnabled;
         this.identifierName = identifierName;
         this.defaultQuery = defaultQuery;
 
@@ -60,29 +55,11 @@ export abstract class BaseServer {
         }
     }
 
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
-    }
-
     /**
      * @param Function ResourceName => object
      */
     setDefaultQuery(query: QueryFunction) {
         this.defaultQuery = query;
-    }
-
-    setBatchUrl(batchUrl: string) {
-        this.batchUrl = batchUrl;
-    }
-
-    /**
-     * @deprecated use setBatchUrl instead
-     */
-    setBatch(url: string) {
-        console.warn(
-            'Server.setBatch() is deprecated, use Server.setBatchUrl() instead',
-        );
-        this.batchUrl = url;
     }
 
     addCollection<T extends CollectionItem = CollectionItem>(
@@ -242,7 +219,6 @@ export type BaseServerOptions = {
     defaultQuery?: QueryFunction;
     identifierName?: string;
     getNewId?: () => number | string;
-    loggingEnabled?: boolean;
 };
 
 export type BaseRequest = {

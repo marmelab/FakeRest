@@ -32,7 +32,11 @@ switch (import.meta.env.VITE_MOCK) {
     default:
         import('./msw')
             .then(({ worker, dataProvider }) => {
-                return worker.start().then(() => dataProvider);
+                return worker
+                    .start({
+                        quiet: true,
+                    })
+                    .then(() => dataProvider);
             })
             .then((dataProvider) => {
                 ReactDom.render(

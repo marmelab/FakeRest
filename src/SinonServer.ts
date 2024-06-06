@@ -7,6 +7,17 @@ export class SinonServer extends BaseServerWithMiddlewares<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {
+    loggingEnabled = false;
+
+    constructor({ loggingEnabled = false, ...options }: SinonServerOptions) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
     extractContextSync(request: SinonFakeXMLHttpRequest) {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
@@ -136,6 +147,10 @@ export const getSinonHandler = (options: BaseServerOptions) => {
  * @deprecated Use SinonServer instead
  */
 export const Server = SinonServer;
+
+export type SinonServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
+};
 
 export type SinonFakeRestResponse = {
     status: number;
