@@ -1,7 +1,12 @@
 import type { Collection } from './Collection.js';
 import { Database, type DatabaseOptions } from './Database.js';
 import type { Single } from './Single.js';
-import type { CollectionItem, QueryFunction } from './types.js';
+import type {
+    BaseResponse,
+    FakeRestContext,
+    CollectionItem,
+    QueryFunction,
+} from './types.js';
 
 export class BaseServer {
     baseUrl = '';
@@ -390,22 +395,6 @@ export type BaseServerOptions = DatabaseOptions & {
     batchUrl?: string | null;
     defaultQuery?: QueryFunction;
     middlewares?: Array<Middleware>;
-};
-
-export type BaseResponse = {
-    status: number;
-    body?: Record<string, any> | Record<string, any>[];
-    headers: { [key: string]: string };
-};
-
-export type FakeRestContext = {
-    url?: string;
-    headers?: Headers;
-    method?: string;
-    collection?: string;
-    single?: string;
-    requestBody: Record<string, any> | undefined;
-    params: { [key: string]: any };
 };
 
 export type NormalizedRequest = Pick<

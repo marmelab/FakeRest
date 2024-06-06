@@ -31,3 +31,24 @@ export type Predicate = <T extends CollectionItem = CollectionItem>(
 ) => boolean;
 
 export type Embed = string | string[];
+
+export type BaseResponse = {
+    status: number;
+    body?: Record<string, any> | Record<string, any>[];
+    headers: { [key: string]: string };
+};
+
+export type FakeRestContext = {
+    url?: string;
+    headers?: Headers;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestBody: Record<string, any> | undefined;
+    params: { [key: string]: any };
+};
+
+export type APIServer = {
+    baseUrl?: string;
+    handle: (context: FakeRestContext) => Promise<BaseResponse>;
+};

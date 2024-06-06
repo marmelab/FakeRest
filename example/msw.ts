@@ -1,10 +1,10 @@
 import { setupWorker } from 'msw/browser';
-import { MswServer, withDelay } from '../src';
+import { getMswHandler, withDelay } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 
 export const initializeMsw = async () => {
-    const restServer = new MswServer({
+    const handler = getMswHandler({
         baseUrl: 'http://localhost:3000',
         data,
         middlewares: [
@@ -46,7 +46,7 @@ export const initializeMsw = async () => {
             },
         ],
     });
-    const worker = setupWorker(restServer.getHandler());
+    const worker = setupWorker(handler);
     return worker.start({
         quiet: true, // Instruct MSW to not log requests in the console
         onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle

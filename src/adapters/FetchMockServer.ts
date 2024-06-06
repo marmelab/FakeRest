@@ -1,16 +1,12 @@
 import { BaseServer } from '../BaseServer.js';
 import { parseQueryString } from '../parseQueryString.js';
-import type {
-    BaseResponse,
-    FakeRestContext,
-    BaseServerOptions,
-    NormalizedRequest,
-} from '../BaseServer.js';
+import type { BaseServerOptions, NormalizedRequest } from '../BaseServer.js';
+import type { BaseResponse, APIServer } from '../types.js';
 import type { MockResponseObject } from 'fetch-mock';
 
 export class FetchMockServer {
     loggingEnabled = false;
-    server;
+    server: APIServer;
 
     constructor({
         loggingEnabled = false,
@@ -125,8 +121,6 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
 };
 
 export type FetchMockServerOptions = BaseServerOptions & {
-    server?: {
-        handle: (context: FakeRestContext) => Promise<BaseResponse>;
-    };
+    server?: APIServer;
     loggingEnabled?: boolean;
 };

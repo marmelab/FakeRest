@@ -1,15 +1,10 @@
 import { http, HttpResponse } from 'msw';
 import { BaseServer } from '../BaseServer.js';
-import type {
-    BaseResponse,
-    FakeRestContext,
-    BaseServerOptions,
-    NormalizedRequest,
-} from '../BaseServer.js';
-import type { DatabaseOptions } from '../Database.js';
+import type { BaseServerOptions, NormalizedRequest } from '../BaseServer.js';
+import type { APIServer } from '../types.js';
 
 export class MswServer {
-    server;
+    server: APIServer;
 
     constructor({ server, ...options }: MswServerOptions) {
         this.server = server || new BaseServer(options);
@@ -56,14 +51,11 @@ export class MswServer {
     }
 }
 
-export const getMswHandler = (options: DatabaseOptions) => {
+export const getMswHandler = (options: MswServerOptions) => {
     const server = new MswServer(options);
     return server.getHandler();
 };
 
 export type MswServerOptions = BaseServerOptions & {
-    server?: {
-        baseUrl?: string;
-        handle: (context: FakeRestContext) => Promise<BaseResponse>;
-    };
+    server?: APIServer;
 };
