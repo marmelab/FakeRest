@@ -20,6 +20,30 @@ export const initializeSinon = () => {
         return next(request, context);
     });
 
+    restServer.addMiddleware((request, context, next) => {
+        if (context.collection === 'books' && request.method === 'POST') {
+            if (
+                restServer.collections[context.collection].getCount({
+                    filter: {
+                        title: context.requestJson?.title,
+                    },
+                }) > 0
+            ) {
+                request.respond(
+                    401,
+                    {},
+                    JSON.stringify({
+                        errors: {
+                            title: 'An article with this title already exists. The title must be unique.',
+                        },
+                    }),
+                );
+            }
+        }
+
+        return next(request, context);
+    });
+
     // use sinon.js to monkey-patch XmlHttpRequest
     const server = sinon.fakeServer.create();
     // this is required when doing asynchronous XmlHttpRequest

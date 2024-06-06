@@ -7,6 +7,8 @@ import {
     ListGuesser,
     Resource,
     ShowGuesser,
+    required,
+    AutocompleteInput,
 } from 'react-admin';
 import { QueryClient } from 'react-query';
 
@@ -51,8 +53,14 @@ import authProvider from './authProvider';
 export const BookCreate = () => (
     <Create>
         <SimpleForm>
-            <ReferenceInput source="author_id" reference="authors" />
-            <TextInput source="title" />
+            <ReferenceInput source="author_id" reference="authors">
+                <AutocompleteInput validate={required()} />
+            </ReferenceInput>
+            <TextInput
+                source="title"
+                validate={required()}
+                defaultValue="Anna Karenina"
+            />
         </SimpleForm>
     </Create>
 );
