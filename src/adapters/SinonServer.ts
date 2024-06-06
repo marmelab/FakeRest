@@ -7,7 +7,7 @@ export class SinonServer extends BaseServer<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {
-    extractContextSync(request: SinonFakeXMLHttpRequest) {
+    async extractContext(request: SinonFakeXMLHttpRequest) {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
 
@@ -34,7 +34,7 @@ export class SinonServer extends BaseServer<
         };
     }
 
-    respondSync(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
+    async respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
         const sinonResponse = {
             status: response.status,
             body: response.body ?? '',
@@ -62,7 +62,7 @@ export class SinonServer extends BaseServer<
         }
 
         // This is an internal property of SinonFakeXMLHttpRequest but we have to reset it to 1
-        // to allow the request to be resolved by Sinon.
+        // to handle the request asynchronously.
         // See https://github.com/sinonjs/sinon/issues/637
         // @ts-expect-error
         request.readyState = 1;
@@ -120,8 +120,15 @@ export class SinonServer extends BaseServer<
 
     getHandler() {
         return (request: SinonFakeXMLHttpRequest) => {
-            const result = this.handleSync(request);
-            return result;
+            // This is an internal property of SinonFakeXMLHttpRequest but we have to set it to 4 to
+            // suppress sinon's synchronous processing (which would result in HTTP 404). This allows us
+            // to handle the request asynchronously.
+            // See https://github.com/sinonjs/sinon/issues/637
+            // @ts-expect-error
+            request.readyState = 4;
+            this.handle(request);
+            // Let Sinon know we've handled the request
+            return true;
         };
     }
 }

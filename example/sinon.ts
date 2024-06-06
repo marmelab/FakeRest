@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { SinonServer } from '../src/FakeRest';
+import { SinonServer, withDelay } from '../src/FakeRest';
 import { data } from './data';
 import { HttpError, type Options } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
@@ -11,16 +11,19 @@ export const initializeSinon = () => {
         loggingEnabled: true,
     });
 
-    restServer.addMiddleware((request, context, next) => {
+    restServer.addMiddleware(withDelay(3000));
+    restServer.addMiddleware(async (request, context, next) => {
         if (request.requestHeaders.Authorization === undefined) {
-            request.respond(401, {}, 'Unauthorized');
-            return null;
+            return {
+                status: 401,
+                headers: {},
+            };
         }
 
         return next(request, context);
     });
 
-    restServer.addMiddleware((request, context, next) => {
+    restServer.addMiddleware(async (request, context, next) => {
         if (context.collection === 'books' && request.method === 'POST') {
             if (
                 restServer.collections[context.collection].getCount({
@@ -29,15 +32,15 @@ export const initializeSinon = () => {
                     },
                 }) > 0
             ) {
-                request.respond(
-                    401,
-                    {},
-                    JSON.stringify({
+                return {
+                    status: 400,
+                    headers: {},
+                    body: {
                         errors: {
                             title: 'An article with this title already exists. The title must be unique.',
                         },
-                    }),
-                );
+                    },
+                };
             }
         }
 

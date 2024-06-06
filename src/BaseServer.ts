@@ -26,20 +26,6 @@ export abstract class BaseServer<
         throw new Error('Not implemented');
     }
 
-    extractContextSync(
-        request: RequestType,
-    ): Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'> {
-        throw new Error('Not implemented');
-    }
-
-    respondSync(
-        response: BaseResponse | null,
-        request: RequestType,
-        context: FakeRestContext,
-    ): ResponseType {
-        throw new Error('Not implemented');
-    }
-
     async handle(request: RequestType): Promise<ResponseType | undefined> {
         const context = this.getContext(await this.extractContext(request));
 
@@ -60,41 +46,6 @@ export abstract class BaseServer<
             const response = await next(request, context);
             if (response != null) {
                 return this.respond(response, request, context);
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                throw error;
-            }
-
-            return error as ResponseType;
-        }
-    }
-
-    handleSync(request: RequestType): ResponseType | undefined {
-        const context = this.getContext(this.extractContextSync(request));
-
-        // Call middlewares
-        let index = 0;
-        const middlewares = [...this.middlewares];
-
-        const next = (req: RequestType, ctx: FakeRestContext) => {
-            const middleware = middlewares[index++];
-            if (middleware) {
-                return middleware(req, ctx, next);
-            }
-
-            return this.handleRequest(req, ctx);
-        };
-
-        try {
-            const response = next(request, context);
-            if (response instanceof Promise) {
-                throw new Error(
-                    'Middleware returned a promise in a sync context',
-                );
-            }
-            if (response != null) {
-                return this.respondSync(response, request, context);
             }
         } catch (error) {
             if (error instanceof Error) {
