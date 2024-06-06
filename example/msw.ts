@@ -42,6 +42,12 @@ restServer.addMiddleware(async (request, context, next) => {
     return next(request, context);
 });
 
-export const worker = setupWorker(restServer.getHandler());
+export const initializeMsw = async () => {
+    const worker = setupWorker(restServer.getHandler());
+    return worker.start({
+        quiet: true, // Instruct MSW to not log requests in the console
+        onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle
+    });
+};
 
 export const dataProvider = defaultDataProvider;

@@ -22,7 +22,7 @@ Then configure it:
 ```js
 // in ./src/msw.js
 import { setupWorker } from "msw/browser";
-import { getMswHandlers } from "fakerest";
+import { getMswHandler } from "fakerest";
 
 const data = {
     'authors': [
@@ -41,7 +41,7 @@ const data = {
     }
 };
 
-export const worker = setupWorker(...getMswHandlers({
+export const worker = setupWorker(getMswHandler({
     data
 }));
 ```
@@ -54,7 +54,10 @@ import ReactDom from "react-dom";
 import { App } from "./App";
 import { worker } from "./msw";
 
-worker.start().then(() => {
+worker.start({
+    quiet: true, // Instruct MSW to not log requests in the console
+    onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle
+}).then(() => {
   ReactDom.render(<App />, document.getElementById("root"));
 });
 ```
@@ -86,7 +89,7 @@ const data = {
 const restServer = new MswServer();
 restServer.init(data);
 
-export const worker = setupWorker(...restServer.getHandlers());
+export const worker = setupWorker(restServer.getHandler());
 ```
 
 ### Sinon
