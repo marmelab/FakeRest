@@ -3,20 +3,22 @@ import { Database, type DatabaseOptions } from './Database.js';
 import type { Single } from './Single.js';
 import type { CollectionItem, QueryFunction } from './types.js';
 
-export class BaseServer<RequestType, ResponseType> {
+export class BaseServer {
     baseUrl = '';
     defaultQuery: QueryFunction = () => ({});
-    middlewares: Array<Middleware<RequestType>> = [];
+    middlewares: Array<Middleware>;
     database: Database;
 
     constructor({
         baseUrl = '',
         defaultQuery = () => ({}),
         database,
+        middlewares,
         ...options
     }: BaseServerOptions = {}) {
         this.baseUrl = baseUrl;
         this.defaultQuery = defaultQuery;
+        this.middlewares = middlewares || [];
 
         if (database) {
             this.database = database;
@@ -32,19 +34,19 @@ export class BaseServer<RequestType, ResponseType> {
         this.defaultQuery = query;
     }
 
-    getContext(context: NormalizedRequest): FakeRestContext {
+    getContext(normalizedRequest: NormalizedRequest): FakeRestContext {
         for (const name of this.database.getSingleNames()) {
-            const matches = context.url?.match(
+            const matches = normalizedRequest.url?.match(
                 new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
             if (!matches) continue;
             return {
-                ...context,
+                ...normalizedRequest,
                 single: name,
             };
         }
 
-        const matches = context.url?.match(
+        const matches = normalizedRequest.url?.match(
             new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
         );
         if (matches) {
@@ -52,72 +54,55 @@ export class BaseServer<RequestType, ResponseType> {
             const params = Object.assign(
                 {},
                 this.defaultQuery(name),
-                context.params,
+                normalizedRequest.params,
             );
 
             return {
-                ...context,
+                ...normalizedRequest,
                 collection: name,
                 params,
             };
         }
 
-        return context;
+        return normalizedRequest;
     }
 
-    getNormalizedRequest(request: RequestType): Promise<NormalizedRequest> {
-        throw new Error('Not implemented');
-    }
-
-    respond(
-        response: BaseResponse | null,
-        request: RequestType,
-        context: FakeRestContext,
-    ): Promise<ResponseType> {
-        throw new Error('Not implemented');
-    }
-
-    async handle(request: RequestType): Promise<ResponseType | undefined> {
-        const context = this.getContext(
-            await this.getNormalizedRequest(request),
-        );
-
+    async handle(normalizedRequest: NormalizedRequest): Promise<BaseResponse> {
+        const context = this.getContext(normalizedRequest);
         // Call middlewares
         let index = 0;
         const middlewares = [...this.middlewares];
 
-        const next = (req: RequestType, ctx: FakeRestContext) => {
+        const next = (context: FakeRestContext) => {
             const middleware = middlewares[index++];
             if (middleware) {
-                return middleware(req, ctx, next);
+                return middleware(context, next);
             }
 
-            return this.handleRequest(req, ctx);
+            return this.handleRequest(context);
         };
 
         try {
-            const response = await next(request, context);
-            if (response != null) {
-                return this.respond(response, request, context);
-            }
+            const response = await next(context);
+            return response;
         } catch (error) {
             if (error instanceof Error) {
                 throw error;
             }
 
-            return error as ResponseType;
+            return error as BaseResponse;
         }
     }
 
-    handleRequest(request: RequestType, ctx: FakeRestContext): BaseResponse {
+    handleRequest(context: FakeRestContext): BaseResponse {
         // Handle Single Objects
         for (const name of this.database.getSingleNames()) {
-            const matches = ctx.url?.match(
+            const matches = context.url?.match(
                 new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
             if (!matches) continue;
 
-            if (ctx.method === 'GET') {
+            if (context.method === 'GET') {
                 try {
                     return {
                         status: 200,
@@ -133,9 +118,9 @@ export class BaseServer<RequestType, ResponseType> {
                     };
                 }
             }
-            if (ctx.method === 'PUT') {
+            if (context.method === 'PUT') {
                 try {
-                    if (ctx.requestBody == null) {
+                    if (context.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -143,7 +128,10 @@ export class BaseServer<RequestType, ResponseType> {
                     }
                     return {
                         status: 200,
-                        body: this.database.updateOnly(name, ctx.requestBody),
+                        body: this.database.updateOnly(
+                            name,
+                            context.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -155,9 +143,9 @@ export class BaseServer<RequestType, ResponseType> {
                     };
                 }
             }
-            if (ctx.method === 'PATCH') {
+            if (context.method === 'PATCH') {
                 try {
-                    if (ctx.requestBody == null) {
+                    if (context.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -165,7 +153,10 @@ export class BaseServer<RequestType, ResponseType> {
                     }
                     return {
                         status: 200,
-                        body: this.database.updateOnly(name, ctx.requestBody),
+                        body: this.database.updateOnly(
+                            name,
+                            context.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -180,16 +171,20 @@ export class BaseServer<RequestType, ResponseType> {
         }
 
         // handle collections
-        const matches = ctx.url?.match(
+        const matches = context.url?.match(
             new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
         );
         if (!matches) {
             return { status: 404, headers: {} };
         }
         const name = matches[1];
-        const params = Object.assign({}, this.defaultQuery(name), ctx.params);
+        const params = Object.assign(
+            {},
+            this.defaultQuery(name),
+            context.params,
+        );
         if (!matches[2]) {
-            if (ctx.method === 'GET') {
+            if (context.method === 'GET') {
                 if (!this.database.getCollection(name)) {
                     return { status: 404, headers: {} };
                 }
@@ -227,15 +222,18 @@ export class BaseServer<RequestType, ResponseType> {
                     },
                 };
             }
-            if (ctx.method === 'POST') {
-                if (ctx.requestBody == null) {
+            if (context.method === 'POST') {
+                if (context.requestBody == null) {
                     return {
                         status: 400,
                         headers: {},
                     };
                 }
 
-                const newResource = this.database.addOne(name, ctx.requestBody);
+                const newResource = this.database.addOne(
+                    name,
+                    context.requestBody,
+                );
                 const newResourceURI = `${this.baseUrl}/${name}/${
                     newResource[
                         this.database.getCollection(name).identifierName
@@ -256,7 +254,7 @@ export class BaseServer<RequestType, ResponseType> {
                 return { status: 404, headers: {} };
             }
             const id = Number.parseInt(matches[3]);
-            if (ctx.method === 'GET') {
+            if (context.method === 'GET') {
                 try {
                     return {
                         status: 200,
@@ -272,9 +270,9 @@ export class BaseServer<RequestType, ResponseType> {
                     };
                 }
             }
-            if (ctx.method === 'PUT') {
+            if (context.method === 'PUT') {
                 try {
-                    if (ctx.requestBody == null) {
+                    if (context.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -285,7 +283,7 @@ export class BaseServer<RequestType, ResponseType> {
                         body: this.database.updateOne(
                             name,
                             id,
-                            ctx.requestBody,
+                            context.requestBody,
                         ),
                         headers: {
                             'Content-Type': 'application/json',
@@ -298,9 +296,9 @@ export class BaseServer<RequestType, ResponseType> {
                     };
                 }
             }
-            if (ctx.method === 'PATCH') {
+            if (context.method === 'PATCH') {
                 try {
-                    if (ctx.requestBody == null) {
+                    if (context.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -311,7 +309,7 @@ export class BaseServer<RequestType, ResponseType> {
                         body: this.database.updateOne(
                             name,
                             id,
-                            ctx.requestBody,
+                            context.requestBody,
                         ),
                         headers: {
                             'Content-Type': 'application/json',
@@ -324,7 +322,7 @@ export class BaseServer<RequestType, ResponseType> {
                     };
                 }
             }
-            if (ctx.method === 'DELETE') {
+            if (context.method === 'DELETE') {
                 try {
                     return {
                         status: 200,
@@ -347,7 +345,7 @@ export class BaseServer<RequestType, ResponseType> {
         };
     }
 
-    addMiddleware(middleware: Middleware<RequestType>) {
+    addMiddleware(middleware: Middleware) {
         this.middlewares.push(middleware);
     }
 
@@ -382,20 +380,17 @@ export class BaseServer<RequestType, ResponseType> {
     }
 }
 
-export type Middleware<RequestType> = (
-    request: RequestType,
+export type Middleware = (
     context: FakeRestContext,
-    next: (
-        req: RequestType,
-        ctx: FakeRestContext,
-    ) => Promise<BaseResponse | null> | BaseResponse | null,
-) => Promise<BaseResponse | null> | BaseResponse | null;
+    next: (context: FakeRestContext) => Promise<BaseResponse> | BaseResponse,
+) => Promise<BaseResponse> | BaseResponse;
 
 export type BaseServerOptions = DatabaseOptions & {
     database?: Database;
     baseUrl?: string;
     batchUrl?: string | null;
     defaultQuery?: QueryFunction;
+    middlewares?: Array<Middleware>;
 };
 
 export type BaseResponse = {
@@ -406,6 +401,7 @@ export type BaseResponse = {
 
 export type FakeRestContext = {
     url?: string;
+    headers?: Headers;
     method?: string;
     collection?: string;
     single?: string;
@@ -415,5 +411,5 @@ export type FakeRestContext = {
 
 export type NormalizedRequest = Pick<
     FakeRestContext,
-    'url' | 'method' | 'params' | 'requestBody'
+    'url' | 'method' | 'params' | 'requestBody' | 'headers'
 >;
