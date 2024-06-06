@@ -126,7 +126,6 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
 
 export type FetchMockServerOptions = BaseServerOptions & {
     server?: {
-        getContext: (context: NormalizedRequest) => FakeRestContext;
         handle: (context: FakeRestContext) => Promise<BaseResponse>;
     };
     loggingEnabled?: boolean;

@@ -78,7 +78,6 @@ export class BaseServer {
             if (middleware) {
                 return middleware(context, next);
             }
-
             return this.handleRequest(context);
         };
 
