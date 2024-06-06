@@ -2,16 +2,31 @@ import React from 'react';
 import {
     Admin,
     Create,
+    type DataProvider,
     EditGuesser,
     ListGuesser,
     Resource,
     ShowGuesser,
+    required,
+    AutocompleteInput,
 } from 'react-admin';
-import { dataProvider } from './dataProvider';
+import { QueryClient } from 'react-query';
 
-export const App = () => {
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+        },
+    },
+});
+
+export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     return (
-        <Admin dataProvider={dataProvider}>
+        <Admin
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            queryClient={queryClient}
+        >
             <Resource
                 name="books"
                 list={ListGuesser}
@@ -24,18 +39,28 @@ export const App = () => {
                 list={ListGuesser}
                 edit={EditGuesser}
                 show={ShowGuesser}
+                recordRepresentation={(record) =>
+                    `${record.first_name} ${record.last_name}`
+                }
             />
         </Admin>
     );
 };
 
 import { Edit, ReferenceInput, SimpleForm, TextInput } from 'react-admin';
+import authProvider from './authProvider';
 
 export const BookCreate = () => (
     <Create>
         <SimpleForm>
-            <ReferenceInput source="author_id" reference="authors" />
-            <TextInput source="title" />
+            <ReferenceInput source="author_id" reference="authors">
+                <AutocompleteInput validate={required()} />
+            </ReferenceInput>
+            <TextInput
+                source="title"
+                validate={required()}
+                defaultValue="Anna Karenina"
+            />
         </SimpleForm>
     </Create>
 );

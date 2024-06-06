@@ -1,5 +1,5 @@
 import { Collection } from './Collection.js';
-import { Server } from './SinonServer.js';
+import { Database } from './Database.js';
 import type { CollectionItem } from './types.js';
 
 describe('Collection', () => {
@@ -627,8 +627,8 @@ describe('Collection', () => {
                 const foos = new Collection({
                     items: [{ name: 'John', bar_id: 123 }],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
+                const database = new Database();
+                database.addCollection('foos', foos);
                 expect(() => {
                     foos.getAll({ embed: ['bar'] });
                 }).toThrow(
@@ -641,9 +641,9 @@ describe('Collection', () => {
                     items: [{ name: 'John', bar_id: 123 }],
                 });
                 const bars = new Collection({ items: [] });
-                const server = new Server();
-                server.addCollection('foos', foos);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addCollection('foos', foos);
+                database.addCollection('bars', bars);
                 const expected = [{ id: 0, name: 'John', bar_id: 123 }];
                 expect(foos.getAll({ embed: ['bar'] })).toEqual(expected);
             });
@@ -662,9 +662,9 @@ describe('Collection', () => {
                         { id: 456, bar: 'bazz' },
                     ],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addCollection('foos', foos);
+                database.addCollection('bars', bars);
                 const expected = [
                     {
                         id: 0,
@@ -686,8 +686,8 @@ describe('Collection', () => {
                 const foos = new Collection({
                     items: [{ name: 'John', bar_id: 123 }],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
+                const database = new Database();
+                database.addCollection('foos', foos);
                 expect(() => {
                     foos.getAll({ embed: ['bars'] });
                 }).toThrow(
@@ -702,9 +702,9 @@ describe('Collection', () => {
                 const bars = new Collection({
                     items: [{ id: 1, bar: 'nobody wants me' }],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addCollection('foos', foos);
+                database.addCollection('bars', bars);
                 const expected = [{ id: 1, bar: 'nobody wants me', foos: [] }];
                 expect(bars.getAll({ embed: ['foos'] })).toEqual(expected);
             });
@@ -724,9 +724,9 @@ describe('Collection', () => {
                         { id: 456, bar: 'bazz' },
                     ],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addCollection('foos', foos);
+                database.addCollection('bars', bars);
                 const expected = [
                     { id: 1, bar: 'nobody wants me', foos: [] },
                     {
@@ -761,9 +761,9 @@ describe('Collection', () => {
                         { id: 456, bar: 'bazz', foos: [2, 3] },
                     ],
                 });
-                const server = new Server();
-                server.addCollection('foos', foos);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addCollection('foos', foos);
+                database.addCollection('bars', bars);
                 const expected = [
                     { id: 1, bar: 'nobody wants me', foos: [] },
                     { id: 123, bar: 'baz', foos: [{ id: 1, name: 'John' }] },
@@ -809,10 +809,10 @@ describe('Collection', () => {
                         { id: 2, name: 'Russia' },
                     ],
                 });
-                const server = new Server();
-                server.addCollection('books', books);
-                server.addCollection('authors', authors);
-                server.addCollection('countrys', countries); // nevermind the plural
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+                database.addCollection('countrys', countries); // nevermind the plural
                 const expected = [
                     {
                         id: 1,

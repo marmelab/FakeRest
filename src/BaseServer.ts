@@ -1,61 +1,28 @@
-import { Collection } from './Collection.js';
-import { Single } from './Single.js';
-import type { CollectionItem, Query, QueryFunction } from './types.js';
+import type { Collection } from './Collection.js';
+import { Database, type DatabaseOptions } from './Database.js';
+import type { Single } from './Single.js';
+import type { CollectionItem, QueryFunction } from './types.js';
 
-export class BaseServer {
+export class BaseServer<RequestType, ResponseType> {
     baseUrl = '';
-    identifierName = 'id';
-    loggingEnabled = false;
     defaultQuery: QueryFunction = () => ({});
-    batchUrl: string | null = null;
-    collections: Record<string, Collection<any>> = {};
-    singles: Record<string, Single<any>> = {};
-    getNewId?: () => number | string;
+    middlewares: Array<Middleware<RequestType>> = [];
+    database: Database;
 
     constructor({
         baseUrl = '',
-        batchUrl = null,
-        data,
         defaultQuery = () => ({}),
-        identifierName = 'id',
-        getNewId,
-        loggingEnabled = false,
+        database,
+        ...options
     }: BaseServerOptions = {}) {
         this.baseUrl = baseUrl;
-        this.batchUrl = batchUrl;
-        this.getNewId = getNewId;
-        this.loggingEnabled = loggingEnabled;
-        this.identifierName = identifierName;
         this.defaultQuery = defaultQuery;
 
-        if (data) {
-            this.init(data);
+        if (database) {
+            this.database = database;
+        } else {
+            this.database = new Database(options);
         }
-    }
-
-    /**
-     * Shortcut for adding several collections if identifierName is always the same
-     */
-    init(data: Record<string, CollectionItem[] | CollectionItem>) {
-        for (const name in data) {
-            const value = data[name];
-            if (Array.isArray(value)) {
-                this.addCollection(
-                    name,
-                    new Collection({
-                        items: value,
-                        identifierName: this.identifierName,
-                        getNewId: this.getNewId,
-                    }),
-                );
-            } else {
-                this.addSingle(name, new Single(value));
-            }
-        }
-    }
-
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
     }
 
     /**
@@ -65,117 +32,96 @@ export class BaseServer {
         this.defaultQuery = query;
     }
 
-    setBatchUrl(batchUrl: string) {
-        this.batchUrl = batchUrl;
-    }
-
-    /**
-     * @deprecated use setBatchUrl instead
-     */
-    setBatch(url: string) {
-        console.warn(
-            'Server.setBatch() is deprecated, use Server.setBatchUrl() instead',
-        );
-        this.batchUrl = url;
-    }
-
-    addCollection<T extends CollectionItem = CollectionItem>(
-        name: string,
-        collection: Collection<T>,
-    ) {
-        this.collections[name] = collection;
-        collection.setServer(this);
-        collection.setName(name);
-    }
-
-    getCollection(name: string) {
-        return this.collections[name];
-    }
-
-    getCollectionNames() {
-        return Object.keys(this.collections);
-    }
-
-    addSingle<T extends CollectionItem = CollectionItem>(
-        name: string,
-        single: Single<T>,
-    ) {
-        this.singles[name] = single;
-        single.setServer(this);
-        single.setName(name);
-    }
-
-    getSingle(name: string) {
-        return this.singles[name];
-    }
-
-    getSingleNames() {
-        return Object.keys(this.singles);
-    }
-
-    /**
-     * @param {string} name
-     * @param {string} params As decoded from the query string, e.g. { sort: "name", filter: {enabled:true}, slice: [10, 20] }
-     */
-    getCount(name: string, params?: Query) {
-        return this.collections[name].getCount(params);
-    }
-
-    /**
-     * @param {string} name
-     * @param {string} params As decoded from the query string, e.g. { sort: "name", filter: {enabled:true}, slice: [10, 20] }
-     */
-    getAll(name: string, params?: Query) {
-        return this.collections[name].getAll(params);
-    }
-
-    getOne(name: string, identifier: string | number, params?: Query) {
-        return this.collections[name].getOne(identifier, params);
-    }
-
-    addOne(name: string, item: CollectionItem) {
-        if (!Object.prototype.hasOwnProperty.call(this.collections, name)) {
-            this.addCollection(
-                name,
-                new Collection({
-                    items: [],
-                    identifierName: 'id',
-                    getNewId: this.getNewId,
-                }),
+    getContext(context: NormalizedRequest): FakeRestContext {
+        for (const name of this.database.getSingleNames()) {
+            const matches = context.url?.match(
+                new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
+            if (!matches) continue;
+            return {
+                ...context,
+                single: name,
+            };
         }
-        return this.collections[name].addOne(item);
+
+        const matches = context.url?.match(
+            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
+        );
+        if (matches) {
+            const name = matches[1];
+            const params = Object.assign(
+                {},
+                this.defaultQuery(name),
+                context.params,
+            );
+
+            return {
+                ...context,
+                collection: name,
+                params,
+            };
+        }
+
+        return context;
     }
 
-    updateOne(name: string, identifier: string | number, item: CollectionItem) {
-        return this.collections[name].updateOne(identifier, item);
+    getNormalizedRequest(request: RequestType): Promise<NormalizedRequest> {
+        throw new Error('Not implemented');
     }
 
-    removeOne(name: string, identifier: string | number) {
-        return this.collections[name].removeOne(identifier);
+    respond(
+        response: BaseResponse | null,
+        request: RequestType,
+        context: FakeRestContext,
+    ): Promise<ResponseType> {
+        throw new Error('Not implemented');
     }
 
-    getOnly(name: string, params?: Query) {
-        return this.singles[name].getOnly();
+    async handle(request: RequestType): Promise<ResponseType | undefined> {
+        const context = this.getContext(
+            await this.getNormalizedRequest(request),
+        );
+
+        // Call middlewares
+        let index = 0;
+        const middlewares = [...this.middlewares];
+
+        const next = (req: RequestType, ctx: FakeRestContext) => {
+            const middleware = middlewares[index++];
+            if (middleware) {
+                return middleware(req, ctx, next);
+            }
+
+            return this.handleRequest(req, ctx);
+        };
+
+        try {
+            const response = await next(request, context);
+            if (response != null) {
+                return this.respond(response, request, context);
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            return error as ResponseType;
+        }
     }
 
-    updateOnly(name: string, item: CollectionItem) {
-        return this.singles[name].updateOnly(item);
-    }
-
-    handleRequest(request: BaseRequest, opts?: RequestInit): BaseResponse {
+    handleRequest(request: RequestType, ctx: FakeRestContext): BaseResponse {
         // Handle Single Objects
-        for (const name of this.getSingleNames()) {
-            const matches = request.url?.match(
+        for (const name of this.database.getSingleNames()) {
+            const matches = ctx.url?.match(
                 new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
             if (!matches) continue;
 
-            if (request.method === 'GET') {
+            if (ctx.method === 'GET') {
                 try {
                     return {
                         status: 200,
-                        body: this.getOnly(name),
+                        body: this.database.getOnly(name),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -187,9 +133,9 @@ export class BaseServer {
                     };
                 }
             }
-            if (request.method === 'PUT') {
+            if (ctx.method === 'PUT') {
                 try {
-                    if (request.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -197,7 +143,7 @@ export class BaseServer {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, request.requestJson),
+                        body: this.database.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -209,9 +155,9 @@ export class BaseServer {
                     };
                 }
             }
-            if (request.method === 'PATCH') {
+            if (ctx.method === 'PATCH') {
                 try {
-                    if (request.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -219,7 +165,7 @@ export class BaseServer {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, request.requestJson),
+                        body: this.database.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -234,29 +180,25 @@ export class BaseServer {
         }
 
         // handle collections
-        const matches = request.url?.match(
+        const matches = ctx.url?.match(
             new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
         );
         if (!matches) {
             return { status: 404, headers: {} };
         }
         const name = matches[1];
-        const params = Object.assign(
-            {},
-            this.defaultQuery(name),
-            request.params,
-        );
+        const params = Object.assign({}, this.defaultQuery(name), ctx.params);
         if (!matches[2]) {
-            if (request.method === 'GET') {
-                if (!this.getCollection(name)) {
+            if (ctx.method === 'GET') {
+                if (!this.database.getCollection(name)) {
                     return { status: 404, headers: {} };
                 }
-                const count = this.getCount(
+                const count = this.database.getCount(
                     name,
                     params.filter ? { filter: params.filter } : {},
                 );
                 if (count > 0) {
-                    const items = this.getAll(name, params);
+                    const items = this.database.getAll(name, params);
                     const first = params.range ? params.range[0] : 0;
                     const last =
                         params.range && params.range.length === 2
@@ -285,17 +227,19 @@ export class BaseServer {
                     },
                 };
             }
-            if (request.method === 'POST') {
-                if (request.requestJson == null) {
+            if (ctx.method === 'POST') {
+                if (ctx.requestBody == null) {
                     return {
                         status: 400,
                         headers: {},
                     };
                 }
 
-                const newResource = this.addOne(name, request.requestJson);
+                const newResource = this.database.addOne(name, ctx.requestBody);
                 const newResourceURI = `${this.baseUrl}/${name}/${
-                    newResource[this.getCollection(name).identifierName]
+                    newResource[
+                        this.database.getCollection(name).identifierName
+                    ]
                 }`;
 
                 return {
@@ -308,15 +252,15 @@ export class BaseServer {
                 };
             }
         } else {
-            if (!this.getCollection(name)) {
+            if (!this.database.getCollection(name)) {
                 return { status: 404, headers: {} };
             }
             const id = Number.parseInt(matches[3]);
-            if (request.method === 'GET') {
+            if (ctx.method === 'GET') {
                 try {
                     return {
                         status: 200,
-                        body: this.getOne(name, id, params),
+                        body: this.database.getOne(name, id, params),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -328,9 +272,9 @@ export class BaseServer {
                     };
                 }
             }
-            if (request.method === 'PUT') {
+            if (ctx.method === 'PUT') {
                 try {
-                    if (request.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -338,7 +282,11 @@ export class BaseServer {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, request.requestJson),
+                        body: this.database.updateOne(
+                            name,
+                            id,
+                            ctx.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -350,9 +298,9 @@ export class BaseServer {
                     };
                 }
             }
-            if (request.method === 'PATCH') {
+            if (ctx.method === 'PATCH') {
                 try {
-                    if (request.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -360,7 +308,11 @@ export class BaseServer {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, request.requestJson),
+                        body: this.database.updateOne(
+                            name,
+                            id,
+                            ctx.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -372,11 +324,11 @@ export class BaseServer {
                     };
                 }
             }
-            if (request.method === 'DELETE') {
+            if (ctx.method === 'DELETE') {
                 try {
                     return {
                         status: 200,
-                        body: this.removeOne(name, id),
+                        body: this.database.removeOne(name, id),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -394,27 +346,74 @@ export class BaseServer {
             headers: {},
         };
     }
+
+    addMiddleware(middleware: Middleware<RequestType>) {
+        this.middlewares.push(middleware);
+    }
+
+    addCollection<T extends CollectionItem = CollectionItem>(
+        name: string,
+        collection: Collection<T>,
+    ) {
+        this.database.addCollection(name, collection);
+    }
+
+    getCollection(name: string) {
+        return this.database.getCollection(name);
+    }
+
+    getCollectionNames() {
+        return this.database.getCollectionNames();
+    }
+
+    addSingle<T extends CollectionItem = CollectionItem>(
+        name: string,
+        single: Single<T>,
+    ) {
+        this.database.addSingle(name, single);
+    }
+
+    getSingle(name: string) {
+        return this.database.getSingle(name);
+    }
+
+    getSingleNames() {
+        return this.database.getSingleNames();
+    }
 }
 
-export type BaseServerOptions = {
+export type Middleware<RequestType> = (
+    request: RequestType,
+    context: FakeRestContext,
+    next: (
+        req: RequestType,
+        ctx: FakeRestContext,
+    ) => Promise<BaseResponse | null> | BaseResponse | null,
+) => Promise<BaseResponse | null> | BaseResponse | null;
+
+export type BaseServerOptions = DatabaseOptions & {
+    database?: Database;
     baseUrl?: string;
     batchUrl?: string | null;
-    data?: Record<string, CollectionItem[] | CollectionItem>;
     defaultQuery?: QueryFunction;
-    identifierName?: string;
-    getNewId?: () => number | string;
-    loggingEnabled?: boolean;
 };
 
-type BaseRequest = {
-    url?: string;
-    method?: string;
-    requestJson?: Record<string, any> | undefined;
-    params?: { [key: string]: any };
-};
-
-type BaseResponse = {
+export type BaseResponse = {
     status: number;
     body?: Record<string, any> | Record<string, any>[];
     headers: { [key: string]: string };
 };
+
+export type FakeRestContext = {
+    url?: string;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestBody: Record<string, any> | undefined;
+    params: { [key: string]: any };
+};
+
+export type NormalizedRequest = Pick<
+    FakeRestContext,
+    'url' | 'method' | 'params' | 'requestBody'
+>;

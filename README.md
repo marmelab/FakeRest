@@ -4,25 +4,25 @@ Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of 
 
 See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
 
-## Usage
+## Installation
 
 ### MSW
 
 We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
 
-First, install msw and initialize it:
+First, install fakerest and MSW. Then initialize MSW:
 
 ```sh
-npm install msw@latest --save-dev
+npm install fakerest msw@latest --save-dev
 npx msw init <PUBLIC_DIR> # eg: public
 ```
 
 Then configure it:
 
 ```js
-// in ./src/msw.js
+// in ./src/fakeServer.js
 import { setupWorker } from "msw/browser";
-import { getMswHandlers } from "fakerest";
+import { getMswHandler } from "fakerest";
 
 const data = {
     'authors': [
@@ -41,7 +41,8 @@ const data = {
     }
 };
 
-export const worker = setupWorker(...getMswHandlers({
+export const worker = setupWorker(getMswHandler({
+    baseUrl: 'http://localhost:3000',
     data
 }));
 ```
@@ -52,17 +53,20 @@ Finally call the `worker.start()` method before rendering your application. For 
 import React from "react";
 import ReactDom from "react-dom";
 import { App } from "./App";
-import { worker } from "./msw";
+import { worker } from "./fakeServer";
 
-worker.start().then(() => {
+worker.start({
+    quiet: true, // Instruct MSW to not log requests in the console
+    onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle
+}).then(() => {
   ReactDom.render(<App />, document.getElementById("root"));
 });
 ```
 
-Another option is to use the `MswServer` class. This is useful if you must conditionally include data:
+Another option is to use the `MswServer` class. This is useful if you must conditionally include data or add middlewares:
 
 ```js
-// in ./src/msw.js
+// in ./src/fakeServer.js
 import { setupWorker } from "msw/browser";
 import { MswServer } from "fakerest";
 
@@ -83,19 +87,24 @@ const data = {
     }
 };
 
-const restServer = new MswServer();
-restServer.init(data);
+const restServer = new MswServer({
+    baseUrl: 'http://localhost:3000',
+    data,
+});
 
-export const worker = setupWorker(...restServer.getHandlers());
+export const worker = setupWorker(restServer.getHandler());
 ```
+
+FakeRest will now intercept every `fetch` requests to the REST server.
 
 ### Sinon
 
-```html
-<script src="/path/to/FakeRest.min.js"></script>
-<script src="/path/to/sinon.js"></script>
-<script type="text/javascript">
-var data = {
+```js
+// in ./src/fakeServer.js
+import sinon from 'sinon';
+import { getSinonHandler } from "fakerest";
+
+const data = {
     'authors': [
         { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
         { id: 1, first_name: 'Jane', last_name: 'Austen' }
@@ -113,18 +122,26 @@ var data = {
 };
 
 // use sinon.js to monkey-patch XmlHttpRequest
-var server = sinon.fakeServer.create();
-server.respondWith(FakeRest.getSinonHandler({ data }));
-</script>
+const sinonServer = sinon.fakeServer.create();
+// this is required when doing asynchronous XmlHttpRequest
+sinonServer.autoRespond = true;
+
+sinonServer.respondWith(
+    getSinonHandler({
+        baseUrl: 'http://localhost:3000',
+        data,
+    })
+);
 ```
 
-Another option is to use the `SinonServer` class. This is useful if you must conditionally include data or interceptors:
+Another option is to use the `SinonServer` class. This is useful if you must conditionally include data or add middlewares:
 
-```html
-<script src="/path/to/FakeRest.min.js"></script>
-<script src="/path/to/sinon.js"></script>
-<script type="text/javascript">
-var data = {
+```js
+// in ./src/fakeServer.js
+import sinon from 'sinon';
+import { SinonServer } from "fakerest";
+
+const data = {
     'authors': [
         { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
         { id: 1, first_name: 'Jane', last_name: 'Austen' }
@@ -140,21 +157,41 @@ var data = {
         preferred_format: 'hardback',
     }
 };
-// initialize fake REST server
-var restServer = new FakeRest.SinonServer();
-restServer.init(data);
+
+const restServer = new SinonServer({
+    baseUrl: 'http://localhost:3000',
+    data,
+});
 
 // use sinon.js to monkey-patch XmlHttpRequest
-var server = sinon.fakeServer.create();
-server.respondWith(restServer.getHandler());
-</script>
+const sinonServer = sinon.fakeServer.create();
+// this is required when doing asynchronous XmlHttpRequest
+sinonServer.autoRespond = true;
+
+sinonServer.respondWith(
+    restServer.getHandler({
+        baseUrl: 'http://localhost:3000',
+        data,
+    })
+);
 ```
+
+FakeRest will now intercept every `XmlHttpRequest` requests to the REST server.
 
 ### fetch-mock
 
+First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
+
+```sh
+npm install fakerest fetch-mock --save-dev
+```
+
+You can then initialize the `FetchMockServer`:
+
 ```js
+// in ./src/fakeServer.js
 import fetchMock from 'fetch-mock';
-import FakeRest from 'fakerest';
+import { getFetchMockHandler } from "fakerest";
 
 const data = {
     'authors': [
@@ -175,15 +212,15 @@ const data = {
 
 fetchMock.mock(
     'begin:http://localhost:3000',
-    FakeRest.getFetchMockHandler({ baseUrl: 'http://localhost:3000', data })
+    getFetchMockHandler({ baseUrl: 'http://localhost:3000', data })
 );
 ```
 
-Another option is to use the `FetchMockServer` class. This is useful if you must conditionally include data or interceptors:
+Another option is to use the `FetchMockServer` class. This is useful if you must conditionally include data or add middlewares:
 
 ```js
 import fetchMock from 'fetch-mock';
-import FakeRest from 'fakerest';
+import { FetchMockServer } from 'fakerest';
 
 const data = {
     'authors': [
@@ -201,84 +238,40 @@ const data = {
         preferred_format: 'hardback',
     }
 };
-const restServer = new FakeRest.FetchMockServer({ baseUrl: 'http://localhost:3000' });
-restServer.init(data);
+const restServer = new FetchMockServer({
+    baseUrl: 'http://localhost:3000',
+    data
+});
 fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
 ```
 
-FakeRest will now intercept every `XmlHttpRequest` to the REST server. The handled routes for collections of items are:
+FakeRest will now intercept every `fetch` requests to the REST server.
 
-```
-GET    /:resource
-POST   /:resource
-GET    /:resource/:id
-PUT    /:resource/:id
-PATCH  /:resource/:id
-DELETE /:resource/:id
-```
+## Concepts
 
-The handled routes for single items are:
+### Server
 
-```
-GET    /:resource
-PUT    /:resource
-PATCH  /:resource
-```
+A fake server implementation. FakeRest provide the following:
 
+- `MswServer`: Based on [MSW](https://mswjs.io/)
+- `FetchMockServer`: Based on [`fetch-mock`](https://www.wheresrhys.co.uk/fetch-mock/)
+- `SinonServer`: Based on [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/)
 
-Let's see an example:
+### Database
 
-```js
-// Query the fake REST server
-var req = new XMLHttpRequest();
-req.open("GET", "/authors", false);
-req.send(null);
-console.log(req.responseText);
-// [
-//    {"id":0,"first_name":"Leo","last_name":"Tolstoi"},
-//    {"id":1,"first_name":"Jane","last_name":"Austen"}
-// ]
+FakeRest internal database, that contains [collections](#collections) and [single](#single).
 
-var req = new XMLHttpRequest();
-req.open("GET", "/books/3", false);
-req.send(null);
-console.log(req.responseText);
-// {"id":3,"author_id":1,"title":"Sense and Sensibility"}
+### Collections
 
-var req = new XMLHttpRequest();
-req.open("GET", "/settings", false);
-req.send(null);
-console.log(req.responseText);
-// {"language:"english","preferred_format":"hardback"}
+The equivalent to a classic database table or document collection. It supports filtering.
 
-var req = new XMLHttpRequest();
-req.open("POST", "/books", false);
-req.send(JSON.stringify({ author_id: 1, title: 'Emma' }));
-console.log(req.responseText);
-// {"author_id":1,"title":"Emma","id":4}
+### Single
 
-// restore native XHR constructor
-server.restore();
-```
+Represent an API endpoint that returns a single entity. Useful for things such as user profile routes (`/me`) or global settings (`/settings`).
 
-*Tip*: The `fakerServer` provided by Sinon.js is [available as a standalone library](http://sinonjs.org/docs/#server), without the entire stubbing framework. Simply add the following bower dependency:
+### Embeds
 
-```
-devDependencies: {
-  "sinon-server": "http://sinonjs.org/releases/sinon-server-1.14.1.js"
-}
-```
-
-## Installation
-
-FakeRest is available through npm and Bower:
-
-```sh
-# If you use Bower
-bower install fakerest --save-dev
-# If you use npm
-npm install fakerest --save-dev
-```
+FakeRest support embedding other resources in a main resource query result. For instance, embedding the author of a book.
 
 ## REST Flavor
 
@@ -452,87 +445,187 @@ Operators are specified as suffixes on each filtered field. For instance, applyi
 
         GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
 
-## Usage and Configuration
+## Middlewares
+
+All fake servers supports middlewares that allows you to intercept requests and simulate server features such as:
+    - authentication checks
+    - server side validation
+    - server dynamically generated values
+    - simulate response delays
+
+A middleware is a function that receive 3 parameters:
+    - The `request` object, specific to the chosen mocking solution (e.g. a [`Request`](https://developer.mozilla.org/fr/docs/Web/API/Request) for MSW and `fetch-mock`, a fake [`XMLHttpRequest`](https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest) for [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/))
+    - The FakeRest `context`, an object containing the data extracted from the request that FakeRest uses to build the response. It has the following properties:
+        - `url`: The request URL as a string
+        - `method`: The request method as a string (`GET`, `POST`, `PATCH` or `PUT`)
+        - `collection`: The name of the targeted [collection](#collection) (e.g. `posts`)
+        - `single`: The name of the targeted [single](#single) (e.g. `settings`)
+        - `requestJson`: The parsed request data if any
+        - `params`: The request parameters from the URL search (e.g. the identifier of the requested record)
+    - A `next` function to call the next middleware in the chain, to which you must pass the `request` and the `context`
+
+A middleware must return a FakeRest response either by returning the result of the `next` function or by returning its own response. A FakeRest response is an object with the following properties:
+    - `status`: The response status as a number (e.g. `200`)
+    - `headers`: The response HTTP headers as an object where keys are header names
+    - `body`: The response body which will be stringified
+
+Except for Sinon, a middleware might also throw a response specific to the chosen mocking solution (e.g. a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for MSW, a [`MockResponseObject`](https://www.wheresrhys.co.uk/fetch-mock/#api-mockingmock_response) or a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for `fetch-mock`) for even more control.
+
+### Authentication Checks
+
+Here's to implement an authentication check:
 
 ```js
-// initialize a rest server with a custom base URL
-const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain' }); // only URLs starting with my.custom.domain will be intercepted
-restServer.toggleLogging(); // logging is off by default, enable it to see network calls in the console
-// Set all JSON data at once - only if identifier name is 'id'
-restServer.init(json);
-// modify the request before FakeRest handles it, using a request interceptor
-// request is {
-//     url: '...',
-//     headers: [...],
-//     requestBody: '...',
-//     json: ..., // parsed JSON body
-//     queryString: '...',
-//     params: {...} // parsed query string
-// }
-restServer.addRequestInterceptor(function(request) {
-    var start = (request.params._start - 1) || 0;
-    var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
-    request.params.range = [start, end];
-    return request; // always return the modified input
-});
-// modify the response before FakeRest sends it, using a response interceptor
-// response is {
-//     status: ...,
-//     headers: [...],
-//     body: {...}
-// }
-restServer.addResponseInterceptor(function(response) {
-    response.body = { data: response.body, status: response.status };
-    return response; // always return the modified input
-});
-// set default query, e.g. to force embeds or filters
-restServer.setDefaultQuery(function(resourceName) {
-    if (resourceName == 'authors') return { embed: ['books'] }
-    if (resourceName == 'books') return { filter: { published: true } }
-    return {};
-})
-// enable batch request handler, i.e. allow API clients to query several resources into a single request
-// see [Facebook's Batch Requests philosophy](https://developers.facebook.com/docs/graph-api/making-multiple-requests) for more details.
-restServer.setBatchUrl('/batch');
+restServer.addMiddleware(async (request, context, next) => {
+    if (request.requestHeaders.Authorization === undefined) {
+        return {
+            status: 401,
+            headers: {},
+        };
+    }
 
-// you can create more than one fake server to listen to several domains
-const restServer2 = new FakeRest.SinonServer({ baseUrl: 'http://my.other.domain' });
-// Set data collection by collection - allows to customize the identifier name
-const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '_id' });
-authorsCollection.addOne({ first_name: 'Leo', last_name: 'Tolstoi' }); // { _id: 0, first_name: 'Leo', last_name: 'Tolstoi' }
-authorsCollection.addOne({ first_name: 'Jane', last_name: 'Austen' }); // { _id: 1, first_name: 'Jane', last_name: 'Austen' }
-// collections have auto incremented identifiers by default but accept identifiers already set
-authorsCollection.addOne({ _id: 3, first_name: 'Marcel', last_name: 'Proust' }); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
-restServer2.addCollection('authors', authorsCollection);
-// collections are mutable
-authorsCollection.updateOne(1, { last_name: 'Doe' }); // { _id: 1, first_name: 'Jane', last_name: 'Doe' }
-authorsCollection.removeOne(3); // { _id: 3, first_name: 'Marcel', last_name: 'Proust' }
-
-const server = sinon.fakeServer.create();
-server.autoRespond = true;
-server.respondWith(restServer.getHandler());
-server.respondWith(restServer2.getHandler());
+    return next(request, context);
+}
 ```
 
-## Configure Identifiers Generation
+### Server Side Validation
 
-By default, FakeRest uses an auto incremented sequence for the items identifiers. If you'd rather use another type of identifiers (e.g. UUIDs), you can provide your own `getNewId` function at the server level:
+Here's to implement server side validation:
 
 ```js
-import FakeRest from 'fakerest';
-import uuid from 'uuid';
+restServer.addMiddleware(async (request, context, next) => {
+    if (
+        context.collection === "books" &&
+        request.method === "POST" &&
+        !context.requestJson?.title
+    ) {
+        return {
+            status: 400,
+            headers: {},
+            body: {
+                errors: {
+                    title: 'An article with this title already exists. The title must be unique.',
+                },
+            },
+        };
+    }
 
-const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain', getNewId: () => uuid.v5() });
+    return next(request, context);
+}
+```
+
+### Server Dynamically Generated Values
+
+Here's to implement server dynamically generated values:
+
+```js
+restServer.addMiddleware(async (request, context, next) => {
+    if (
+        context.collection === 'books' &&
+        context.method === 'POST'
+    ) {
+        const response = await next(request, context);
+        response.body.updatedAt = new Date().toISOString();
+        return response;
+    }
+
+    return next(request, context);
+}
+```
+
+### Simulate Response Delays
+
+Here's to simulate response delays:
+
+```js
+restServer.addMiddleware(async (request, context, next) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(next(request, context));
+        }, delayMs);
+    });
+});
+```
+
+This is so common FakeRest provides the `withDelay` function for that:
+
+```js
+import { withDelay } from 'fakerest';
+
+restServer.addMiddleware(withDelay(300));
+```
+
+## Configuration
+
+### Configure Identifiers
+
+By default, FakeRest assume all records have a unique `id` field.
+Some database such as [MongoDB](https://www.mongodb.com) use `_id` instead of `id` for collection identifiers.
+You can customize FakeRest to do the same by using the `identifierName` option:
+
+```js
+import { MswServer } from 'fakerest';
+
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    identifierName: '_id'
+});
 ```
 
 This can also be specified at the collection level:
 
 ```js
-import FakeRest from 'fakerest';
+import { MswServer, Collection } from 'fakerest';
+
+const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const authorsCollection = new Collection({ items: [], identifierName: '_id' });
+restServer.addCollection('authors', authorsCollection);
+```
+
+### Configure Identifiers Generation
+
+By default, FakeRest uses an auto incremented sequence for the items identifiers.
+If you'd rather use UUIDs for instance but would like to avoid providing them when you insert new items, you can provide your own function:
+
+```js
+import { MswServer } from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain' });
-const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '_id', getNewId: () => uuid.v5() });
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    getNewId: () => uuid.v5()
+});
+```
+
+This can also be specified at the collection level:
+
+```js
+import { MswServer, Collection } from 'fakerest';
+import uuid from 'uuid';
+
+const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const authorsCollection = new Collection({ items: [], getNewId: () => uuid.v5() });
+restServer.addCollection('authors', authorsCollection);
+```
+
+### Configure Default Queries
+
+Some APIs might enforce some parameters on queries. For instance, an API might always include an [embed](#embed) or enforce a query filter.
+You can simulate this using the `defaultQuery` parameter:
+
+```js
+import { MswServer } from 'fakerest';
+import uuid from 'uuid';
+
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    getNewId: () => uuid.v5(),
+    defaultQuery: (collection) => {
+        if (resourceName == 'authors') return { embed: ['books'] }
+        if (resourceName == 'books') return { filter: { published: true } }
+        return {};
+    }
+});
 ```
 
 ## Development
@@ -540,20 +633,24 @@ const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '
 ```sh
 # Install dependencies
 make install
+
 # Run the demo with MSW
 make run-msw
 
 # Run the demo with fetch-mock
 make run-fetch-mock
-# Watch source files and recompile dist/FakeRest.js when anything is modified
-make watch
+
+# Run the demo with sinon
+make run-sinon
+
 # Run tests
 make test
+
 # Build minified version
 make build
 ```
 
-To test the Sinon integration, build the library then run the demo to start Vite and visit http://localhost:5173/sinon.html
+You can sign-in to the demo with `janedoe` and `password`
 
 ## License
 

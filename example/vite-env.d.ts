@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-    readonly VITE_MOCK: 'msw' | 'fetch-mock';
+    readonly VITE_MOCK: 'msw' | 'fetch-mock' | 'sinon';
 }
 
 interface ImportMeta {

@@ -1,9 +1,9 @@
-import type { BaseServer } from './BaseServer.js';
+import type { Database } from './Database.js';
 import type { CollectionItem, Embed, Query } from './types.js';
 
 export class Single<T extends CollectionItem = CollectionItem> {
     obj: T | null = null;
-    server: BaseServer | null = null;
+    database: Database | null = null;
     name: string | null = null;
 
     constructor(obj: T) {
@@ -17,10 +17,10 @@ export class Single<T extends CollectionItem = CollectionItem> {
 
     /**
      * A Single may need to access other collections (e.g. for embedded
-     * references) This is done through a reference to the parent server.
+     * references) This is done through a reference to the parent database.
      */
-    setServer(server: BaseServer) {
-        this.server = server;
+    setDatabase(database: Database) {
+        this.database = database;
     }
 
     setName(name: string) {
@@ -32,10 +32,10 @@ export class Single<T extends CollectionItem = CollectionItem> {
     // it is by definition a singleton
     _oneToManyEmbedder(resourceName: string) {
         return (item: T) => {
-            if (this.server == null) {
-                throw new Error("Can't embed references without a server");
+            if (this.database == null) {
+                throw new Error("Can't embed references without a database");
             }
-            const otherCollection = this.server.collections[resourceName];
+            const otherCollection = this.database.collections[resourceName];
             if (!otherCollection)
                 throw new Error(
                     `Can't embed a non-existing collection ${resourceName}`,
@@ -57,10 +57,11 @@ export class Single<T extends CollectionItem = CollectionItem> {
         const pluralResourceName = `${resourceName}s`;
         const referenceName = `${resourceName}_id`;
         return (item: T) => {
-            if (this.server == null) {
-                throw new Error("Can't embed references without a server");
+            if (this.database == null) {
+                throw new Error("Can't embed references without a database");
             }
-            const otherCollection = this.server.collections[pluralResourceName];
+            const otherCollection =
+                this.database.collections[pluralResourceName];
             if (!otherCollection)
                 throw new Error(
                     `Can't embed a non-existing collection ${resourceName}`,
@@ -93,7 +94,7 @@ export class Single<T extends CollectionItem = CollectionItem> {
 
     getOnly(query?: Query) {
         let item = this.obj;
-        if (query?.embed && this.server) {
+        if (query?.embed && this.database) {
             item = Object.assign({}, item); // Clone
             item = this._itemEmbedder(query.embed)(item);
         }
