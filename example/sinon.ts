@@ -16,20 +16,29 @@ export const initializeSinon = () => {
             return null;
         }
 
+        if (
+            context.collection === 'books' &&
+            request.method === 'POST' &&
+            !context.requestJson?.title
+        ) {
+            request.respond(400, {}, 'Title is required');
+            return null;
+        }
+
         return next(request, context);
     });
 
     // use sinon.js to monkey-patch XmlHttpRequest
-    const server = sinon.fakeServer.create();
+    const sinonServer = sinon.fakeServer.create();
     // this is required when doing asynchronous XmlHttpRequest
-    server.autoRespond = true;
+    sinonServer.autoRespond = true;
     if (window) {
         // @ts-ignore
         window.restServer = restServer; // give way to update data in the console
         // @ts-ignore
-        window.sinonServer = server; // give way to update data in the console
+        window.sinonServer = sinonServer; // give way to update data in the console
     }
-    server.respondWith(restServer.getHandler());
+    sinonServer.respondWith(restServer.getHandler());
 };
 
 export const dataProvider: DataProvider = {
