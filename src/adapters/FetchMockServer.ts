@@ -30,9 +30,9 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
             : '';
         const params = parseQueryString(queryString);
         const text = await req.text();
-        let requestJson: Record<string, any> | undefined = undefined;
+        let requestBody: Record<string, any> | undefined = undefined;
         try {
-            requestJson = JSON.parse(text);
+            requestBody = JSON.parse(text);
         } catch (e) {
             // not JSON, no big deal
         }
@@ -40,7 +40,7 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
         return {
             url: req.url,
             params,
-            requestJson,
+            requestBody,
             method: req.method,
         };
     }

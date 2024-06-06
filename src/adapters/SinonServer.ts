@@ -32,10 +32,10 @@ export class SinonServer extends BaseServer<
             ? decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1))
             : '';
         const params = parseQueryString(queryString);
-        let requestJson: Record<string, any> | undefined = undefined;
+        let requestBody: Record<string, any> | undefined = undefined;
         if ((req as SinonFakeXMLHttpRequest).requestBody) {
             try {
-                requestJson = JSON.parse(
+                requestBody = JSON.parse(
                     (req as SinonFakeXMLHttpRequest).requestBody,
                 );
             } catch (error) {
@@ -46,7 +46,7 @@ export class SinonServer extends BaseServer<
         return {
             url: req.url,
             params,
-            requestJson,
+            requestBody,
             method: req.method,
         };
     }

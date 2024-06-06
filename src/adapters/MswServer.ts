@@ -17,10 +17,10 @@ export class MswServer extends BaseServer<Request, Response> {
                 ([key, value]) => [key, JSON.parse(value)],
             ),
         );
-        let requestJson: Record<string, any> | undefined = undefined;
+        let requestBody: Record<string, any> | undefined = undefined;
         try {
             const text = await request.text();
-            requestJson = JSON.parse(text);
+            requestBody = JSON.parse(text);
         } catch (e) {
             // not JSON, no big deal
         }
@@ -28,7 +28,7 @@ export class MswServer extends BaseServer<Request, Response> {
         return {
             url: request.url,
             params,
-            requestJson,
+            requestBody,
             method: request.method,
         };
     }

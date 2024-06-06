@@ -21,7 +21,7 @@ restServer.addMiddleware(async (request, context, next) => {
         if (
             restServer.collections[context.collection].getCount({
                 filter: {
-                    title: context.requestJson?.title,
+                    title: context.requestBody?.title,
                 },
             }) > 0
         ) {

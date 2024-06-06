@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { SinonServer, withDelay } from '../src/FakeRest';
+import { SinonServer, withDelay } from '../src';
 import { data } from './data';
 import { HttpError, type Options } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
@@ -11,7 +11,7 @@ export const initializeSinon = () => {
         loggingEnabled: true,
     });
 
-    restServer.addMiddleware(withDelay(3000));
+    restServer.addMiddleware(withDelay(300));
     restServer.addMiddleware(async (request, context, next) => {
         if (request.requestHeaders.Authorization === undefined) {
             return {
@@ -28,7 +28,7 @@ export const initializeSinon = () => {
             if (
                 restServer.collections[context.collection].getCount({
                     filter: {
-                        title: context.requestJson?.title,
+                        title: context.requestBody?.title,
                     },
                 }) > 0
             ) {

@@ -1,5 +1,5 @@
 import fetchMock from 'fetch-mock';
-import { FetchMockServer, withDelay } from 'fakerest';
+import { FetchMockServer, withDelay } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 
@@ -17,7 +17,7 @@ export const initializeFetchMock = () => {
     restServer.addMiddleware(withDelay(300));
     restServer.addMiddleware(async (request, context, next) => {
         if (!request.headers?.get('Authorization')) {
-            return new Response(null, { status: 401 });
+            throw new Response(null, { status: 401 });
         }
         return next(request, context);
     });
@@ -26,7 +26,7 @@ export const initializeFetchMock = () => {
             if (
                 restServer.collections[context.collection].getCount({
                     filter: {
-                        title: context.requestJson?.title,
+                        title: context.requestBody?.title,
                     },
                 }) > 0
             ) {

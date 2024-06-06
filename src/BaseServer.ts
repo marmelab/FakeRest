@@ -26,7 +26,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
     getContext(
         context: Pick<
             FakeRestContext,
-            'url' | 'method' | 'params' | 'requestJson'
+            'url' | 'method' | 'params' | 'requestBody'
         >,
     ): FakeRestContext {
         for (const name of this.getSingleNames()) {
@@ -64,7 +64,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
     getNormalizedRequest(
         request: RequestType,
     ): Promise<
-        Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'>
+        Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestBody'>
     > {
         throw new Error('Not implemented');
     }
@@ -135,7 +135,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
             }
             if (ctx.method === 'PUT') {
                 try {
-                    if (ctx.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -143,7 +143,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, ctx.requestJson),
+                        body: this.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -157,7 +157,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
             }
             if (ctx.method === 'PATCH') {
                 try {
-                    if (ctx.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -165,7 +165,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, ctx.requestJson),
+                        body: this.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -228,14 +228,14 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                 };
             }
             if (ctx.method === 'POST') {
-                if (ctx.requestJson == null) {
+                if (ctx.requestBody == null) {
                     return {
                         status: 400,
                         headers: {},
                     };
                 }
 
-                const newResource = this.addOne(name, ctx.requestJson);
+                const newResource = this.addOne(name, ctx.requestBody);
                 const newResourceURI = `${this.baseUrl}/${name}/${
                     newResource[this.getCollection(name).identifierName]
                 }`;
@@ -272,7 +272,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
             }
             if (ctx.method === 'PUT') {
                 try {
-                    if (ctx.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -280,7 +280,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, ctx.requestJson),
+                        body: this.updateOne(name, id, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -294,7 +294,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
             }
             if (ctx.method === 'PATCH') {
                 try {
-                    if (ctx.requestJson == null) {
+                    if (ctx.requestBody == null) {
                         return {
                             status: 400,
                             headers: {},
@@ -302,7 +302,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, ctx.requestJson),
+                        body: this.updateOne(name, id, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -357,15 +357,6 @@ export type BaseServerOptions = DatabaseOptions & {
     defaultQuery?: QueryFunction;
 };
 
-export type BaseRequest = {
-    url?: string;
-    method?: string;
-    collection?: string;
-    single?: string;
-    requestJson?: Record<string, any> | undefined;
-    params?: { [key: string]: any };
-};
-
 export type BaseResponse = {
     status: number;
     body?: Record<string, any> | Record<string, any>[];
@@ -377,6 +368,6 @@ export type FakeRestContext = {
     method?: string;
     collection?: string;
     single?: string;
-    requestJson: Record<string, any> | undefined;
+    requestBody: Record<string, any> | undefined;
     params: { [key: string]: any };
 };
