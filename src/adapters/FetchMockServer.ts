@@ -8,6 +8,20 @@ import type {
 import { parseQueryString } from '../parseQueryString.js';
 
 export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: FetchMockServerOptions = {}) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
     async extractContext(request: Request) {
         const req =
             typeof request === 'string' ? new Request(request) : request;
@@ -89,7 +103,7 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
     }
 }
 
-export const getFetchMockHandler = (options: BaseServerOptions) => {
+export const getFetchMockHandler = (options: FetchMockServerOptions) => {
     const server = new FetchMockServer(options);
     return server.getHandler();
 };
@@ -105,4 +119,8 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     requestJson?: Record<string, any>;
     queryString?: string;
     params?: { [key: string]: any };
+};
+
+export type FetchMockServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
 };

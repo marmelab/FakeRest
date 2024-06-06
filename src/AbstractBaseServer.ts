@@ -11,7 +11,6 @@ import type { CollectionItem, Query, QueryFunction } from './types.js';
 export abstract class AbstractBaseServer {
     baseUrl = '';
     identifierName = 'id';
-    loggingEnabled = false;
     defaultQuery: QueryFunction = () => ({});
     collections: Record<string, Collection<any>> = {};
     singles: Record<string, Single<any>> = {};
@@ -23,11 +22,9 @@ export abstract class AbstractBaseServer {
         defaultQuery = () => ({}),
         identifierName = 'id',
         getNewId,
-        loggingEnabled = false,
     }: BaseServerOptions = {}) {
         this.baseUrl = baseUrl;
         this.getNewId = getNewId;
-        this.loggingEnabled = loggingEnabled;
         this.identifierName = identifierName;
         this.defaultQuery = defaultQuery;
 
@@ -55,10 +52,6 @@ export abstract class AbstractBaseServer {
                 this.addSingle(name, new Single(value));
             }
         }
-    }
-
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
     }
 
     /**
@@ -198,7 +191,6 @@ export type BaseServerOptions = {
     defaultQuery?: QueryFunction;
     identifierName?: string;
     getNewId?: () => number | string;
-    loggingEnabled?: boolean;
 };
 
 export type BaseRequest = {
