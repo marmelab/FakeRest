@@ -1,10 +1,10 @@
 import fetchMock from 'fetch-mock';
-import { FetchServer, withDelay } from 'fakerest';
+import { FetchMockServer, withDelay } from 'fakerest';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 
 export const initializeFetchMock = () => {
-    const restServer = new FetchServer({
+    const restServer = new FetchMockServer({
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,
