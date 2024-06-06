@@ -106,12 +106,3 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     queryString?: string;
     params?: { [key: string]: any };
 };
-
-export type FetchMockRequestInterceptor = (
-    request: FetchMockFakeRestRequest,
-) => FetchMockFakeRestRequest;
-
-export type FetchMockResponseInterceptor = (
-    response: MockResponseObject,
-    request: FetchMockFakeRestRequest,
-) => MockResponseObject;

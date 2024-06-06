@@ -74,12 +74,3 @@ const getCollectionHandlers = ({
 };
 
 export type MswFakeRestRequest = Partial<Request> & BaseRequest;
-
-export type MswRequestInterceptor = (
-    request: MswFakeRestRequest,
-) => MswFakeRestRequest;
-
-export type MswResponseInterceptor = (
-    response: HttpResponse,
-    request: Request,
-) => HttpResponse;
