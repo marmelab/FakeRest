@@ -1,7 +1,8 @@
 import sinon from 'sinon';
 import { SinonServer } from '../src/FakeRest';
 import { data } from './data';
-import { type DataProvider, HttpError } from 'react-admin';
+import { HttpError, type Options } from 'react-admin';
+import simpleRestProvider from 'ra-data-simple-rest';
 
 export const initializeSinon = () => {
     const restServer = new SinonServer({
@@ -32,125 +33,9 @@ export const initializeSinon = () => {
     server.respondWith(restServer.getHandler());
 };
 
-export const dataProvider: DataProvider = {
-    async getList(resource, params) {
-        const { page, perPage } = params.pagination;
-        const { field, order } = params.sort;
-
-        const rangeStart = (page - 1) * perPage;
-        const rangeEnd = page * perPage - 1;
-        const query = {
-            sort: JSON.stringify([field, order]),
-            range: JSON.stringify([rangeStart, rangeEnd]),
-            filter: JSON.stringify(params.filter),
-        };
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}?${new URLSearchParams(query)}`,
-        );
-        return {
-            data: json.json,
-            total: Number.parseInt(
-                json.headers['Content-Range'].split('/').pop() ?? '0',
-                10,
-            ),
-        };
-    },
-    async getMany(resource, params) {
-        const query = {
-            filter: JSON.stringify({ id: params.ids }),
-        };
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}?${new URLSearchParams(query)}`,
-        );
-        return {
-            data: json.json,
-        };
-    },
-    async getManyReference(resource, params) {
-        const { page, perPage } = params.pagination;
-        const { field, order } = params.sort;
-        const rangeStart = (page - 1) * perPage;
-        const rangeEnd = page * perPage - 1;
-        const query = {
-            sort: JSON.stringify([field, order]),
-            range: JSON.stringify([rangeStart, rangeEnd]),
-            filter: JSON.stringify({
-                ...params.filter,
-                [params.target]: params.id,
-            }),
-        };
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}?${new URLSearchParams(query)}`,
-        );
-        return {
-            data: json.json,
-            total: Number.parseInt(
-                json.headers['Content-Range'].split('/').pop() ?? '0',
-                10,
-            ),
-        };
-    },
-    async getOne(resource, params) {
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}/${params.id}`,
-        );
-        return {
-            data: json.json,
-        };
-    },
-    async create(resource, params) {
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}`,
-            'POST',
-            JSON.stringify(params.data),
-        );
-        return {
-            data: json.json,
-        };
-    },
-    async update(resource, params) {
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}/${params.id}`,
-            'PUT',
-            JSON.stringify(params.data),
-        );
-        return {
-            data: json.json,
-        };
-    },
-    async updateMany(resource, params) {
-        return Promise.all(
-            params.ids.map((id) =>
-                this.update(resource, { id, data: params.data }),
-            ),
-        ).then((responses) => ({ data: responses.map(({ json }) => json.id) }));
-    },
-    async delete(resource, params) {
-        const json = await sendRequest(
-            `http://localhost:3000/${resource}/${params.id}`,
-            'DELETE',
-            null,
-        );
-        return {
-            data: json.json,
-        };
-    },
-    async deleteMany(resource, params) {
-        return Promise.all(
-            params.ids.map((id) => this.delete(resource, { id })),
-        ).then((responses) => ({
-            data: responses.map(({ data }) => data.id),
-        }));
-    },
-};
-
-const sendRequest = (
-    url: string,
-    method = 'GET',
-    body: any = null,
-): Promise<any> => {
+const httpClient = (url: string, options: Options = {}): Promise<any> => {
     const request = new XMLHttpRequest();
-    request.open(method, url);
+    request.open(options.method ?? 'GET', url);
 
     const persistedUser = localStorage.getItem('user');
     const user = persistedUser ? JSON.parse(persistedUser) : null;
@@ -160,7 +45,7 @@ const sendRequest = (
 
     // add content-type header
     request.overrideMimeType('application/json');
-    request.send(body);
+    request.send(typeof options.body === 'string' ? options.body : undefined);
 
     return new Promise((resolve, reject) => {
         request.onloadend = (e) => {
@@ -171,20 +56,20 @@ const sendRequest = (
                 // not json, no big deal
             }
             // Get the raw header string
-            const headers = request.getAllResponseHeaders();
+            const headersAsString = request.getAllResponseHeaders();
 
             // Convert the header string into an array
             // of individual headers
-            const arr = headers.trim().split(/[\r\n]+/);
+            const arr = headersAsString.trim().split(/[\r\n]+/);
 
             // Create a map of header names to values
-            const headerMap: Record<string, string> = {};
+            const headers = new Headers();
             for (const line of arr) {
                 const parts = line.split(': ');
                 const header = parts.shift();
                 if (!header) continue;
                 const value = parts.join(': ');
-                headerMap[header] = value;
+                headers.set(header, value);
             }
             if (request.status < 200 || request.status >= 300) {
                 return reject(
@@ -197,10 +82,15 @@ const sendRequest = (
             }
             resolve({
                 status: request.status,
-                headers: headerMap,
+                headers,
                 body: request.responseText,
                 json,
             });
         };
     });
 };
+
+export const dataProvider = simpleRestProvider(
+    'http://localhost:3000',
+    httpClient,
+);
