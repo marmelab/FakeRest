@@ -1,19 +1,28 @@
+import type { Collection } from './Collection.js';
 import { Database, type DatabaseOptions } from './Database.js';
-import type { QueryFunction } from './types.js';
+import type { Single } from './Single.js';
+import type { CollectionItem, QueryFunction } from './types.js';
 
-export class BaseServer<RequestType, ResponseType> extends Database {
+export class BaseServer<RequestType, ResponseType> {
     baseUrl = '';
     defaultQuery: QueryFunction = () => ({});
     middlewares: Array<Middleware<RequestType>> = [];
+    database: Database;
 
     constructor({
         baseUrl = '',
         defaultQuery = () => ({}),
+        database,
         ...options
     }: BaseServerOptions = {}) {
-        super(options);
         this.baseUrl = baseUrl;
         this.defaultQuery = defaultQuery;
+
+        if (database) {
+            this.database = database;
+        } else {
+            this.database = new Database(options);
+        }
     }
 
     /**
@@ -23,13 +32,8 @@ export class BaseServer<RequestType, ResponseType> extends Database {
         this.defaultQuery = query;
     }
 
-    getContext(
-        context: Pick<
-            FakeRestContext,
-            'url' | 'method' | 'params' | 'requestBody'
-        >,
-    ): FakeRestContext {
-        for (const name of this.getSingleNames()) {
+    getContext(context: NormalizedRequest): FakeRestContext {
+        for (const name of this.database.getSingleNames()) {
             const matches = context.url?.match(
                 new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
@@ -61,11 +65,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
         return context;
     }
 
-    getNormalizedRequest(
-        request: RequestType,
-    ): Promise<
-        Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestBody'>
-    > {
+    getNormalizedRequest(request: RequestType): Promise<NormalizedRequest> {
         throw new Error('Not implemented');
     }
 
@@ -111,7 +111,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
 
     handleRequest(request: RequestType, ctx: FakeRestContext): BaseResponse {
         // Handle Single Objects
-        for (const name of this.getSingleNames()) {
+        for (const name of this.database.getSingleNames()) {
             const matches = ctx.url?.match(
                 new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
             );
@@ -121,7 +121,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                 try {
                     return {
                         status: 200,
-                        body: this.getOnly(name),
+                        body: this.database.getOnly(name),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -143,7 +143,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, ctx.requestBody),
+                        body: this.database.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -165,7 +165,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOnly(name, ctx.requestBody),
+                        body: this.database.updateOnly(name, ctx.requestBody),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -190,15 +190,15 @@ export class BaseServer<RequestType, ResponseType> extends Database {
         const params = Object.assign({}, this.defaultQuery(name), ctx.params);
         if (!matches[2]) {
             if (ctx.method === 'GET') {
-                if (!this.getCollection(name)) {
+                if (!this.database.getCollection(name)) {
                     return { status: 404, headers: {} };
                 }
-                const count = this.getCount(
+                const count = this.database.getCount(
                     name,
                     params.filter ? { filter: params.filter } : {},
                 );
                 if (count > 0) {
-                    const items = this.getAll(name, params);
+                    const items = this.database.getAll(name, params);
                     const first = params.range ? params.range[0] : 0;
                     const last =
                         params.range && params.range.length === 2
@@ -235,9 +235,11 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     };
                 }
 
-                const newResource = this.addOne(name, ctx.requestBody);
+                const newResource = this.database.addOne(name, ctx.requestBody);
                 const newResourceURI = `${this.baseUrl}/${name}/${
-                    newResource[this.getCollection(name).identifierName]
+                    newResource[
+                        this.database.getCollection(name).identifierName
+                    ]
                 }`;
 
                 return {
@@ -250,7 +252,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                 };
             }
         } else {
-            if (!this.getCollection(name)) {
+            if (!this.database.getCollection(name)) {
                 return { status: 404, headers: {} };
             }
             const id = Number.parseInt(matches[3]);
@@ -258,7 +260,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                 try {
                     return {
                         status: 200,
-                        body: this.getOne(name, id, params),
+                        body: this.database.getOne(name, id, params),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -280,7 +282,11 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, ctx.requestBody),
+                        body: this.database.updateOne(
+                            name,
+                            id,
+                            ctx.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -302,7 +308,11 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                     }
                     return {
                         status: 200,
-                        body: this.updateOne(name, id, ctx.requestBody),
+                        body: this.database.updateOne(
+                            name,
+                            id,
+                            ctx.requestBody,
+                        ),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -318,7 +328,7 @@ export class BaseServer<RequestType, ResponseType> extends Database {
                 try {
                     return {
                         status: 200,
-                        body: this.removeOne(name, id),
+                        body: this.database.removeOne(name, id),
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -340,6 +350,36 @@ export class BaseServer<RequestType, ResponseType> extends Database {
     addMiddleware(middleware: Middleware<RequestType>) {
         this.middlewares.push(middleware);
     }
+
+    addCollection<T extends CollectionItem = CollectionItem>(
+        name: string,
+        collection: Collection<T>,
+    ) {
+        this.database.addCollection(name, collection);
+    }
+
+    getCollection(name: string) {
+        return this.database.getCollection(name);
+    }
+
+    getCollectionNames() {
+        return this.database.getCollectionNames();
+    }
+
+    addSingle<T extends CollectionItem = CollectionItem>(
+        name: string,
+        single: Single<T>,
+    ) {
+        this.database.addSingle(name, single);
+    }
+
+    getSingle(name: string) {
+        return this.database.getSingle(name);
+    }
+
+    getSingleNames() {
+        return this.database.getSingleNames();
+    }
 }
 
 export type Middleware<RequestType> = (
@@ -352,6 +392,7 @@ export type Middleware<RequestType> = (
 ) => Promise<BaseResponse | null> | BaseResponse | null;
 
 export type BaseServerOptions = DatabaseOptions & {
+    database?: Database;
     baseUrl?: string;
     batchUrl?: string | null;
     defaultQuery?: QueryFunction;
@@ -371,3 +412,8 @@ export type FakeRestContext = {
     requestBody: Record<string, any> | undefined;
     params: { [key: string]: any };
 };
+
+export type NormalizedRequest = Pick<
+    FakeRestContext,
+    'url' | 'method' | 'params' | 'requestBody'
+>;

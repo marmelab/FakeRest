@@ -47,7 +47,7 @@ export class Database {
         collection: Collection<T>,
     ) {
         this.collections[name] = collection;
-        collection.setServer(this);
+        collection.setDatabase(this);
         collection.setName(name);
     }
 
@@ -64,7 +64,7 @@ export class Database {
         single: Single<T>,
     ) {
         this.singles[name] = single;
-        single.setServer(this);
+        single.setDatabase(this);
         single.setName(name);
     }
 
@@ -102,7 +102,7 @@ export class Database {
                 name,
                 new Collection({
                     items: [],
-                    identifierName: 'id',
+                    identifierName: this.identifierName,
                     getNewId: this.getNewId,
                 }),
             );

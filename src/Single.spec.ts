@@ -1,6 +1,6 @@
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
-import { Server } from './adapters/SinonServer.js';
+import { Database } from './Database.js';
 
 describe('Single', () => {
     describe('constructor', () => {
@@ -19,8 +19,8 @@ describe('Single', () => {
         describe('embed query', () => {
             it('should throw an error when trying to embed a non-existing collection', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
-                const server = new Server();
-                server.addSingle('foo', foo);
+                const database = new Database();
+                database.addSingle('foo', foo);
                 expect(() => {
                     foo.getOnly({ embed: ['bar'] });
                 }).toThrow(
@@ -31,9 +31,9 @@ describe('Single', () => {
             it('should return the original object for missing embed one', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
                 const bars = new Collection({ items: [] });
-                const server = new Server();
-                server.addSingle('foo', foo);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addSingle('foo', foo);
+                database.addCollection('bars', bars);
                 const expected = { name: 'foo', bar_id: 123 };
                 expect(foo.getOnly({ embed: ['bar'] })).toEqual(expected);
             });
@@ -47,9 +47,9 @@ describe('Single', () => {
                         { id: 456, bar: 'bazz' },
                     ],
                 });
-                const server = new Server();
-                server.addSingle('foo', foo);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addSingle('foo', foo);
+                database.addCollection('bars', bars);
                 const expected = {
                     name: 'foo',
                     bar_id: 123,
@@ -60,8 +60,8 @@ describe('Single', () => {
 
             it('should throw an error when trying to embed many a non-existing collection', () => {
                 const foo = new Single({ name: 'foo', bar_id: 123 });
-                const server = new Server();
-                server.addSingle('foo', foo);
+                const database = new Database();
+                database.addSingle('foo', foo);
                 expect(() => {
                     foo.getOnly({ embed: ['bars'] });
                 }).toThrow(
@@ -78,9 +78,9 @@ describe('Single', () => {
                         { id: 3, bar: 'boz' },
                     ],
                 });
-                const server = new Server();
-                server.addSingle('foo', foo);
-                server.addCollection('bars', bars);
+                const database = new Database();
+                database.addSingle('foo', foo);
+                database.addCollection('bars', bars);
                 const expected = {
                     name: 'foo',
                     bars: [
@@ -111,10 +111,10 @@ describe('Single', () => {
                         { id: 6, name: 'baz3' },
                     ],
                 });
-                const server = new Server();
-                server.addSingle('foo', foo);
-                server.addCollection('bars', bars);
-                server.addCollection('bazs', bazs);
+                const database = new Database();
+                database.addSingle('foo', foo);
+                database.addCollection('bars', bars);
+                database.addCollection('bazs', bazs);
                 const expected = {
                     name: 'foo',
                     bars: [

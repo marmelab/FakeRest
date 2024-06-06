@@ -2,7 +2,7 @@ import { Database } from './Database.js';
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
 
-describe('AbstractBaseServer', () => {
+describe('Database', () => {
     describe('init', () => {
         it('should populate several collections', () => {
             const server = new Database();

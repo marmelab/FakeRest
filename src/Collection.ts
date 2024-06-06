@@ -14,7 +14,7 @@ import type {
 export class Collection<T extends CollectionItem = CollectionItem> {
     sequence = 0;
     items: T[] = [];
-    server: Database | null = null;
+    database: Database | null = null;
     name: string | null = null;
     identifierName = 'id';
     getNewId: () => number | string;
@@ -40,10 +40,10 @@ export class Collection<T extends CollectionItem = CollectionItem> {
 
     /**
      * A Collection may need to access other collections (e.g. for embedding references)
-     * This is done through a reference to the parent server.
+     * This is done through a reference to the parent database.
      */
-    setServer(server: Database) {
-        this.server = server;
+    setDatabase(database: Database) {
+        this.database = database;
     }
 
     setName(name: string) {
@@ -66,10 +66,10 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         const singularResourceName = this.name.slice(0, -1);
         const referenceName = `${singularResourceName}_id`;
         return (item: T) => {
-            if (this.server == null) {
-                throw new Error("Can't embed references without a server");
+            if (this.database == null) {
+                throw new Error("Can't embed references without a database");
             }
-            const otherCollection = this.server.collections[resourceName];
+            const otherCollection = this.database.collections[resourceName];
             if (!otherCollection)
                 throw new Error(
                     `Can't embed a non-existing collection ${resourceName}`,
@@ -108,10 +108,11 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         const pluralResourceName = `${resourceName}s`;
         const referenceName = `${resourceName}_id`;
         return (item: T) => {
-            if (this.server == null) {
-                throw new Error("Can't embed references without a server");
+            if (this.database == null) {
+                throw new Error("Can't embed references without a database");
             }
-            const otherCollection = this.server.collections[pluralResourceName];
+            const otherCollection =
+                this.database.collections[pluralResourceName];
             if (!otherCollection)
                 throw new Error(
                     `Can't embed a non-existing collection ${resourceName}`,
@@ -163,7 +164,7 @@ export class Collection<T extends CollectionItem = CollectionItem> {
                 items = rangeItems(items, query.range);
             }
             items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
-            if (query.embed && this.server) {
+            if (query.embed && this.database) {
                 items = items.map(this._itemEmbedder(query.embed)); // embed reference
             }
         }
@@ -184,7 +185,7 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         }
         let item = this.items[index];
         item = Object.assign({}, item); // clone item to avoid returning the original
-        if (query?.embed && this.server) {
+        if (query?.embed && this.database) {
             item = this._itemEmbedder(query.embed)(item); // embed reference
         }
         return item;

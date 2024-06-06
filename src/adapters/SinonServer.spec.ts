@@ -40,7 +40,7 @@ describe('SinonServer', () => {
                 context.params.range = [start, end];
                 return next(request, context);
             });
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -85,7 +85,7 @@ describe('SinonServer', () => {
                 };
                 return response;
             });
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -111,7 +111,7 @@ describe('SinonServer', () => {
                 requestUrl = request.url;
                 return next(request, context);
             });
-            server.addCollection('foo', new Collection());
+            server.database.addCollection('foo', new Collection());
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
@@ -132,7 +132,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo by sending all items in collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -159,7 +159,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foos',
                 new Collection({
                     items: [
@@ -169,7 +169,7 @@ describe('SinonServer', () => {
                     ],
                 }),
             );
-            server.addCollection(
+            server.database.addCollection(
                 'bars',
                 new Collection({ items: [{ id: 0, name: 'a', foo_id: 1 }] }),
             );
@@ -194,7 +194,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
@@ -233,7 +233,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo on an empty collection with a []', async () => {
             const server = new SinonServer();
-            server.addCollection('foo', new Collection());
+            server.database.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
             await server.handle(request);
@@ -247,7 +247,7 @@ describe('SinonServer', () => {
 
         it('should respond to POST /foo by adding an item to collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -270,7 +270,7 @@ describe('SinonServer', () => {
                 'application/json',
             );
             expect(request.getResponseHeader('Location')).toEqual('/foo/3');
-            expect(server.getAll('foo')).toEqual([
+            expect(server.database.getAll('foo')).toEqual([
                 { id: 1, name: 'foo' },
                 { id: 2, name: 'bar' },
                 { id: 3, name: 'baz' },
@@ -293,12 +293,14 @@ describe('SinonServer', () => {
                 'application/json',
             );
             expect(request.getResponseHeader('Location')).toEqual('/foo/0');
-            expect(server.getAll('foo')).toEqual([{ id: 0, name: 'baz' }]);
+            expect(server.database.getAll('foo')).toEqual([
+                { id: 0, name: 'baz' },
+            ]);
         });
 
         it('should respond to GET /foo/:id by sending element of identifier id in collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -320,7 +322,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
-            server.addCollection('foo', new Collection());
+            server.database.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo/3');
             if (request == null) throw new Error('request is null');
             await server.handle(request);
@@ -329,7 +331,7 @@ describe('SinonServer', () => {
 
         it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -351,7 +353,7 @@ describe('SinonServer', () => {
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
-            expect(server.getAll('foo')).toEqual([
+            expect(server.database.getAll('foo')).toEqual([
                 { id: 1, name: 'foo' },
                 { id: 2, name: 'baz' },
             ]);
@@ -359,7 +361,7 @@ describe('SinonServer', () => {
 
         it('should respond to PUT /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
-            server.addCollection('foo', new Collection({ items: [] }));
+            server.database.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
                 'PUT',
                 '/foo/3',
@@ -372,7 +374,7 @@ describe('SinonServer', () => {
 
         it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -394,7 +396,7 @@ describe('SinonServer', () => {
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
-            expect(server.getAll('foo')).toEqual([
+            expect(server.database.getAll('foo')).toEqual([
                 { id: 1, name: 'foo' },
                 { id: 2, name: 'baz' },
             ]);
@@ -402,7 +404,7 @@ describe('SinonServer', () => {
 
         it('should respond to PATCH /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
-            server.addCollection('foo', new Collection({ items: [] }));
+            server.database.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
                 'PATCH',
                 '/foo/3',
@@ -415,7 +417,7 @@ describe('SinonServer', () => {
 
         it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [
@@ -433,12 +435,14 @@ describe('SinonServer', () => {
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
-            expect(server.getAll('foo')).toEqual([{ id: 1, name: 'foo' }]);
+            expect(server.database.getAll('foo')).toEqual([
+                { id: 1, name: 'foo' },
+            ]);
         });
 
         it('should respond to DELETE /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
-            server.addCollection('foo', new Collection({ items: [] }));
+            server.database.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
             if (request == null) throw new Error('request is null');
             await server.handle(request);
@@ -447,7 +451,7 @@ describe('SinonServer', () => {
 
         it('should respond to GET /foo/ with single item', async () => {
             const server = new SinonServer();
-            server.addSingle('foo', new Single({ name: 'foo' }));
+            server.database.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
@@ -462,7 +466,7 @@ describe('SinonServer', () => {
 
         it('should respond to PUT /foo/ by updating the singleton record', async () => {
             const server = new SinonServer();
-            server.addSingle('foo', new Single({ name: 'foo' }));
+            server.database.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest(
                 'PUT',
@@ -477,12 +481,12 @@ describe('SinonServer', () => {
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
-            expect(server.getOnly('foo')).toEqual({ name: 'baz' });
+            expect(server.database.getOnly('foo')).toEqual({ name: 'baz' });
         });
 
         it('should respond to PATCH /foo/ by updating the singleton record', async () => {
             const server = new SinonServer();
-            server.addSingle('foo', new Single({ name: 'foo' }));
+            server.database.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest(
                 'PATCH',
@@ -497,14 +501,14 @@ describe('SinonServer', () => {
             expect(request.getResponseHeader('Content-Type')).toEqual(
                 'application/json',
             );
-            expect(server.getOnly('foo')).toEqual({ name: 'baz' });
+            expect(server.database.getOnly('foo')).toEqual({ name: 'baz' });
         });
     });
 
     describe('setDefaultQuery', () => {
         it('should set the default query string', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
@@ -527,7 +531,7 @@ describe('SinonServer', () => {
 
         it('should not override any provided query string', async () => {
             const server = new SinonServer();
-            server.addCollection(
+            server.database.addCollection(
                 'foo',
                 new Collection({
                     items: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
