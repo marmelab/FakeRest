@@ -16,7 +16,7 @@ export class FetchMockServer extends BaseServerWithMiddlewares<
     constructor({
         loggingEnabled = false,
         ...options
-    }: FetchMockServerOptions) {
+    }: FetchMockServerOptions = {}) {
         super(options);
         this.loggingEnabled = loggingEnabled;
     }

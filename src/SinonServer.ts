@@ -9,7 +9,10 @@ export class SinonServer extends BaseServerWithMiddlewares<
 > {
     loggingEnabled = false;
 
-    constructor({ loggingEnabled = false, ...options }: SinonServerOptions) {
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: SinonServerOptions = {}) {
         super(options);
         this.loggingEnabled = loggingEnabled;
     }
