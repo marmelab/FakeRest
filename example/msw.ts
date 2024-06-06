@@ -1,6 +1,5 @@
 import { setupWorker } from 'msw/browser';
-import { HttpResponse } from 'msw';
-import { MswServer, withDelay } from '../src/FakeRest';
+import { MswServer, withDelay } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 
@@ -43,6 +42,6 @@ restServer.addMiddleware(async (request, context, next) => {
     return next(request, context);
 });
 
-export const worker = setupWorker(...restServer.getHandlers());
+export const worker = setupWorker(restServer.getHandler());
 
 export const dataProvider = defaultDataProvider;

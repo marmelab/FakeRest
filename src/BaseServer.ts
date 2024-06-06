@@ -1,13 +1,67 @@
-import {
-    type BaseResponse,
-    type FakeRestContext,
-    AbstractBaseServer,
-} from './AbstractBaseServer.js';
+import { Database, type DatabaseOptions } from './Database.js';
+import type { QueryFunction } from './types.js';
 
-export class BaseServer<RequestType, ResponseType> extends AbstractBaseServer {
+export class BaseServer<RequestType, ResponseType> extends Database {
+    baseUrl = '';
+    defaultQuery: QueryFunction = () => ({});
     middlewares: Array<Middleware<RequestType>> = [];
 
-    extractContext(
+    constructor({
+        baseUrl = '',
+        defaultQuery = () => ({}),
+        ...options
+    }: BaseServerOptions = {}) {
+        super(options);
+        this.baseUrl = baseUrl;
+        this.defaultQuery = defaultQuery;
+    }
+
+    /**
+     * @param Function ResourceName => object
+     */
+    setDefaultQuery(query: QueryFunction) {
+        this.defaultQuery = query;
+    }
+
+    getContext(
+        context: Pick<
+            FakeRestContext,
+            'url' | 'method' | 'params' | 'requestJson'
+        >,
+    ): FakeRestContext {
+        for (const name of this.getSingleNames()) {
+            const matches = context.url?.match(
+                new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
+            );
+            if (!matches) continue;
+            return {
+                ...context,
+                single: name,
+            };
+        }
+
+        const matches = context.url?.match(
+            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
+        );
+        if (matches) {
+            const name = matches[1];
+            const params = Object.assign(
+                {},
+                this.defaultQuery(name),
+                context.params,
+            );
+
+            return {
+                ...context,
+                collection: name,
+                params,
+            };
+        }
+
+        return context;
+    }
+
+    getNormalizedRequest(
         request: RequestType,
     ): Promise<
         Pick<FakeRestContext, 'url' | 'method' | 'params' | 'requestJson'>
@@ -24,7 +78,9 @@ export class BaseServer<RequestType, ResponseType> extends AbstractBaseServer {
     }
 
     async handle(request: RequestType): Promise<ResponseType | undefined> {
-        const context = this.getContext(await this.extractContext(request));
+        const context = this.getContext(
+            await this.getNormalizedRequest(request),
+        );
 
         // Call middlewares
         let index = 0;
@@ -294,3 +350,33 @@ export type Middleware<RequestType> = (
         ctx: FakeRestContext,
     ) => Promise<BaseResponse | null> | BaseResponse | null,
 ) => Promise<BaseResponse | null> | BaseResponse | null;
+
+export type BaseServerOptions = DatabaseOptions & {
+    baseUrl?: string;
+    batchUrl?: string | null;
+    defaultQuery?: QueryFunction;
+};
+
+export type BaseRequest = {
+    url?: string;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestJson?: Record<string, any> | undefined;
+    params?: { [key: string]: any };
+};
+
+export type BaseResponse = {
+    status: number;
+    body?: Record<string, any> | Record<string, any>[];
+    headers: { [key: string]: string };
+};
+
+export type FakeRestContext = {
+    url?: string;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestJson: Record<string, any> | undefined;
+    params: { [key: string]: any };
+};

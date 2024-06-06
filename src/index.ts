@@ -8,7 +8,7 @@ import {
     FetchServer,
     FetchMockServer,
 } from './adapters/FetchMockServer.js';
-import { getMswHandlers, MswServer } from './adapters/msw.js';
+import { getMswHandler, MswServer } from './adapters/MswServer.js';
 import { Collection } from './Collection.js';
 import { Single } from './Single.js';
 import { withDelay } from './withDelay.js';
@@ -16,7 +16,7 @@ import { withDelay } from './withDelay.js';
 export {
     getSinonHandler,
     getFetchMockHandler,
-    getMswHandlers,
+    getMswHandler,
     Server,
     SinonServer,
     FetchServer,
@@ -30,7 +30,7 @@ export {
 export default {
     getSinonHandler,
     getFetchMockHandler,
-    getMswHandlers,
+    getMswHandler,
     Server,
     SinonServer,
     FetchServer,

@@ -2,34 +2,19 @@ import { Collection } from './Collection.js';
 import { Single } from './Single.js';
 import type { CollectionItem, Query, QueryFunction } from './types.js';
 
-/**
- * This base class does not need generics so we can reference it in Collection and Single
- * without having to propagate mocking implementation generics nor requiring the user to specify them.
- * The BaseServerWithMiddlewares class is the one that needs to have generic parameters which are
- * provided by the mocking implementation server classes.
- */
-export class AbstractBaseServer {
-    baseUrl = '';
+export class Database {
     identifierName = 'id';
-    loggingEnabled = false;
-    defaultQuery: QueryFunction = () => ({});
     collections: Record<string, Collection<any>> = {};
     singles: Record<string, Single<any>> = {};
     getNewId?: () => number | string;
 
     constructor({
-        baseUrl = '',
         data,
-        defaultQuery = () => ({}),
         identifierName = 'id',
         getNewId,
-        loggingEnabled = false,
-    }: BaseServerOptions = {}) {
-        this.baseUrl = baseUrl;
+    }: DatabaseOptions = {}) {
         this.getNewId = getNewId;
-        this.loggingEnabled = loggingEnabled;
         this.identifierName = identifierName;
-        this.defaultQuery = defaultQuery;
 
         if (data) {
             this.init(data);
@@ -55,17 +40,6 @@ export class AbstractBaseServer {
                 this.addSingle(name, new Single(value));
             }
         }
-    }
-
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
-    }
-
-    /**
-     * @param Function ResourceName => object
-     */
-    setDefaultQuery(query: QueryFunction) {
-        this.defaultQuery = query;
     }
 
     addCollection<T extends CollectionItem = CollectionItem>(
@@ -151,47 +125,9 @@ export class AbstractBaseServer {
     updateOnly(name: string, item: CollectionItem) {
         return this.singles[name].updateOnly(item);
     }
-
-    getContext(
-        context: Pick<
-            FakeRestContext,
-            'url' | 'method' | 'params' | 'requestJson'
-        >,
-    ): FakeRestContext {
-        for (const name of this.getSingleNames()) {
-            const matches = context.url?.match(
-                new RegExp(`^${this.baseUrl}\\/(${name})(\\/?.*)?$`),
-            );
-            if (!matches) continue;
-            return {
-                ...context,
-                single: name,
-            };
-        }
-
-        const matches = context.url?.match(
-            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
-        );
-        if (matches) {
-            const name = matches[1];
-            const params = Object.assign(
-                {},
-                this.defaultQuery(name),
-                context.params,
-            );
-
-            return {
-                ...context,
-                collection: name,
-                params,
-            };
-        }
-
-        return context;
-    }
 }
 
-export type BaseServerOptions = {
+export type DatabaseOptions = {
     baseUrl?: string;
     batchUrl?: string | null;
     data?: Record<string, CollectionItem[] | CollectionItem>;
@@ -199,28 +135,4 @@ export type BaseServerOptions = {
     identifierName?: string;
     getNewId?: () => number | string;
     loggingEnabled?: boolean;
-};
-
-export type BaseRequest = {
-    url?: string;
-    method?: string;
-    collection?: string;
-    single?: string;
-    requestJson?: Record<string, any> | undefined;
-    params?: { [key: string]: any };
-};
-
-export type BaseResponse = {
-    status: number;
-    body?: Record<string, any> | Record<string, any>[];
-    headers: { [key: string]: string };
-};
-
-export type FakeRestContext = {
-    url?: string;
-    method?: string;
-    collection?: string;
-    single?: string;
-    requestJson: Record<string, any> | undefined;
-    params: { [key: string]: any };
 };

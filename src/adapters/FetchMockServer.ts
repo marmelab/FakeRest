@@ -1,14 +1,28 @@
-import type { MockResponseObject, MockMatcherFunction } from 'fetch-mock';
-import { BaseServer } from '../BaseServer.js';
-import type {
-    BaseResponse,
-    BaseServerOptions,
-    FakeRestContext,
-} from '../AbstractBaseServer.js';
+import type { MockResponseObject } from 'fetch-mock';
+import {
+    type BaseResponse,
+    BaseServer,
+    type FakeRestContext,
+    type BaseServerOptions,
+} from '../BaseServer.js';
 import { parseQueryString } from '../parseQueryString.js';
 
 export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
-    async extractContext(request: Request) {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: FetchMockServerOptions = {}) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    async getNormalizedRequest(request: Request) {
         const req =
             typeof request === 'string' ? new Request(request) : request;
         const queryString = req.url
@@ -89,7 +103,7 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
     }
 }
 
-export const getFetchMockHandler = (options: BaseServerOptions) => {
+export const getFetchMockHandler = (options: FetchMockServerOptions) => {
     const server = new FetchMockServer(options);
     return server.getHandler();
 };
@@ -105,4 +119,8 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     requestJson?: Record<string, any>;
     queryString?: string;
     params?: { [key: string]: any };
+};
+
+export type FetchMockServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
 };

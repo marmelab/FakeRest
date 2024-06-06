@@ -1,13 +1,11 @@
-import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
-
-import { AbstractBaseServer } from './AbstractBaseServer.js';
+import { Database } from './Database.js';
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
 
 describe('AbstractBaseServer', () => {
     describe('init', () => {
         it('should populate several collections', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.init({
                 foo: [{ a: 1 }, { a: 2 }, { a: 3 }],
                 bar: [{ b: true }, { b: false }],
@@ -28,7 +26,7 @@ describe('AbstractBaseServer', () => {
 
     describe('addCollection', () => {
         it('should add a collection and index it by name', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             const collection = new Collection({
                 items: [
                     { id: 1, name: 'foo' },
@@ -43,7 +41,7 @@ describe('AbstractBaseServer', () => {
 
     describe('addSingle', () => {
         it('should add a single object and index it by name', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             const single = new Single({ name: 'foo', description: 'bar' });
             server.addSingle('foo', single);
             expect(server.getSingle('foo')).toEqual(single);
@@ -52,7 +50,7 @@ describe('AbstractBaseServer', () => {
 
     describe('getAll', () => {
         it('should return all items for a given name', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addCollection(
                 'foo',
                 new Collection({
@@ -74,7 +72,7 @@ describe('AbstractBaseServer', () => {
         });
 
         it('should support a query', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addCollection(
                 'foo',
                 new Collection({
@@ -100,7 +98,7 @@ describe('AbstractBaseServer', () => {
 
     describe('getOne', () => {
         it('should return an error when no collection match the identifier', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addCollection(
                 'foo',
                 new Collection({ items: [{ id: 1, name: 'foo' }] }),
@@ -111,7 +109,7 @@ describe('AbstractBaseServer', () => {
         });
 
         it('should return the first collection matching the identifier', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addCollection(
                 'foo',
                 new Collection({
@@ -126,7 +124,7 @@ describe('AbstractBaseServer', () => {
         });
 
         it('should use the identifierName', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addCollection(
                 'foo',
                 new Collection({
@@ -144,7 +142,7 @@ describe('AbstractBaseServer', () => {
 
     describe('getOnly', () => {
         it('should return the single matching the identifier', () => {
-            const server = new AbstractBaseServer();
+            const server = new Database();
             server.addSingle('foo', new Single({ name: 'foo' }));
             expect(server.getOnly('foo')).toEqual({ name: 'foo' });
         });

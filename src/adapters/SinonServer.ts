@@ -1,13 +1,30 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
-import { BaseServer } from '../BaseServer.js';
+import {
+    type BaseResponse,
+    BaseServer,
+    type BaseServerOptions,
+} from '../BaseServer.js';
 import { parseQueryString } from '../parseQueryString.js';
-import type { BaseResponse, BaseServerOptions } from '../AbstractBaseServer.js';
 
 export class SinonServer extends BaseServer<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {
-    async extractContext(request: SinonFakeXMLHttpRequest) {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: SinonServerOptions = {}) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    async getNormalizedRequest(request: SinonFakeXMLHttpRequest) {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
 
@@ -133,7 +150,7 @@ export class SinonServer extends BaseServer<
     }
 }
 
-export const getSinonHandler = (options: BaseServerOptions) => {
+export const getSinonHandler = (options: SinonServerOptions) => {
     const server = new SinonServer(options);
     return server.getHandler();
 };
@@ -147,4 +164,8 @@ export type SinonFakeRestResponse = {
     status: number;
     body: any;
     headers: Record<string, string>;
+};
+
+export type SinonServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
 };
