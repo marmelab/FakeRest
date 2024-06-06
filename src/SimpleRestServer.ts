@@ -9,7 +9,7 @@ import type {
     NormalizedRequest,
 } from './types.js';
 
-export class BaseServer {
+export class SimpleRestServer {
     baseUrl = '';
     defaultQuery: QueryFunction = () => ({});
     middlewares: Array<Middleware>;

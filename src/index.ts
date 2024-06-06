@@ -10,13 +10,13 @@ import {
 } from './adapters/FetchMockServer.js';
 import { getMswHandler, MswServer } from './adapters/MswServer.js';
 import { Database } from './Database.js';
-import { BaseServer } from './BaseServer.js';
+import { SimpleRestServer } from './SimpleRestServer.js';
 import { Collection } from './Collection.js';
 import { Single } from './Single.js';
 import { withDelay } from './withDelay.js';
 
 export {
-    BaseServer,
+    SimpleRestServer,
     Database,
     getSinonHandler,
     getFetchMockHandler,
@@ -32,7 +32,7 @@ export {
 };
 
 export default {
-    BaseServer,
+    SimpleRestServer,
     Database,
     getSinonHandler,
     getFetchMockHandler,

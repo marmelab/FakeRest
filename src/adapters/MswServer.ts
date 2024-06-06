@@ -1,13 +1,13 @@
 import { http, HttpResponse } from 'msw';
-import { BaseServer } from '../BaseServer.js';
-import type { BaseServerOptions } from '../BaseServer.js';
+import { SimpleRestServer } from '../SimpleRestServer.js';
+import type { BaseServerOptions } from '../SimpleRestServer.js';
 import type { APIServer, NormalizedRequest } from '../types.js';
 
 export class MswServer {
     server: APIServer;
 
     constructor({ server, ...options }: MswServerOptions) {
-        this.server = server || new BaseServer(options);
+        this.server = server || new SimpleRestServer(options);
     }
 
     getHandler() {

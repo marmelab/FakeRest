@@ -3,7 +3,7 @@ import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 import { SinonServer } from './SinonServer.js';
 import { Single } from '../Single.js';
 import { Collection } from '../Collection.js';
-import type { BaseResponse } from '../BaseServer.js';
+import type { BaseResponse } from '../SimpleRestServer.js';
 
 function getFakeXMLHTTPRequest(
     method: string,

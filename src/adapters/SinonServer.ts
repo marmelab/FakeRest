@@ -1,5 +1,8 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
-import { BaseServer, type BaseServerOptions } from '../BaseServer.js';
+import {
+    SimpleRestServer,
+    type BaseServerOptions,
+} from '../SimpleRestServer.js';
 import { parseQueryString } from '../parseQueryString.js';
 import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 
@@ -12,7 +15,7 @@ export class SinonServer {
         server,
         ...options
     }: SinonServerOptions = {}) {
-        this.server = server || new BaseServer(options);
+        this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
 

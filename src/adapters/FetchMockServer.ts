@@ -1,6 +1,6 @@
-import { BaseServer } from '../BaseServer.js';
+import { SimpleRestServer } from '../SimpleRestServer.js';
 import { parseQueryString } from '../parseQueryString.js';
-import type { BaseServerOptions } from '../BaseServer.js';
+import type { BaseServerOptions } from '../SimpleRestServer.js';
 import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 import type { MockResponseObject } from 'fetch-mock';
 
@@ -13,7 +13,7 @@ export class FetchMockServer {
         server,
         ...options
     }: FetchMockServerOptions = {}) {
-        this.server = server || new BaseServer(options);
+        this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
 
