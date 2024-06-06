@@ -247,6 +247,18 @@ fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
 
 FakeRest will now intercept every `fetch` requests to the REST server.
 
+## Concepts
+
+### Server
+
+### Database
+
+### Collections
+
+### Single
+
+### Embeds
+
 ## REST Flavor
 
 FakeRest defines a REST flavor, described below. It is inspired by commonly used ways how to handle aspects like filtering and sorting.
@@ -531,25 +543,75 @@ restServer.addMiddleware(withDelay(300));
 
 ## Configuration
 
-### Configure Identifiers Generation
+### Configure Identifiers
 
-By default, FakeRest uses an auto incremented sequence for the items identifiers. If you'd rather use UUIDs for instance but would like to avoid providing them when you insert new items, you can provide your own function:
+By default, FakeRest assume all records have a unique `id` field.
+Some database such as [MongoDB](https://www.mongodb.com) use `_id` instead of `id` for collection identifiers.
+You can customize FakeRest to do the same by using the `identifierName` option:
 
 ```js
-import FakeRest from 'fakerest';
-import uuid from 'uuid';
+import { MswServer } from 'fakerest';
 
-const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain', getNewId: () => uuid.v5() });
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    identifierName: '_id'
+});
 ```
 
 This can also be specified at the collection level:
 
 ```js
-import FakeRest from 'fakerest';
+import { MswServer, Collection } from 'fakerest';
+
+const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const authorsCollection = new Collection({ items: [], identifierName: '_id' });
+restServer.addCollection('authors', authorsCollection);
+```
+
+### Configure Identifiers Generation
+
+By default, FakeRest uses an auto incremented sequence for the items identifiers.
+If you'd rather use UUIDs for instance but would like to avoid providing them when you insert new items, you can provide your own function:
+
+```js
+import { MswServer } from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new FakeRest.SinonServer({ baseUrl: 'http://my.custom.domain' });
-const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '_id', getNewId: () => uuid.v5() });
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    getNewId: () => uuid.v5()
+});
+```
+
+This can also be specified at the collection level:
+
+```js
+import { MswServer, Collection } from 'fakerest';
+import uuid from 'uuid';
+
+const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const authorsCollection = new Collection({ items: [], getNewId: () => uuid.v5() });
+restServer.addCollection('authors', authorsCollection);
+```
+
+### Configure Default Queries
+
+Some APIs might enforce some parameters on queries. For instance, an API might always include an [embed](#embed) or enforce a query filter.
+You can simulate this using the `defaultQuery` parameter:
+
+```js
+import { MswServer } from 'fakerest';
+import uuid from 'uuid';
+
+const restServer = new MswServer({
+    baseUrl: 'http://my.custom.domain',
+    getNewId: () => uuid.v5(),
+    defaultQuery: (collection) => {
+        if (resourceName == 'authors') return { embed: ['books'] }
+        if (resourceName == 'books') return { filter: { published: true } }
+        return {};
+    }
+});
 ```
 
 ## Development
