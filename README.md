@@ -180,7 +180,7 @@ FakeRest will now intercept every `XmlHttpRequest` requests to the REST server.
 
 ### fetch-mock
 
-First, install fakerest and fetch-mock:
+First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
 
 ```sh
 npm install fakerest fetch-mock --save-dev
@@ -251,13 +251,27 @@ FakeRest will now intercept every `fetch` requests to the REST server.
 
 ### Server
 
+A fake server implementation. FakeRest provide the following:
+
+- `MswServer`: Based on [MSW](https://mswjs.io/)
+- `FetchMockServer`: Based on [`fetch-mock`](https://www.wheresrhys.co.uk/fetch-mock/)
+- `SinonServer`: Based on [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/)
+
 ### Database
+
+FakeRest internal database, that contains [collections](#collections) and [single](#single).
 
 ### Collections
 
+The equivalent to a classic database table or document collection. It supports filtering.
+
 ### Single
 
+Represent an API endpoint that returns a single entity. Useful for things such as user profile routes (`/me`) or global settings (`/settings`).
+
 ### Embeds
+
+FakeRest support embedding other resources in a main resource query result. For instance, embedding the author of a book.
 
 ## REST Flavor
 
