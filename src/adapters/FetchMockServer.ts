@@ -1,17 +1,28 @@
-import type { MockResponseObject, MockMatcherFunction } from 'fetch-mock';
-import { BaseServerWithMiddlewares } from './BaseServerWithMiddlewares.js';
-import type {
-    BaseResponse,
-    BaseServerOptions,
-    FakeRestContext,
-} from './BaseServer.js';
-import { parseQueryString } from './parseQueryString.js';
+import type { MockResponseObject } from 'fetch-mock';
+import {
+    type BaseResponse,
+    BaseServer,
+    type FakeRestContext,
+    type BaseServerOptions,
+} from '../BaseServer.js';
+import { parseQueryString } from '../parseQueryString.js';
 
-export class FetchMockServer extends BaseServerWithMiddlewares<
-    Request,
-    MockResponseObject
-> {
-    async extractContext(request: Request) {
+export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: FetchMockServerOptions = {}) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    async getNormalizedRequest(request: Request) {
         const req =
             typeof request === 'string' ? new Request(request) : request;
         const queryString = req.url
@@ -19,9 +30,9 @@ export class FetchMockServer extends BaseServerWithMiddlewares<
             : '';
         const params = parseQueryString(queryString);
         const text = await req.text();
-        let requestJson: Record<string, any> | undefined = undefined;
+        let requestBody: Record<string, any> | undefined = undefined;
         try {
-            requestJson = JSON.parse(text);
+            requestBody = JSON.parse(text);
         } catch (e) {
             // not JSON, no big deal
         }
@@ -29,7 +40,7 @@ export class FetchMockServer extends BaseServerWithMiddlewares<
         return {
             url: req.url,
             params,
-            requestJson,
+            requestBody,
             method: req.method,
         };
     }
@@ -92,7 +103,7 @@ export class FetchMockServer extends BaseServerWithMiddlewares<
     }
 }
 
-export const getFetchMockHandler = (options: BaseServerOptions) => {
+export const getFetchMockHandler = (options: FetchMockServerOptions) => {
     const server = new FetchMockServer(options);
     return server.getHandler();
 };
@@ -110,11 +121,6 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     params?: { [key: string]: any };
 };
 
-export type FetchMockRequestInterceptor = (
-    request: FetchMockFakeRestRequest,
-) => FetchMockFakeRestRequest;
-
-export type FetchMockResponseInterceptor = (
-    response: MockResponseObject,
-    request: FetchMockFakeRestRequest,
-) => MockResponseObject;
+export type FetchMockServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
+};

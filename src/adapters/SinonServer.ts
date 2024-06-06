@@ -1,13 +1,30 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
-import { BaseServerWithMiddlewares } from './BaseServerWithMiddlewares.js';
-import { parseQueryString } from './parseQueryString.js';
-import type { BaseResponse, BaseServerOptions } from './BaseServer.js';
+import {
+    type BaseResponse,
+    BaseServer,
+    type BaseServerOptions,
+} from '../BaseServer.js';
+import { parseQueryString } from '../parseQueryString.js';
 
-export class SinonServer extends BaseServerWithMiddlewares<
+export class SinonServer extends BaseServer<
     SinonFakeXMLHttpRequest,
     SinonFakeRestResponse
 > {
-    extractContextSync(request: SinonFakeXMLHttpRequest) {
+    loggingEnabled = false;
+
+    constructor({
+        loggingEnabled = false,
+        ...options
+    }: SinonServerOptions = {}) {
+        super(options);
+        this.loggingEnabled = loggingEnabled;
+    }
+
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
+    }
+
+    async getNormalizedRequest(request: SinonFakeXMLHttpRequest) {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
 
@@ -15,10 +32,10 @@ export class SinonServer extends BaseServerWithMiddlewares<
             ? decodeURIComponent(req.url.slice(req.url.indexOf('?') + 1))
             : '';
         const params = parseQueryString(queryString);
-        let requestJson: Record<string, any> | undefined = undefined;
+        let requestBody: Record<string, any> | undefined = undefined;
         if ((req as SinonFakeXMLHttpRequest).requestBody) {
             try {
-                requestJson = JSON.parse(
+                requestBody = JSON.parse(
                     (req as SinonFakeXMLHttpRequest).requestBody,
                 );
             } catch (error) {
@@ -29,12 +46,12 @@ export class SinonServer extends BaseServerWithMiddlewares<
         return {
             url: req.url,
             params,
-            requestJson,
+            requestBody,
             method: req.method,
         };
     }
 
-    respondSync(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
+    async respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
         const sinonResponse = {
             status: response.status,
             body: response.body ?? '',
@@ -62,7 +79,7 @@ export class SinonServer extends BaseServerWithMiddlewares<
         }
 
         // This is an internal property of SinonFakeXMLHttpRequest but we have to reset it to 1
-        // to allow the request to be resolved by Sinon.
+        // to handle the request asynchronously.
         // See https://github.com/sinonjs/sinon/issues/637
         // @ts-expect-error
         request.readyState = 1;
@@ -120,14 +137,20 @@ export class SinonServer extends BaseServerWithMiddlewares<
 
     getHandler() {
         return (request: SinonFakeXMLHttpRequest) => {
-            const result = this.handleSync(request);
-            console.log(result);
-            return result;
+            // This is an internal property of SinonFakeXMLHttpRequest but we have to set it to 4 to
+            // suppress sinon's synchronous processing (which would result in HTTP 404). This allows us
+            // to handle the request asynchronously.
+            // See https://github.com/sinonjs/sinon/issues/637
+            // @ts-expect-error
+            request.readyState = 4;
+            this.handle(request);
+            // Let Sinon know we've handled the request
+            return true;
         };
     }
 }
 
-export const getSinonHandler = (options: BaseServerOptions) => {
+export const getSinonHandler = (options: SinonServerOptions) => {
     const server = new SinonServer(options);
     return server.getHandler();
 };
@@ -141,4 +164,8 @@ export type SinonFakeRestResponse = {
     status: number;
     body: any;
     headers: Record<string, string>;
+};
+
+export type SinonServerOptions = BaseServerOptions & {
+    loggingEnabled?: boolean;
 };

@@ -1,9 +1,9 @@
 import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
 import { SinonServer } from './SinonServer.js';
-import { Single } from './Single.js';
-import { Collection } from './Collection.js';
-import type { BaseResponse } from './BaseServer.js';
+import { Single } from '../Single.js';
+import { Collection } from '../Collection.js';
+import type { BaseResponse } from '../BaseServer.js';
 
 function getFakeXMLHTTPRequest(
     method: string,
@@ -23,153 +23,8 @@ function getFakeXMLHTTPRequest(
 }
 
 describe('SinonServer', () => {
-    describe('init', () => {
-        it('should populate several collections', () => {
-            const server = new SinonServer();
-            server.init({
-                foo: [{ a: 1 }, { a: 2 }, { a: 3 }],
-                bar: [{ b: true }, { b: false }],
-                baz: { name: 'baz' },
-            });
-            expect(server.getAll('foo')).toEqual([
-                { id: 0, a: 1 },
-                { id: 1, a: 2 },
-                { id: 2, a: 3 },
-            ]);
-            expect(server.getAll('bar')).toEqual([
-                { id: 0, b: true },
-                { id: 1, b: false },
-            ]);
-            expect(server.getOnly('baz')).toEqual({ name: 'baz' });
-        });
-    });
-
-    describe('addCollection', () => {
-        it('should add a collection and index it by name', () => {
-            const server = new SinonServer();
-            const collection = new Collection({
-                items: [
-                    { id: 1, name: 'foo' },
-                    { id: 2, name: 'bar' },
-                ],
-            });
-            server.addCollection('foo', collection);
-            const newcollection = server.getCollection('foo');
-            expect(newcollection).toEqual(collection);
-        });
-    });
-
-    describe('addSingle', () => {
-        it('should add a single object and index it by name', () => {
-            const server = new SinonServer();
-            const single = new Single({ name: 'foo', description: 'bar' });
-            server.addSingle('foo', single);
-            expect(server.getSingle('foo')).toEqual(single);
-        });
-    });
-
-    describe('getAll', () => {
-        it('should return all items for a given name', () => {
-            const server = new SinonServer();
-            server.addCollection(
-                'foo',
-                new Collection({
-                    items: [
-                        { id: 1, name: 'foo' },
-                        { id: 2, name: 'bar' },
-                    ],
-                }),
-            );
-            server.addCollection(
-                'baz',
-                new Collection({ items: [{ id: 1, name: 'baz' }] }),
-            );
-            expect(server.getAll('foo')).toEqual([
-                { id: 1, name: 'foo' },
-                { id: 2, name: 'bar' },
-            ]);
-            expect(server.getAll('baz')).toEqual([{ id: 1, name: 'baz' }]);
-        });
-
-        it('should support a query', () => {
-            const server = new SinonServer();
-            server.addCollection(
-                'foo',
-                new Collection({
-                    items: [
-                        { id: 0, name: 'c', arg: false },
-                        { id: 1, name: 'b', arg: true },
-                        { id: 2, name: 'a', arg: true },
-                    ],
-                }),
-            );
-            const params = {
-                filter: { arg: true },
-                sort: 'name',
-                slice: [0, 10],
-            };
-            const expected = [
-                { id: 2, name: 'a', arg: true },
-                { id: 1, name: 'b', arg: true },
-            ];
-            expect(server.getAll('foo', params)).toEqual(expected);
-        });
-    });
-
-    describe('getOne', () => {
-        it('should return an error when no collection match the identifier', () => {
-            const server = new SinonServer();
-            server.addCollection(
-                'foo',
-                new Collection({ items: [{ id: 1, name: 'foo' }] }),
-            );
-            expect(() => {
-                server.getOne('foo', 2);
-            }).toThrow(new Error('No item with identifier 2'));
-        });
-
-        it('should return the first collection matching the identifier', () => {
-            const server = new SinonServer();
-            server.addCollection(
-                'foo',
-                new Collection({
-                    items: [
-                        { id: 1, name: 'foo' },
-                        { id: 2, name: 'bar' },
-                    ],
-                }),
-            );
-            expect(server.getOne('foo', 1)).toEqual({ id: 1, name: 'foo' });
-            expect(server.getOne('foo', 2)).toEqual({ id: 2, name: 'bar' });
-        });
-
-        it('should use the identifierName', () => {
-            const server = new SinonServer();
-            server.addCollection(
-                'foo',
-                new Collection({
-                    items: [
-                        { _id: 1, name: 'foo' },
-                        { _id: 2, name: 'bar' },
-                    ],
-                    identifierName: '_id',
-                }),
-            );
-            expect(server.getOne('foo', 1)).toEqual({ _id: 1, name: 'foo' });
-            expect(server.getOne('foo', 2)).toEqual({ _id: 2, name: 'bar' });
-        });
-    });
-
-    describe('getOnly', () => {
-        it('should return the single matching the identifier', () => {
-            const server = new SinonServer();
-            server.addSingle('foo', new Single({ name: 'foo' }));
-            expect(server.getOnly('foo')).toEqual({ name: 'foo' });
-        });
-    });
-
     describe('addMiddleware', () => {
-        it('should allow request transformation', () => {
+        it('should allow request transformation', async () => {
             const server = new SinonServer();
             server.addMiddleware((request, context, next) => {
                 const start = context.params?._start
@@ -197,7 +52,7 @@ describe('SinonServer', () => {
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=1&_end=1');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request?.status).toEqual(206);
             // @ts-ignore
             expect(request.responseText).toEqual('[{"id":1,"name":"foo"}]');
@@ -206,7 +61,7 @@ describe('SinonServer', () => {
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?_start=2&_end=2');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request?.status).toEqual(206);
             // @ts-ignore
             expect(request?.responseText).toEqual('[{"id":2,"name":"bar"}]');
@@ -215,7 +70,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should allow response transformation', () => {
+        it('should allow response transformation', async () => {
             const server = new SinonServer();
             server.addMiddleware((request, context, next) => {
                 const response = next(request, context);
@@ -241,7 +96,7 @@ describe('SinonServer', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(418);
             // @ts-ignore
             expect(request.responseText).toEqual(
@@ -249,7 +104,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should pass request in response interceptor', () => {
+        it('should pass request in response interceptor', async () => {
             const server = new SinonServer();
             let requestUrl: string | undefined;
             server.addMiddleware((request, context, next) => {
@@ -260,22 +115,22 @@ describe('SinonServer', () => {
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
 
             expect(requestUrl).toEqual('/foo');
         });
     });
 
     describe('handle', () => {
-        it('should respond a 404 to GET /whatever on non existing collection', () => {
+        it('should respond a 404 to GET /whatever on non existing collection', async () => {
             const server = new SinonServer();
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(404); // not responded
         });
 
-        it('should respond to GET /foo by sending all items in collection foo', () => {
+        it('should respond to GET /foo by sending all items in collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -288,7 +143,7 @@ describe('SinonServer', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual(
@@ -302,7 +157,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', () => {
+        it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foos',
@@ -323,7 +178,7 @@ describe('SinonServer', () => {
                 '/foos?filter={"arg":true}&sort=name&slice=[0,10]&embed=["bars"]',
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual(
@@ -337,7 +192,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', () => {
+        it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -348,40 +203,40 @@ describe('SinonServer', () => {
             let request: SinonFakeXMLHttpRequest | null;
             request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-10/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-4/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[5,9]');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 5-9/11',
             );
             request = getFakeXMLHTTPRequest('GET', '/foo?range=[10,14]');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 10-10/11',
             );
         });
 
-        it('should respond to GET /foo on an empty collection with a []', () => {
+        it('should respond to GET /foo on an empty collection with a []', async () => {
             const server = new SinonServer();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('[]');
@@ -390,7 +245,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should respond to POST /foo by adding an item to collection foo', () => {
+        it('should respond to POST /foo by adding an item to collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -407,7 +262,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(201);
             // @ts-ignore
             expect(request.responseText).toEqual('{"name":"baz","id":3}');
@@ -422,7 +277,7 @@ describe('SinonServer', () => {
             ]);
         });
 
-        it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', () => {
+        it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', async () => {
             const server = new SinonServer();
             const request = getFakeXMLHTTPRequest(
                 'POST',
@@ -430,7 +285,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(201);
             // @ts-ignore
             expect(request.responseText).toEqual('{"name":"baz","id":0}');
@@ -441,7 +296,7 @@ describe('SinonServer', () => {
             expect(server.getAll('foo')).toEqual([{ id: 0, name: 'baz' }]);
         });
 
-        it('should respond to GET /foo/:id by sending element of identifier id in collection foo', () => {
+        it('should respond to GET /foo/:id by sending element of identifier id in collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -454,7 +309,7 @@ describe('SinonServer', () => {
             );
             const request = getFakeXMLHTTPRequest('GET', '/foo/2');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
@@ -463,16 +318,16 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should respond to GET /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to GET /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
             server.addCollection('foo', new Collection());
             const request = getFakeXMLHTTPRequest('GET', '/foo/3');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', () => {
+        it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -489,7 +344,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
@@ -502,7 +357,7 @@ describe('SinonServer', () => {
             ]);
         });
 
-        it('should respond to PUT /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to PUT /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
@@ -511,11 +366,11 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', () => {
+        it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -532,7 +387,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"id":2,"name":"baz"}');
@@ -545,7 +400,7 @@ describe('SinonServer', () => {
             ]);
         });
 
-        it('should respond to PATCH /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to PATCH /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest(
@@ -554,11 +409,11 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', () => {
+        it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -571,7 +426,7 @@ describe('SinonServer', () => {
             );
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/2');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"id":2,"name":"bar"}');
@@ -581,22 +436,22 @@ describe('SinonServer', () => {
             expect(server.getAll('foo')).toEqual([{ id: 1, name: 'foo' }]);
         });
 
-        it('should respond to DELETE /foo/:id on a non-existing id with a 404', () => {
+        it('should respond to DELETE /foo/:id on a non-existing id with a 404', async () => {
             const server = new SinonServer();
             server.addCollection('foo', new Collection({ items: [] }));
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(404);
         });
 
-        it('should respond to GET /foo/ with single item', () => {
+        it('should respond to GET /foo/ with single item', async () => {
             const server = new SinonServer();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"name":"foo"}');
@@ -605,7 +460,7 @@ describe('SinonServer', () => {
             );
         });
 
-        it('should respond to PUT /foo/ by updating the singleton record', () => {
+        it('should respond to PUT /foo/ by updating the singleton record', async () => {
             const server = new SinonServer();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
@@ -615,7 +470,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"name":"baz"}');
@@ -625,7 +480,7 @@ describe('SinonServer', () => {
             expect(server.getOnly('foo')).toEqual({ name: 'baz' });
         });
 
-        it('should respond to PATCH /foo/ by updating the singleton record', () => {
+        it('should respond to PATCH /foo/ by updating the singleton record', async () => {
             const server = new SinonServer();
             server.addSingle('foo', new Single({ name: 'foo' }));
 
@@ -635,7 +490,7 @@ describe('SinonServer', () => {
                 JSON.stringify({ name: 'baz' }),
             );
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(200);
             // @ts-ignore
             expect(request.responseText).toEqual('{"name":"baz"}');
@@ -647,7 +502,7 @@ describe('SinonServer', () => {
     });
 
     describe('setDefaultQuery', () => {
-        it('should set the default query string', () => {
+        it('should set the default query string', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -660,7 +515,7 @@ describe('SinonServer', () => {
             });
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 2-4/10',
@@ -670,7 +525,7 @@ describe('SinonServer', () => {
             expect(request.responseText).toEqual(JSON.stringify(expected));
         });
 
-        it('should not override any provided query string', () => {
+        it('should not override any provided query string', async () => {
             const server = new SinonServer();
             server.addCollection(
                 'foo',
@@ -681,7 +536,7 @@ describe('SinonServer', () => {
             server.setDefaultQuery((name) => ({ range: [2, 4] }));
             const request = getFakeXMLHTTPRequest('GET', '/foo?range=[0,4]');
             if (request == null) throw new Error('request is null');
-            server.handleSync(request);
+            await server.handle(request);
             expect(request.status).toEqual(206);
             expect(request.getResponseHeader('Content-Range')).toEqual(
                 'items 0-4/10',

@@ -6,7 +6,7 @@ export default defineConfig({
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points
-            entry: resolve(__dirname, 'src/FakeRest.ts'),
+            entry: resolve(__dirname, 'src/index.ts'),
             name: 'FakeRest',
             // the proper extensions will be added
             fileName: 'fakerest.min',

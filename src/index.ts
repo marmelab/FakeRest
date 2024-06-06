@@ -1,18 +1,22 @@
-import { getSinonHandler, Server, SinonServer } from './SinonServer.js';
+import {
+    getSinonHandler,
+    Server,
+    SinonServer,
+} from './adapters/SinonServer.js';
 import {
     getFetchMockHandler,
     FetchServer,
     FetchMockServer,
-} from './FetchMockServer.js';
+} from './adapters/FetchMockServer.js';
+import { getMswHandler, MswServer } from './adapters/MswServer.js';
 import { Collection } from './Collection.js';
 import { Single } from './Single.js';
-import { getMswHandlers, MswServer } from './msw.js';
 import { withDelay } from './withDelay.js';
 
 export {
     getSinonHandler,
     getFetchMockHandler,
-    getMswHandlers,
+    getMswHandler,
     Server,
     SinonServer,
     FetchServer,
@@ -26,7 +30,7 @@ export {
 export default {
     getSinonHandler,
     getFetchMockHandler,
-    getMswHandlers,
+    getMswHandler,
     Server,
     SinonServer,
     FetchServer,

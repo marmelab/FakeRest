@@ -31,8 +31,8 @@ switch (import.meta.env.VITE_MOCK) {
         break;
     default:
         import('./msw')
-            .then(({ worker, dataProvider }) => {
-                return worker.start().then(() => dataProvider);
+            .then(({ initializeMsw, dataProvider }) => {
+                return initializeMsw().then(() => dataProvider);
             })
             .then((dataProvider) => {
                 ReactDom.render(

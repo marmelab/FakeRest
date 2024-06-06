@@ -1,6 +1,6 @@
 import { Single } from './Single.js';
 import { Collection } from './Collection.js';
-import { Server } from './SinonServer.js';
+import { Server } from './adapters/SinonServer.js';
 
 describe('Single', () => {
     describe('constructor', () => {

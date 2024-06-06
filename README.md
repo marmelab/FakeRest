@@ -22,7 +22,7 @@ Then configure it:
 ```js
 // in ./src/fakeServer.js
 import { setupWorker } from "msw/browser";
-import { getMswHandlers } from "fakerest";
+import { getMswHandler } from "fakerest";
 
 const data = {
     'authors': [
@@ -41,12 +41,10 @@ const data = {
     }
 };
 
-export const worker = setupWorker(
-    ...getMswHandlers({
-        baseUrl: 'http://localhost:3000',
-        data
-    })
-);
+export const worker = setupWorker(getMswHandler({
+    baseUrl: 'http://localhost:3000',
+    data
+}));
 ```
 
 Finally call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
@@ -57,7 +55,10 @@ import ReactDom from "react-dom";
 import { App } from "./App";
 import { worker } from "./fakeServer";
 
-worker.start().then(() => {
+worker.start({
+    quiet: true, // Instruct MSW to not log requests in the console
+    onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle
+}).then(() => {
   ReactDom.render(<App />, document.getElementById("root"));
 });
 ```
@@ -91,7 +92,7 @@ const restServer = new MswServer({
     data,
 });
 
-export const worker = setupWorker(...restServer.getHandlers());
+export const worker = setupWorker(restServer.getHandler());
 ```
 
 FakeRest will now intercept every `fetch` requests to the REST server.
@@ -583,20 +584,24 @@ const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '
 ```sh
 # Install dependencies
 make install
+
 # Run the demo with MSW
 make run-msw
 
 # Run the demo with fetch-mock
 make run-fetch-mock
-# Watch source files and recompile dist/FakeRest.js when anything is modified
-make watch
+
+# Run the demo with sinon
+make run-sinon
+
 # Run tests
 make test
+
 # Build minified version
 make build
 ```
 
-To test the Sinon integration, build the library then run the demo to start Vite and visit http://localhost:5173/sinon.html
+You can sign-in to the demo with `janedoe` and `password`
 
 ## License
 

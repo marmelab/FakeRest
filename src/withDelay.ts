@@ -1,4 +1,4 @@
-import type { Middleware } from './BaseServerWithMiddlewares.js';
+import type { Middleware } from './BaseServer.js';
 
 export const withDelay =
     <RequestType>(delayMs: number): Middleware<RequestType> =>
