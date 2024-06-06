@@ -121,7 +121,6 @@ export class SinonServer extends BaseServer<
     getHandler() {
         return (request: SinonFakeXMLHttpRequest) => {
             const result = this.handleSync(request);
-            console.log(result);
             return result;
         };
     }
