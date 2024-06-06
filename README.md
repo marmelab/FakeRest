@@ -540,20 +540,24 @@ const authorsCollection = new FakeRest.Collection({ items: [], identifierName: '
 ```sh
 # Install dependencies
 make install
+
 # Run the demo with MSW
 make run-msw
 
 # Run the demo with fetch-mock
 make run-fetch-mock
-# Watch source files and recompile dist/FakeRest.js when anything is modified
-make watch
+
+# Run the demo with sinon
+make run-sinon
+
 # Run tests
 make test
+
 # Build minified version
 make build
 ```
 
-To test the Sinon integration, build the library then run the demo to start Vite and visit http://localhost:5173/sinon.html
+You can sign-in to the demo with `janedoe` and `password`
 
 ## License
 

@@ -60,6 +60,7 @@ export const initializeSinon = () => {
     server.respondWith(restServer.getHandler());
 };
 
+// An HttpClient based on XMLHttpRequest to use with Sinon
 const httpClient = (url: string, options: Options = {}): Promise<any> => {
     const request = new XMLHttpRequest();
     request.open(options.method ?? 'GET', url);
