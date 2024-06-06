@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { BaseServer } from '../BaseServer.js';
-import type { BaseServerOptions, NormalizedRequest } from '../BaseServer.js';
-import type { APIServer } from '../types.js';
+import type { BaseServerOptions } from '../BaseServer.js';
+import type { APIServer, NormalizedRequest } from '../types.js';
 
 export class MswServer {
     server: APIServer;

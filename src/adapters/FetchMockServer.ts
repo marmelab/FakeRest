@@ -1,7 +1,7 @@
 import { BaseServer } from '../BaseServer.js';
 import { parseQueryString } from '../parseQueryString.js';
-import type { BaseServerOptions, NormalizedRequest } from '../BaseServer.js';
-import type { BaseResponse, APIServer } from '../types.js';
+import type { BaseServerOptions } from '../BaseServer.js';
+import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 import type { MockResponseObject } from 'fetch-mock';
 
 export class FetchMockServer {

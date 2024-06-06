@@ -9,42 +9,19 @@ export const initializeSinon = () => {
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,
-    });
-
-    restServer.addMiddleware(withDelay(300));
-    restServer.addMiddleware(async (request, context, next) => {
-        if (request.requestHeaders.Authorization === undefined) {
-            return {
-                status: 401,
-                headers: {},
-            };
-        }
-
-        return next(request, context);
-    });
-
-    restServer.addMiddleware(async (request, context, next) => {
-        if (context.collection === 'books' && request.method === 'POST') {
-            if (
-                restServer.database.getCount(context.collection, {
-                    filter: {
-                        title: context.requestBody?.title,
-                    },
-                }) > 0
-            ) {
-                return {
-                    status: 400,
-                    headers: {},
-                    body: {
-                        errors: {
-                            title: 'An article with this title already exists. The title must be unique.',
-                        },
-                    },
-                };
-            }
-        }
-
-        return next(request, context);
+        middlewares: [
+            withDelay(300),
+            async (context, next) => {
+                if (!context.headers?.get('Authorization')) {
+                    return {
+                        status: 401,
+                        headers: {},
+                    };
+                }
+                return next(context);
+            },
+            // FIXME: add validation middleware
+        ],
     });
 
     // use sinon.js to monkey-patch XmlHttpRequest

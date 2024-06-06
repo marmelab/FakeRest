@@ -6,6 +6,7 @@ import type {
     FakeRestContext,
     CollectionItem,
     QueryFunction,
+    NormalizedRequest,
 } from './types.js';
 
 export class BaseServer {
@@ -396,8 +397,3 @@ export type BaseServerOptions = DatabaseOptions & {
     defaultQuery?: QueryFunction;
     middlewares?: Array<Middleware>;
 };
-
-export type NormalizedRequest = Pick<
-    FakeRestContext,
-    'url' | 'method' | 'params' | 'requestBody' | 'headers'
->;

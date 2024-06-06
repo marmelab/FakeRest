@@ -48,6 +48,11 @@ export type FakeRestContext = {
     params: { [key: string]: any };
 };
 
+export type NormalizedRequest = Pick<
+    FakeRestContext,
+    'url' | 'method' | 'params' | 'requestBody' | 'headers'
+>;
+
 export type APIServer = {
     baseUrl?: string;
     handle: (context: FakeRestContext) => Promise<BaseResponse>;
