@@ -4,10 +4,7 @@ import {
     AbstractBaseServer,
 } from './AbstractBaseServer.js';
 
-export abstract class BaseServer<
-    RequestType,
-    ResponseType,
-> extends AbstractBaseServer {
+export class BaseServer<RequestType, ResponseType> extends AbstractBaseServer {
     middlewares: Array<Middleware<RequestType>> = [];
 
     extractContext(

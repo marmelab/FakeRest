@@ -8,7 +8,7 @@ import type { CollectionItem, Query, QueryFunction } from './types.js';
  * The BaseServerWithMiddlewares class is the one that needs to have generic parameters which are
  * provided by the mocking implementation server classes.
  */
-export abstract class AbstractBaseServer {
+export class AbstractBaseServer {
     baseUrl = '';
     identifierName = 'id';
     loggingEnabled = false;
