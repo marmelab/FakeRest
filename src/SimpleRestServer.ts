@@ -2,6 +2,7 @@ import type { Collection } from './Collection.js';
 import { Database, type DatabaseOptions } from './Database.js';
 import type { Single } from './Single.js';
 import type {
+    APIServer,
     BaseResponse,
     FakeRestContext,
     CollectionItem,
@@ -9,7 +10,7 @@ import type {
     NormalizedRequest,
 } from './types.js';
 
-export class SimpleRestServer {
+export class SimpleRestServer implements APIServer {
     baseUrl = '';
     defaultQuery: QueryFunction = () => ({});
     middlewares: Array<Middleware>;

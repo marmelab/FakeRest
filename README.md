@@ -1,8 +1,16 @@
 # FakeRest
 
-Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHTTPRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
+A browser library that intercepts AJAX calls to mock a REST server based on JSON data.
+
+Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHTTPRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
 
 See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
+
+## Installation
+
+```sh
+npm install fakerest --save-dev
+```
 
 ## Usage
 
@@ -12,10 +20,10 @@ FakeRest lets you create a handler function that you can pass to an API mocking 
 
 We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
 
-Install FakeRest and MSW, then initialize MSW:
+Install MSW, then initialize it:
 
 ```sh
-npm install fakerest msw@latest --save-dev
+npm install msw@latest --save-dev
 npx msw init <PUBLIC_DIR> # eg: public
 ```
 
@@ -68,13 +76,13 @@ FakeRest will now intercept every `fetch` requests to the REST server.
 
 ### fetch-mock
 
-First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
+Install [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
 
 ```sh
-npm install fakerest fetch-mock --save-dev
+npm install fetch-mock --save-dev
 ```
 
-You can then initialize the `FetchMockServer`:
+You can then create a handler and pass it to fetch-mock:
 
 ```js
 // in ./src/fakeServer.js
@@ -108,10 +116,10 @@ FakeRest will now intercept every `fetch` requests to the REST server.
 
 ### Sinon
 
-Install FakeRest and [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/):
+Install [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/):
 
 ```sh
-npm install fakerest sinon --save-dev
+npm install sinon --save-dev
 ```
 
 Then, configure a Sinon server:
@@ -602,13 +610,13 @@ const handler = getMswHandler({
 });
 ```
 
-## Concepts
+## Architecture
 
 Behind a simple API (`getXXXHandler`), FakeRest uses a modular architecture that lets you combine different components to build a fake REST server that fits your needs.
 
 ### Mocking Adapter
 
-`getXXXHandler` is a shortcut to an object-oriented API:
+`getXXXHandler` is a shortcut to an object-oriented API of adapter classes:
 
 ```js
 export const getMswHandler = (options: MswAdapterOptions) => {
@@ -623,7 +631,7 @@ FakeRest provides 3 adapter classes:
 - `FetchMockAdapter`: Based on [`fetch-mock`](https://www.wheresrhys.co.uk/fetch-mock/)
 - `SinonAdapter`: Based on [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/)
 
-You can use the adapter class directly, e.g. if you want to store the adapter instance in a variable:
+You can use the adapter class directly, e.g. if you want to make the adapter instance available in the global scope for debugging purposes:
 
 ```js
 import { MsWAdapter } from 'fakerest';
@@ -653,9 +661,9 @@ const handler = adapter.getHandler();
 
 ### REST Server
 
-The REST syntax is implemented by a Server object. It takes a normalized request and returns a normalized response. Adapters rely on the server to handle the REST API.
+Adapters transform requests to a normalized format, pass them to a server object, and transform the normalized server response into the format expected by the mocking library.
 
-FakeRest currently provides only one server implementation: `SimpleRestServer`.
+The server object implements the REST syntax. It takes a normalized request and exposes a `handle` method that returns a normalized response. FakeRest currently provides only one server implementation: `SimpleRestServer`.
 
 You can specify the server to use in an adapter by passing the `server` option:
 
@@ -682,6 +690,33 @@ const server = new SimpleRestServer({
 const adapter = new MswAdapter({ server });
 const handler = adapter.getHandler();
 ```
+
+You can provide an alternative server implementation. This class must implement the `APIServer` type:
+
+```ts
+export type APIServer = {
+    baseUrl?: string;
+    handle: (context: FakeRestContext) => Promise<BaseResponse>;
+};
+
+export type BaseResponse = {
+    status: number;
+    body?: Record<string, any> | Record<string, any>[];
+    headers: { [key: string]: string };
+};
+
+export type FakeRestContext = {
+    url?: string;
+    headers?: Headers;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestBody: Record<string, any> | undefined;
+    params: { [key: string]: any };
+};
+```
+
+The `FakerRestContext` type describes the normalized request. It's usually the adapter's job to transform the request from the mocking library to this format.
 
 ### Database
 
@@ -711,17 +746,53 @@ const database = new Database({
 const server = new SimpleRestServer({ baseUrl: 'http://my.custom.domain', database });
 ```
 
-### Collections
+You can even use the database object, if you want to manipulate the data:
 
-The equivalent to a classic database table or document collection. It supports filtering.
+```js
+database.updateOne('authors', 0, { first_name: 'Lev' });
+```
 
-### Single
+### Collections & Singles
 
-Represent an API endpoint that returns a single entity. Useful for things such as user profile routes (`/me`) or global settings (`/settings`).
+The Database mays contain collections ans singles. In the following example, `authors` and `books` are collections, and `settings` is a single.
+
+```js
+const handler = getMswHandler({
+    baseUrl: 'http://localhost:3000',
+    data: {
+        'authors': [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
+        'books': [
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+        }
+    }
+});
+```
+
+A collection is the equivalent of a classic database table. It supports filtering and direct access to records by their identifier.
+
+A single represents an API endpoint that returns a single entity. It's useful for things such as user profile routes (`/me`) or global settings (`/settings`).
 
 ### Embeds
 
 FakeRest support embedding other resources in a main resource query result. For instance, embedding the author of a book.
+
+    GET /books/2?embed=['author']
+
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+
+Embeds are defined by the query, they require no setup in the database.
 
 ## Development
 
