@@ -2,7 +2,7 @@
 
 A browser library that intercepts AJAX calls to mock a REST server based on JSON data.
 
-Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHttpRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
+Use it in conjunction with [MSW](https://mswjs.io/), [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/), or [Sinon.js](https://sinonjs.org/releases/v18/fake-xhr-and-server/) to test JavaScript REST clients on the client side (e.g. single page apps) without a server.
 
 See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
 
