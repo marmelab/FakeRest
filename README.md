@@ -66,6 +66,46 @@ worker.start({
 
 FakeRest will now intercept every `fetch` requests to the REST server.
 
+### fetch-mock
+
+First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
+
+```sh
+npm install fakerest fetch-mock --save-dev
+```
+
+You can then initialize the `FetchMockServer`:
+
+```js
+// in ./src/fakeServer.js
+import fetchMock from 'fetch-mock';
+import { getFetchMockHandler } from "fakerest";
+
+const handler = getFetchMockHandler({
+    baseUrl: 'http://localhost:3000',
+    data: {
+        'authors': [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
+        'books': [
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+        }
+    }
+});
+
+fetchMock.mock('begin:http://localhost:3000', handler);
+```
+
+FakeRest will now intercept every `fetch` requests to the REST server.
+
 ### Sinon
 
 Install FakeRest and [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/):
@@ -109,46 +149,6 @@ sinonServer.respondWith(handler);
 ```
 
 FakeRest will now intercept every `XmlHttpRequest` requests to the REST server.
-
-### fetch-mock
-
-First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
-
-```sh
-npm install fakerest fetch-mock --save-dev
-```
-
-You can then initialize the `FetchMockServer`:
-
-```js
-// in ./src/fakeServer.js
-import fetchMock from 'fetch-mock';
-import { getFetchMockHandler } from "fakerest";
-
-const handler = getFetchMockHandler({
-    baseUrl: 'http://localhost:3000',
-    data: {
-        'authors': [
-            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-            { id: 1, first_name: 'Jane', last_name: 'Austen' }
-        ],
-        'books': [
-            { id: 0, author_id: 0, title: 'Anna Karenina' },
-            { id: 1, author_id: 0, title: 'War and Peace' },
-            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-        ],
-        'settings': {
-            language: 'english',
-            preferred_format: 'hardback',
-        }
-    }
-});
-
-fetchMock.mock('begin:http://localhost:3000', handler);
-```
-
-FakeRest will now intercept every `fetch` requests to the REST server.
 
 ## Concepts
 
