@@ -2,7 +2,6 @@
 
 install:
 	@npm install
-	@bower install
 
 build-dev:
 	@NODE_ENV=development npm run build

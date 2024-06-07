@@ -1,27 +1,16 @@
 import sinon from 'sinon';
+import simpleRestProvider from 'ra-data-simple-rest';
+import { HttpError, type Options } from 'react-admin';
 import { SinonServer, withDelay } from '../src';
 import { data } from './data';
-import { HttpError, type Options } from 'react-admin';
-import simpleRestProvider from 'ra-data-simple-rest';
+import { middlewares } from './middlewares';
 
 export const initializeSinon = () => {
     const restServer = new SinonServer({
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,
-        middlewares: [
-            withDelay(300),
-            async (context, next) => {
-                if (!context.headers?.get('Authorization')) {
-                    return {
-                        status: 401,
-                        headers: {},
-                    };
-                }
-                return next(context);
-            },
-            // FIXME: add validation middleware
-        ],
+        middlewares,
     });
 
     // use sinon.js to monkey-patch XmlHttpRequest
