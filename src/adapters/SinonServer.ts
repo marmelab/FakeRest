@@ -20,7 +20,7 @@ export class SinonServer {
     }
 
     getHandler() {
-        return (request: SinonFakeXMLHttpRequest) => {
+        return async (request: SinonFakeXMLHttpRequest) => {
             // This is an internal property of SinonFakeXMLHttpRequest but we have to set it to 4 to
             // suppress sinon's synchronous processing (which would result in HTTP 404). This allows us
             // to handle the request asynchronously.
@@ -28,11 +28,8 @@ export class SinonServer {
             // @ts-expect-error
             request.readyState = 4;
             const normalizedRequest = this.getNormalizedRequest(request);
-            this.server
-                .handle(normalizedRequest)
-                .then((response) => this.respond(response, request));
-            // Let Sinon know we've handled the request
-            return true;
+            const response = await this.server.handle(normalizedRequest);
+            this.respond(response, request);
         };
     }
 
@@ -64,7 +61,7 @@ export class SinonServer {
         };
     }
 
-    async respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
+    respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
         const sinonResponse = {
             status: response.status,
             body: response.body ?? '',
@@ -104,12 +101,6 @@ export class SinonServer {
         );
 
         this.log(request, sinonResponse);
-
-        return {
-            status: response.status,
-            body: response.body,
-            headers: response.headers,
-        };
     }
 
     log(request: SinonFakeXMLHttpRequest, response: SinonFakeRestResponse) {
