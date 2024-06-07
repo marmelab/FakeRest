@@ -1,30 +1,39 @@
 import type { SinonFakeXMLHttpRequest } from 'sinon';
 import {
-    type BaseResponse,
-    BaseServer,
+    SimpleRestServer,
     type BaseServerOptions,
-} from '../BaseServer.js';
+} from '../SimpleRestServer.js';
 import { parseQueryString } from '../parseQueryString.js';
+import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 
-export class SinonServer extends BaseServer<
-    SinonFakeXMLHttpRequest,
-    SinonFakeRestResponse
-> {
+export class SinonAdapter {
     loggingEnabled = false;
+    server: APIServer;
 
     constructor({
         loggingEnabled = false,
+        server,
         ...options
-    }: SinonServerOptions = {}) {
-        super(options);
+    }: SinonAdapterOptions = {}) {
+        this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
 
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
+    getHandler() {
+        return async (request: SinonFakeXMLHttpRequest) => {
+            // This is an internal property of SinonFakeXMLHttpRequest but we have to set it to 4 to
+            // suppress sinon's synchronous processing (which would result in HTTP 404). This allows us
+            // to handle the request asynchronously.
+            // See https://github.com/sinonjs/sinon/issues/637
+            // @ts-expect-error
+            request.readyState = 4;
+            const normalizedRequest = this.getNormalizedRequest(request);
+            const response = await this.server.handle(normalizedRequest);
+            this.respond(response, request);
+        };
     }
 
-    async getNormalizedRequest(request: SinonFakeXMLHttpRequest) {
+    getNormalizedRequest(request: SinonFakeXMLHttpRequest): NormalizedRequest {
         const req: Request | SinonFakeXMLHttpRequest =
             typeof request === 'string' ? new Request(request) : request;
 
@@ -45,13 +54,14 @@ export class SinonServer extends BaseServer<
 
         return {
             url: req.url,
+            headers: new Headers(request.requestHeaders),
             params,
             requestBody,
             method: req.method,
         };
     }
 
-    async respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
+    respond(response: BaseResponse, request: SinonFakeXMLHttpRequest) {
         const sinonResponse = {
             status: response.status,
             body: response.body ?? '',
@@ -91,12 +101,6 @@ export class SinonServer extends BaseServer<
         );
 
         this.log(request, sinonResponse);
-
-        return {
-            status: response.status,
-            body: response.body,
-            headers: response.headers,
-        };
     }
 
     log(request: SinonFakeXMLHttpRequest, response: SinonFakeRestResponse) {
@@ -135,30 +139,20 @@ export class SinonServer extends BaseServer<
         }
     }
 
-    getHandler() {
-        return (request: SinonFakeXMLHttpRequest) => {
-            // This is an internal property of SinonFakeXMLHttpRequest but we have to set it to 4 to
-            // suppress sinon's synchronous processing (which would result in HTTP 404). This allows us
-            // to handle the request asynchronously.
-            // See https://github.com/sinonjs/sinon/issues/637
-            // @ts-expect-error
-            request.readyState = 4;
-            this.handle(request);
-            // Let Sinon know we've handled the request
-            return true;
-        };
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
     }
 }
 
-export const getSinonHandler = (options: SinonServerOptions) => {
-    const server = new SinonServer(options);
+export const getSinonHandler = (options: SinonAdapterOptions) => {
+    const server = new SinonAdapter(options);
     return server.getHandler();
 };
 
 /**
  * @deprecated Use SinonServer instead
  */
-export const Server = SinonServer;
+export const Server = SinonAdapter;
 
 export type SinonFakeRestResponse = {
     status: number;
@@ -166,6 +160,7 @@ export type SinonFakeRestResponse = {
     headers: Record<string, string>;
 };
 
-export type SinonServerOptions = BaseServerOptions & {
+export type SinonAdapterOptions = BaseServerOptions & {
+    server?: APIServer;
     loggingEnabled?: boolean;
 };

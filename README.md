@@ -1,53 +1,60 @@
 # FakeRest
 
-Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of [Sinon.js](http://sinonjs.org/) (for `XMLHTTPRequest`) or [fetch-mock](https://github.com/wheresrhys/fetch-mock) (for `fetch`) to test JavaScript REST clients on the browser side (e.g. single page apps) without a server.
+A browser library that intercepts AJAX calls to mock a REST server based on JSON data.
+
+Use it in conjunction with [MSW](https://mswjs.io/), [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/), or [Sinon.js](https://sinonjs.org/releases/v18/fake-xhr-and-server/) to test JavaScript REST clients on the client side (e.g. single page apps) without a server.
 
 See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
 
 ## Installation
 
+```sh
+npm install fakerest --save-dev
+```
+
+## Usage
+
+FakeRest lets you create a handler function that you can pass to an API mocking library. FakeRest supports [MSW](https://mswjs.io/), [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/), and [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/). If you have the choice, we recommend using MSW, as it will allow you to inspect requests as you usually do in the dev tools network tab.
+
 ### MSW
 
-We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
-
-First, install fakerest and MSW. Then initialize MSW:
+Install [MSW](https://mswjs.io/) and initialize it:
 
 ```sh
-npm install fakerest msw@latest --save-dev
+npm install msw@latest --save-dev
 npx msw init <PUBLIC_DIR> # eg: public
 ```
 
-Then configure it:
+Then configure an MSW worker:
 
 ```js
 // in ./src/fakeServer.js
 import { setupWorker } from "msw/browser";
 import { getMswHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-export const worker = setupWorker(getMswHandler({
+const handler = getMswHandler({
     baseUrl: 'http://localhost:3000',
-    data
-}));
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
+export const worker = setupWorker(handler);
 ```
 
-Finally call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
+Finally, call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
 
 ```js
 import React from "react";
@@ -63,570 +70,725 @@ worker.start({
 });
 ```
 
-Another option is to use the `MswServer` class. This is useful if you must conditionally include data or add middlewares:
-
-```js
-// in ./src/fakeServer.js
-import { setupWorker } from "msw/browser";
-import { MswServer } from "fakerest";
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-const restServer = new MswServer({
-    baseUrl: 'http://localhost:3000',
-    data,
-});
-
-export const worker = setupWorker(restServer.getHandler());
-```
-
-FakeRest will now intercept every `fetch` requests to the REST server.
-
-### Sinon
-
-```js
-// in ./src/fakeServer.js
-import sinon from 'sinon';
-import { getSinonHandler } from "fakerest";
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-// use sinon.js to monkey-patch XmlHttpRequest
-const sinonServer = sinon.fakeServer.create();
-// this is required when doing asynchronous XmlHttpRequest
-sinonServer.autoRespond = true;
-
-sinonServer.respondWith(
-    getSinonHandler({
-        baseUrl: 'http://localhost:3000',
-        data,
-    })
-);
-```
-
-Another option is to use the `SinonServer` class. This is useful if you must conditionally include data or add middlewares:
-
-```js
-// in ./src/fakeServer.js
-import sinon from 'sinon';
-import { SinonServer } from "fakerest";
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-const restServer = new SinonServer({
-    baseUrl: 'http://localhost:3000',
-    data,
-});
-
-// use sinon.js to monkey-patch XmlHttpRequest
-const sinonServer = sinon.fakeServer.create();
-// this is required when doing asynchronous XmlHttpRequest
-sinonServer.autoRespond = true;
-
-sinonServer.respondWith(
-    restServer.getHandler({
-        baseUrl: 'http://localhost:3000',
-        data,
-    })
-);
-```
-
-FakeRest will now intercept every `XmlHttpRequest` requests to the REST server.
+FakeRest will now intercept every `fetch` request to the REST server.
 
 ### fetch-mock
 
-First, install fakerest and [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
+Install [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/):
 
 ```sh
-npm install fakerest fetch-mock --save-dev
+npm install fetch-mock --save-dev
 ```
 
-You can then initialize the `FetchMockServer`:
+You can then create a handler and pass it to fetch-mock:
 
 ```js
-// in ./src/fakeServer.js
 import fetchMock from 'fetch-mock';
 import { getFetchMockHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
+const handler = getFetchMockHandler({
+    baseUrl: 'http://localhost:3000',
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
 
-fetchMock.mock(
-    'begin:http://localhost:3000',
-    getFetchMockHandler({ baseUrl: 'http://localhost:3000', data })
-);
+fetchMock.mock('begin:http://localhost:3000', handler);
 ```
 
-Another option is to use the `FetchMockServer` class. This is useful if you must conditionally include data or add middlewares:
+FakeRest will now intercept every `fetch` request to the REST server.
+
+### Sinon
+
+Install [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/):
+
+```sh
+npm install sinon --save-dev
+```
+
+Then, configure a Sinon server:
 
 ```js
-import fetchMock from 'fetch-mock';
-import { FetchMockServer } from 'fakerest';
+import sinon from 'sinon';
+import { getSinonHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-const restServer = new FetchMockServer({
+const handler = getSinonHandler({
     baseUrl: 'http://localhost:3000',
-    data
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ },
 });
-fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
+
+// use sinon.js to monkey-patch XmlHttpRequest
+const sinonServer = sinon.fakeServer.create();
+// this is required when doing asynchronous XmlHttpRequest
+sinonServer.autoRespond = true;
+sinonServer.respondWith(handler);
 ```
 
-FakeRest will now intercept every `fetch` requests to the REST server.
+FakeRest will now intercept every `XMLHttpRequest` request to the REST server.
 
-## Concepts
+## REST Syntax
 
-### Server
+FakeRest uses a simple REST syntax described below.
 
-A fake server implementation. FakeRest provide the following:
+### Get A Collection of records
 
-- `MswServer`: Based on [MSW](https://mswjs.io/)
-- `FetchMockServer`: Based on [`fetch-mock`](https://www.wheresrhys.co.uk/fetch-mock/)
-- `SinonServer`: Based on [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/)
+`GET /[name]` returns an array of records in the `name` collection. It accepts 4 query parameters: `filter`, `sort`, `range`, and `embed`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response mentions the total count in the `Content-Range` header.
 
-### Database
+ GET /books?filter={"author_id":1}&embed=["author"]&sort=["title","desc"]&range=[0-9]
 
-FakeRest internal database, that contains [collections](#collections) and [single](#single).
+ HTTP 1.1 200 OK
+ Content-Range: items 0-1/2
+ Content-Type: application/json
+ [
+ { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+ ]
 
-### Collections
+The `filter` param must be a serialized object literal describing the criteria to apply to the search query. See the [supported filters](#supported-filters) for more details.
 
-The equivalent to a classic database table or document collection. It supports filtering.
+ GET /books?filter={"author_id":1} // return books where author_id is equal to 1
+ HTTP 1.1 200 OK
+ Content-Range: items 0-1/2
+ Content-Type: application/json
+ [
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+ { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+ ]
 
-### Single
+ // array values are possible
+ GET /books?filter={"id":[2,3]} // return books where id is in [2,3]
+ HTTP 1.1 200 OK
+ Content-Range: items 0-1/2
+ Content-Type: application/json
+ [
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+ { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+ ]
 
-Represent an API endpoint that returns a single entity. Useful for things such as user profile routes (`/me`) or global settings (`/settings`).
+ // use the special "q" filter to make a full-text search on all text fields
+ GET /books?filter={"q":"and"} // return books where any of the book properties contains the string 'and'
 
-### Embeds
+ HTTP 1.1 200 OK
+ Content-Range: items 0-2/3
+ Content-Type: application/json
+ [
+ { "id": 1, "author_id": 0, "title": "War and Peace" },
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+ { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+ ]
 
-FakeRest support embedding other resources in a main resource query result. For instance, embedding the author of a book.
+ // use _gt, _gte, _lte, _lt, or _neq suffix on filter names to make range queries
+ GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
+ GET /books?filter={"price_gt":20} // return books where the price is greater than 20
 
-## REST Flavor
+ // when the filter object contains more than one property, the criteria combine with an AND logic
+ GET /books?filter={"published_at_gte":"2015-06-12","published_at_lte":"2015-06-15"} // return books published between two dates
 
-FakeRest defines a REST flavor, described below. It is inspired by commonly used ways how to handle aspects like filtering and sorting.
+The `sort` param must be a serialized array literal defining first the property used for sorting, then the sorting direction.
 
-* `GET /foo` returns a JSON array. It accepts three query parameters: `filter`, `sort`, and `range`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response contains a mention of the total count in the `Content-Range` header.
+ GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
+ GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
 
-        GET /books?filter={"author_id":1}&embed=["author"]&sort=["title","desc"]&range=[0-9]
+The `range` param defines the number of results by specifying the rank of the first and last results. The first result is #0.
 
-        HTTP 1.1 200 OK
-        Content-Range: items 0-1/2
-        Content-Type: application/json
-        [
-          { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
-          { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
-        ]
+ GET /books?range=[0-9] // return the first 10 books
+ GET /books?range=[10-19] // return the 10 next books
 
-    The `filter` param must be a serialized object literal describing the criteria to apply to the search query.
+The `embed` param sets the related objects or collections to be embedded in the response.
 
-        GET /books?filter={"author_id":1} // return books where author_id is equal to 1
-        HTTP 1.1 200 OK
-        Content-Range: items 0-1/2
-        Content-Type: application/json
-        [
-          { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
-          { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
-        ]
+ // embed author in books
+ GET /books?embed=["author"]
+ HTTP 1.1 200 OK
+ Content-Range: items 0-3/4
+ Content-Type: application/json
+ [
+ { "id": 0, "author_id": 0, "title": "Anna Karenina", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
+ { "id": 1, "author_id": 0, "title": "War and Peace", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
+ { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+ ]
 
-        // array values are possible
-        GET /books?filter={"id":[2,3]} // return books where id is in [2,3]
-        HTTP 1.1 200 OK
-        Content-Range: items 0-1/2
-        Content-Type: application/json
-        [
-          { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
-          { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
-        ]
+ // embed books in author
+ GET /authors?embed=["books"]
+ HTTP 1.1 200 OK
+ Content-Range: items 0-1/2
+ Content-Type: application/json
+ [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi', books: [{ id: 0, author_id: 0, title: 'Anna Karenina' }, { id: 1, author_id: 0, title: 'War and Peace' }] },
+ { id: 1, first_name: 'Jane', last_name: 'Austen', books: [{ id: 2, author_id: 1, title: 'Pride and Prejudice' }, { id: 3, author_id: 1, title: 'Sense and Sensibility' }] }
+ ]
 
-        // use the special "q" filter to make a full-text search on all text fields
-        GET /books?filter={"q":"and"} // return books where any of the book properties contains the string 'and'
+ // you can embed several objects
+ GET /authors?embed=["books","country"]
 
-        HTTP 1.1 200 OK
-        Content-Range: items 0-2/3
-        Content-Type: application/json
-        [
-          { "id": 1, "author_id": 0, "title": "War and Peace" },
-          { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
-          { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
-        ]
+### Get A Single Record
 
-        // use _gt, _gte, _lte, _lt, or _neq suffix on filter names to make range queries
-        GET /books?filter={"price_lte":20} // return books where price is less than or equal to 20
-        GET /books?filter={"price_gt":20} // return books where price is greater than 20
+`GET /[name]/:id` returns a JSON object, and a status 200, unless the resource doesn't exist.
 
-        // when the filter object contains more than one property, the criteria combine with an AND logic
-        GET /books?filter={"published_at_gte":"2015-06-12","published_at_lte":"2015-06-15"} // return books published between two dates
+ GET /books/2
 
-    The `embed` param sets the related objects or collections to be embedded in the response.
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
-        // embed author in books
-        GET /books?embed=["author"]
-        HTTP 1.1 200 OK
-        Content-Range: items 0-3/4
-        Content-Type: application/json
-        [
-            { "id": 0, "author_id": 0, "title": "Anna Karenina", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
-            { "id": 1, "author_id": 0, "title": "War and Peace", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
-            { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
-            { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
-        ]
+The `embed` param sets the related objects or collections to be embedded in the response.
 
-        // embed books in author
-        GET /authors?embed=["books"]
-        HTTP 1.1 200 OK
-        Content-Range: items 0-1/2
-        Content-Type: application/json
-        [
-            { id: 0, first_name: 'Leo', last_name: 'Tolstoi', books: [{ id: 0, author_id: 0, title: 'Anna Karenina' }, { id: 1, author_id: 0, title: 'War and Peace' }] },
-            { id: 1, first_name: 'Jane', last_name: 'Austen', books: [{ id: 2, author_id: 1, title: 'Pride and Prejudice' }, { id: 3, author_id: 1, title: 'Sense and Sensibility' }] }
-        ]
+ GET /books/2?embed=['author']
 
-        // you can embed several objects
-        GET /authors?embed=["books","country"]
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
 
-    The `sort` param must be a serialized array literal defining first the property used for sorting, then the sorting direction.
+### Create A Record
 
-        GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
-        GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
+`POST /[name]` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
-    The `range` param defines the number of results by specifying the rank of the first and last result. The first result is #0.
+ POST /books
+ { "author_id": 1, "title": "Emma" }
 
-        GET /books?range=[0-9] // return the first 10 books
-        GET /books?range=[10-19] // return the 10 next books
+ HTTP 1.1 201 Created
+ Location: /books/4
+ Content-Type: application/json
+ { "author_id": 1, "title": "Emma", "id": 4 }
 
-* `POST /foo` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
-        POST /books
-        { "author_id": 1, "title": "Emma" }
+### Update A  Record
 
-        HTTP 1.1 201 Created
-        Location: /books/4
-        Content-Type: application/json
-        { "author_id": 1, "title": "Emma", "id": 4 }
+`PUT /[name]/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist.
 
-* `GET /foo/:id` returns a JSON object, and a status 200, unless the resource doesn't exist
+ PUT /books/2
+ { "author_id": 1, "title": "Pride and Prejudice" }
 
-        GET /books/2
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
-        HTTP 1.1 200 OK
-        Content-Type: application/json
-        { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
+### Delete A Single Record
 
-    The `embed` param sets the related objects or collections to be embedded in the response.
+`DELETE /[name]/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist.
 
-        GET /books/2?embed=['author']
+ DELETE /books/2
 
-        HTTP 1.1 200 OK
-        Content-Type: application/json
-        { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
-* `PUT /foo/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist
-* `DELETE /foo/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist
+### Supported Filters
 
-If the REST flavor you want to simulate differs from the one chosen for FakeRest, no problem: request and response interceptors will do the conversion (see below).  
+Operators are specified as suffixes on each filtered field. For instance, applying the `_lte` operator on the `price` field for the `books` resource is done like this:
 
-Note that all of the above apply only to collections. Single objects respond to `GET /bar`, `PUT /bar` and `PATCH /bar` in a manner identical to those operations for `/foo/:id`, including embedding. `POST /bar` and `DELETE /bar` are not enabled.
-
-## Supported Filters
-
-Operators are specified as suffixes on each filtered field. For instance, applying the `_lte` operator on the `price` field for the `books` resource is done by like this:
-
-    GET /books?filter={"price_lte":20} // return books where price is less than or equal to 20
+ GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
 
 - `_eq`: check for equality on simple values:
 
-        GET /books?filter={"price_eq":20} // return books where price is equal to 20
+ GET /books?filter={"price_eq":20} // return books where the price is equal to 20
 
 - `_neq`: check for inequality on simple values
 
-        GET /books?filter={"price_neq":20} // return books where price is not equal to 20
+ GET /books?filter={"price_neq":20} // return books where the price is not equal to 20
 
 - `_eq_any`: check for equality on any passed values
 
-        GET /books?filter={"price_eq_any":[20, 30]} // return books where price is equal to 20 or 30
+ GET /books?filter={"price_eq_any":[20, 30]} // return books where the price is equal to 20 or 30
 
 - `_neq_any`: check for inequality on any passed values
 
-        GET /books?filter={"price_neq_any":[20, 30]} // return books where price is not equal to 20 nor 30
+ GET /books?filter={"price_neq_any":[20, 30]} // return books where the price is not equal to 20 nor 30
 
-- `_inc_any`: check for items that includes any of the passed values
+- `_inc_any`: check for items that include any of the passed values
 
-        GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors includes either 'William Gibson' or 'Pat Cadigan' or both
+ GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors include either 'William Gibson' or 'Pat Cadigan' or both
 
-- `_q`: check for items that contains the provided text
+- `_q`: check for items that contain the provided text
 
-        GET /books?filter={"author_q":['Gibson']} // return books where author includes 'Gibson' not considering the other fields
+ GET /books?filter={"author_q":['Gibson']} // return books where the author includes 'Gibson' not considering the other fields
 
-- `_lt`: check for items that has a value lower than the provided value
+- `_lt`: check for items that have a value lower than the provided value
 
-        GET /books?filter={"price_lte":100} // return books that have a price lower that 100
+ GET /books?filter={"price_lte":100} // return books that have a price lower that 100
 
-- `_lte`: check for items that has a value lower or equal than the provided value
+- `_lte`: check for items that have a value lower than or equal to the provided value
 
-        GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
+ GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
 
-- `_gt`: check for items that has a value greater than the provided value
+- `_gt`: check for items that have a value greater than the provided value
 
-        GET /books?filter={"price_gte":100} // return books that have a price greater that 100
+ GET /books?filter={"price_gte":100} // return books that have a price greater that 100
 
-- `_gte`: check for items that has a value greater or equal than the provided value
+- `_gte`: check for items that have a value greater than or equal to the provided value
 
-        GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
+ GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
+
+### Single Elements
+
+FakeRest allows you to define a single element, such as a user profile or global settings, that can be fetched, updated, or deleted.
+
+ GET /settings
+
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "language": "english", "preferred_format": "hardback" }
+
+ PUT /settings
+ { "language": "french", "preferred_format": "paperback" }
+
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "language": "french", "preferred_format": "paperback" }
+
+ DELETE /settings
+
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "language": "french", "preferred_format": "paperback" }
 
 ## Middlewares
 
-All fake servers supports middlewares that allows you to intercept requests and simulate server features such as:
-    - authentication checks
-    - server side validation
-    - server dynamically generated values
-    - simulate response delays
+Middlewares let you intercept requests and simulate server features such as:
+ - authentication checks
+ - server-side validation
+ - server dynamically generated values
+ - simulate response delays
 
-A middleware is a function that receive 3 parameters:
-    - The `request` object, specific to the chosen mocking solution (e.g. a [`Request`](https://developer.mozilla.org/fr/docs/Web/API/Request) for MSW and `fetch-mock`, a fake [`XMLHttpRequest`](https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest) for [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/))
-    - The FakeRest `context`, an object containing the data extracted from the request that FakeRest uses to build the response. It has the following properties:
-        - `url`: The request URL as a string
-        - `method`: The request method as a string (`GET`, `POST`, `PATCH` or `PUT`)
-        - `collection`: The name of the targeted [collection](#collection) (e.g. `posts`)
-        - `single`: The name of the targeted [single](#single) (e.g. `settings`)
-        - `requestJson`: The parsed request data if any
-        - `params`: The request parameters from the URL search (e.g. the identifier of the requested record)
-    - A `next` function to call the next middleware in the chain, to which you must pass the `request` and the `context`
+You can define middlewares on all handlers, by passing a `middlewares` option:
+
+```js
+import { getMswHandler } from 'fakerest';
+import { data } from './data';
+
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        async (context, next) => {
+            if (context.headers.Authorization === undefined) {
+                return {
+                    status: 401,
+                    headers: {},
+ };
+ }
+
+            return next(context);
+ },
+        withDelay(300),
+ ],
+});
+```
+
+A middleware is a function that receives 2 parameters:
+ - The FakeRest `context`, an object containing the data extracted from the request that FakeRest uses to build the response. It has the following properties:
+ - `method`: The request method as a string (`GET`, `POST`, `PATCH` or `PUT`)
+ - `url`: The request URL as a string
+ - `headers`: The request headers as an object where keys are header names
+ - `requestBody`: The parsed request data if any
+ - `params`: The request parameters from the URL search (e.g. the identifier of the requested record)
+ - `collection`: The name of the targeted [collection](#collection) (e.g. `posts`)
+ - `single`: The name of the targeted [single](#single) (e.g. `settings`)
+ - A `next` function to call the next middleware in the chain, to which you must pass the `context`
 
 A middleware must return a FakeRest response either by returning the result of the `next` function or by returning its own response. A FakeRest response is an object with the following properties:
-    - `status`: The response status as a number (e.g. `200`)
-    - `headers`: The response HTTP headers as an object where keys are header names
-    - `body`: The response body which will be stringified
-
-Except for Sinon, a middleware might also throw a response specific to the chosen mocking solution (e.g. a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for MSW, a [`MockResponseObject`](https://www.wheresrhys.co.uk/fetch-mock/#api-mockingmock_response) or a [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) for `fetch-mock`) for even more control.
+ - `status`: The response status as a number (e.g. `200`)
+ - `headers`: The response HTTP headers as an object where keys are header names
+ - `body`: The response body which will be stringified
 
 ### Authentication Checks
 
-Here's to implement an authentication check:
+Here's how to implement an authentication check:
 
 ```js
-restServer.addMiddleware(async (request, context, next) => {
-    if (request.requestHeaders.Authorization === undefined) {
-        return {
-            status: 401,
-            headers: {},
-        };
-    }
-
-    return next(request, context);
-}
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        async (context, next) => {
+            if (context.headers.Authorization === undefined) {
+                return { status: 401, headers: {} };
+ }
+            return next(context);
+ }
+ ]
+});
 ```
 
-### Server Side Validation
+### Server-Side Validation
 
-Here's to implement server side validation:
+Here's how to implement server-side validation:
 
 ```js
-restServer.addMiddleware(async (request, context, next) => {
-    if (
-        context.collection === "books" &&
-        request.method === "POST" &&
-        !context.requestJson?.title
-    ) {
-        return {
-            status: 400,
-            headers: {},
-            body: {
-                errors: {
-                    title: 'An article with this title already exists. The title must be unique.',
-                },
-            },
-        };
-    }
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        async (context, next) => {
+            if (
+                context.collection === "books" &&
+                request.method === "POST" &&
+ !context.requestBody?.title
+ ) {
+                return {
+                    status: 400,
+                    headers: {},
+                    body: {
+                        errors: {
+                            title: 'An article with this title already exists. The title must be unique.',
+ },
+ },
+ };
+ }
 
-    return next(request, context);
-}
+            return next(context);
+ }
+ ]
+});
 ```
 
-### Server Dynamically Generated Values
+### Dynamically Generated Values
 
-Here's to implement server dynamically generated values:
+Here's how to implement dynamically generated values on creation:
 
 ```js
-restServer.addMiddleware(async (request, context, next) => {
-    if (
-        context.collection === 'books' &&
-        context.method === 'POST'
-    ) {
-        const response = await next(request, context);
-        response.body.updatedAt = new Date().toISOString();
-        return response;
-    }
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        async (context, next) => {
+            if (
+                context.collection === 'books' &&
+                context.method === 'POST'
+ ) {
+                const response = await next(context);
+                response.body.updatedAt = new Date().toISOString();
+                return response;
+ }
 
-    return next(request, context);
-}
+            return next(context);
+ }
+ ]
+});
 ```
 
 ### Simulate Response Delays
 
-Here's to simulate response delays:
+Here's how to simulate response delays:
 
 ```js
-restServer.addMiddleware(async (request, context, next) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(next(request, context));
-        }, delayMs);
-    });
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        async (context, next) => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(next(context));
+ }, 500);
+ });
+ }
+ ]
 });
 ```
 
 This is so common FakeRest provides the `withDelay` function for that:
 
 ```js
-import { withDelay } from 'fakerest';
+import { getMswHandler, withDelay } from 'fakerest';
 
-restServer.addMiddleware(withDelay(300));
+const handler = getMswHandler({
+    baseUrl: 'http://my.custom.domain',
+    data,
+    middlewares: [
+        withDelay(500), // delay in ms
+ ]
+});
 ```
 
 ## Configuration
 
-### Configure Identifiers
+All handlers can be customized to accommodate your API structure.
 
-By default, FakeRest assume all records have a unique `id` field.
-Some database such as [MongoDB](https://www.mongodb.com) use `_id` instead of `id` for collection identifiers.
-You can customize FakeRest to do the same by using the `identifierName` option:
+### Identifiers
+
+By default, FakeRest assumes all records have a unique `id` field.
+Some databases such as [MongoDB](https://www.mongodb.com) use `_id` instead of `id` for collection identifiers.
+You can customize FakeRest to do the same by setting the `identifierName` option:
 
 ```js
-import { MswServer } from 'fakerest';
-
-const restServer = new MswServer({
+const handler = getMswHandler({
     baseUrl: 'http://my.custom.domain',
+    data,
     identifierName: '_id'
 });
 ```
 
-This can also be specified at the collection level:
+You can also specify that on a per-collection basis:
 
 ```js
-import { MswServer, Collection } from 'fakerest';
+import { MswAdapter, Collection } from 'fakerest';
 
-const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const adapter = new MswAdapter({ baseUrl: 'http://my.custom.domain', data });
 const authorsCollection = new Collection({ items: [], identifierName: '_id' });
-restServer.addCollection('authors', authorsCollection);
+adapter.server.addCollection('authors', authorsCollection);
+const handler = adapter.getHandler();
 ```
 
-### Configure Identifiers Generation
+### Primary Keys
 
-By default, FakeRest uses an auto incremented sequence for the items identifiers.
+By default, FakeRest uses an auto-incremented sequence for the item identifiers.
 If you'd rather use UUIDs for instance but would like to avoid providing them when you insert new items, you can provide your own function:
 
 ```js
-import { MswServer } from 'fakerest';
+import { getMswHandler } from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new MswServer({
+const handler = new getMswHandler({
     baseUrl: 'http://my.custom.domain',
+    data,
     getNewId: () => uuid.v5()
 });
 ```
 
-This can also be specified at the collection level:
+You can also specify that on a per-collection basis:
 
 ```js
-import { MswServer, Collection } from 'fakerest';
+import { MswAdapter, Collection } from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new MswServer({ baseUrl: 'http://my.custom.domain' });
+const adapter = new MswAdapter({ baseUrl: 'http://my.custom.domain', data });
 const authorsCollection = new Collection({ items: [], getNewId: () => uuid.v5() });
-restServer.addCollection('authors', authorsCollection);
+adapter.server.addCollection('authors', authorsCollection);
+const handler = adapter.getHandler();
 ```
 
-### Configure Default Queries
+### Default Queries
 
 Some APIs might enforce some parameters on queries. For instance, an API might always include an [embed](#embed) or enforce a query filter.
 You can simulate this using the `defaultQuery` parameter:
 
 ```js
-import { MswServer } from 'fakerest';
+import { getMswHandler } from 'fakerest';
 import uuid from 'uuid';
 
-const restServer = new MswServer({
+const handler = getMswHandler({
     baseUrl: 'http://my.custom.domain',
-    getNewId: () => uuid.v5(),
+    data,
     defaultQuery: (collection) => {
         if (resourceName == 'authors') return { embed: ['books'] }
         if (resourceName == 'books') return { filter: { published: true } }
         return {};
-    }
+ }
 });
 ```
+
+## Architecture
+
+Behind a simple API (`getXXXHandler`), FakeRest uses a modular architecture that lets you combine different components to build a fake REST server that fits your needs.
+
+### Mocking Adapter
+
+`getXXXHandler` is a shortcut to an object-oriented API of adapter classes:
+
+```js
+export const getMswHandler = (options: MswAdapterOptions) => {
+    const server = new MswAdapter(options);
+    return server.getHandler();
+};
+```
+
+FakeRest provides 3 adapter classes:
+
+- `MswAdapter`: Based on [MSW](https://mswjs.io/)
+- `FetchMockAdapter`: Based on [`fetch-mock`](https://www.wheresrhys.co.uk/fetch-mock/)
+- `SinonAdapter`: Based on [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/)
+
+You can use the adapter class directly, e.g. if you want to make the adapter instance available in the global scope for debugging purposes:
+
+```js
+import { MsWAdapter } from 'fakerest';
+
+const adapter = new MswAdapter({
+    baseUrl: 'http://my.custom.domain',
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
+window.fakerest = adapter;
+const handler = adapter.getHandler();
+```
+
+### REST Server
+
+Adapters transform requests to a normalized format, pass them to a server object, and transform the normalized server response into the format expected by the mocking library.
+
+The server object implements the REST syntax. It takes a normalized request and exposes a `handle` method that returns a normalized response. FakeRest currently provides only one server implementation: `SimpleRestServer`.
+
+You can specify the server to use in an adapter by passing the `server` option:
+
+```js
+const server = new SimpleRestServer({
+    baseUrl: 'http://my.custom.domain',
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
+const adapter = new MswAdapter({ server });
+const handler = adapter.getHandler();
+```
+
+You can provide an alternative server implementation. This class must implement the `APIServer` type:
+
+```ts
+export type APIServer = {
+    baseUrl?: string;
+    handle: (context: FakeRestContext) => Promise<BaseResponse>;
+};
+
+export type BaseResponse = {
+    status: number;
+    body?: Record<string, any> | Record<string, any>[];
+    headers: { [key: string]: string };
+};
+
+export type FakeRestContext = {
+    url?: string;
+    headers?: Headers;
+    method?: string;
+    collection?: string;
+    single?: string;
+    requestBody: Record<string, any> | undefined;
+    params: { [key: string]: any };
+};
+```
+
+The `FakerRestContext` type describes the normalized request. It's usually the adapter's job to transform the request from the mocking library to this format.
+
+### Database
+
+The querying logic is implemented in a class called `Database`, which is independent of the server. It contains [collections](#collections) and [single](#single).
+
+You can specify the database used by a server by setting its `database` property:
+
+```js
+const database = new Database({
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
+const server = new SimpleRestServer({ baseUrl: 'http://my.custom.domain', database });
+```
+
+You can even use the database object if you want to manipulate the data:
+
+```js
+database.updateOne('authors', 0, { first_name: 'Lev' });
+```
+
+### Collections & Singles
+
+The Database may contain collections and singles. In the following example, `authors` and `books` are collections, and `settings` is a single.
+
+```js
+const handler = getMswHandler({
+    baseUrl: 'http://localhost:3000',
+    data: {
+        'authors': [
+ { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+ { id: 1, first_name: 'Jane', last_name: 'Austen' }
+ ],
+        'books': [
+ { id: 0, author_id: 0, title: 'Anna Karenina' },
+ { id: 1, author_id: 0, title: 'War and Peace' },
+ { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+ { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+ ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+ }
+ }
+});
+```
+
+A collection is the equivalent of a classic database table. It supports filtering and direct access to records by their identifier.
+
+A single represents an API endpoint that returns a single entity. It's useful for things such as user profile routes (`/me`) or global settings (`/settings`).
+
+### Embeds
+
+FakeRest supports embedding other resources in a main resource query result. For instance, embedding the author of a book.
+
+ GET /books/2?embed=['author']
+
+ HTTP 1.1 200 OK
+ Content-Type: application/json
+ { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+
+Embeds are defined by the query, they require no setup in the database.
 
 ## Development
 

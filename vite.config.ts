@@ -13,6 +13,7 @@ export default defineConfig({
             // the proper extensions will be added
             fileName: 'fakerest',
         },
+        minify: false,
         sourcemap: true,
         rollupOptions: {
             // make sure to externalize deps that shouldn't be bundled

@@ -1,28 +1,35 @@
-import type { MockResponseObject } from 'fetch-mock';
-import {
-    type BaseResponse,
-    BaseServer,
-    type FakeRestContext,
-    type BaseServerOptions,
-} from '../BaseServer.js';
+import { SimpleRestServer } from '../SimpleRestServer.js';
 import { parseQueryString } from '../parseQueryString.js';
+import type { BaseServerOptions } from '../SimpleRestServer.js';
+import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
+import type { MockResponseObject } from 'fetch-mock';
 
-export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
+export class FetchMockAdapter {
     loggingEnabled = false;
+    server: APIServer;
 
     constructor({
         loggingEnabled = false,
+        server,
         ...options
-    }: FetchMockServerOptions = {}) {
-        super(options);
+    }: FetchMockAdapterOptions = {}) {
+        this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
 
-    toggleLogging() {
-        this.loggingEnabled = !this.loggingEnabled;
+    getHandler() {
+        const handler = async (url: string, options: RequestInit) => {
+            const request = new Request(url, options);
+            const normalizedRequest = await this.getNormalizedRequest(request);
+            const response = await this.server.handle(normalizedRequest);
+            this.log(request, response, normalizedRequest);
+            return response as MockResponseObject;
+        };
+
+        return handler;
     }
 
-    async getNormalizedRequest(request: Request) {
+    async getNormalizedRequest(request: Request): Promise<NormalizedRequest> {
         const req =
             typeof request === 'string' ? new Request(request) : request;
         const queryString = req.url
@@ -39,32 +46,28 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
 
         return {
             url: req.url,
+            headers: req.headers,
             params,
             requestBody,
             method: req.method,
         };
     }
 
-    async respond(
-        response: BaseResponse,
-        request: FetchMockFakeRestRequest,
-        context: FakeRestContext,
-    ) {
-        this.log(request, response, context);
-        return response;
-    }
-
     log(
         request: FetchMockFakeRestRequest,
-        response: MockResponseObject,
-        context: FakeRestContext,
+        response: BaseResponse,
+        normalizedRequest: NormalizedRequest,
     ) {
         if (!this.loggingEnabled) return;
         if (console.group) {
             // Better logging in Chrome
-            console.groupCollapsed(context.method, context.url, '(FakeRest)');
+            console.groupCollapsed(
+                normalizedRequest.method,
+                normalizedRequest.url,
+                '(FakeRest)',
+            );
             console.group('request');
-            console.log(context.method, context.url);
+            console.log(normalizedRequest.method, normalizedRequest.url);
             console.log('headers', request.headers);
             console.log('body   ', request.requestJson);
             console.groupEnd();
@@ -76,8 +79,8 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
         } else {
             console.log(
                 'FakeRest request ',
-                context.method,
-                context.url,
+                normalizedRequest.method,
+                normalizedRequest.url,
                 'headers',
                 request.headers,
                 'body',
@@ -94,24 +97,20 @@ export class FetchMockServer extends BaseServer<Request, MockResponseObject> {
         }
     }
 
-    getHandler() {
-        const handler = (url: string, options: RequestInit) => {
-            return this.handle(new Request(url, options));
-        };
-
-        return handler;
+    toggleLogging() {
+        this.loggingEnabled = !this.loggingEnabled;
     }
 }
 
-export const getFetchMockHandler = (options: FetchMockServerOptions) => {
-    const server = new FetchMockServer(options);
+export const getFetchMockHandler = (options: FetchMockAdapterOptions) => {
+    const server = new FetchMockAdapter(options);
     return server.getHandler();
 };
 
 /**
  * @deprecated Use FetchServer instead
  */
-export const FetchServer = FetchMockServer;
+export const FetchServer = FetchMockAdapter;
 
 export type FetchMockFakeRestRequest = Partial<Request> & {
     requestBody?: string;
@@ -121,6 +120,7 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     params?: { [key: string]: any };
 };
 
-export type FetchMockServerOptions = BaseServerOptions & {
+export type FetchMockAdapterOptions = BaseServerOptions & {
+    server?: APIServer;
     loggingEnabled?: boolean;
 };

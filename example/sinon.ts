@@ -1,50 +1,16 @@
 import sinon from 'sinon';
-import { SinonServer, withDelay } from '../src';
-import { data } from './data';
-import { HttpError, type Options } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
+import { HttpError, type Options } from 'react-admin';
+import { SinonAdapter } from '../src';
+import { data } from './data';
+import { middlewares } from './middlewares';
 
 export const initializeSinon = () => {
-    const restServer = new SinonServer({
+    const restServer = new SinonAdapter({
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,
-    });
-
-    restServer.addMiddleware(withDelay(300));
-    restServer.addMiddleware(async (request, context, next) => {
-        if (request.requestHeaders.Authorization === undefined) {
-            return {
-                status: 401,
-                headers: {},
-            };
-        }
-
-        return next(request, context);
-    });
-
-    restServer.addMiddleware(async (request, context, next) => {
-        if (context.collection === 'books' && request.method === 'POST') {
-            if (
-                restServer.database.getCount(context.collection, {
-                    filter: {
-                        title: context.requestBody?.title,
-                    },
-                }) > 0
-            ) {
-                return {
-                    status: 400,
-                    headers: {},
-                    body: {
-                        errors: {
-                            title: 'An article with this title already exists. The title must be unique.',
-                        },
-                    },
-                };
-            }
-        }
-
-        return next(request, context);
+        middlewares,
     });
 
     // use sinon.js to monkey-patch XmlHttpRequest
