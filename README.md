@@ -608,7 +608,7 @@ Behind a simple API (`getXXXHandler`), FakeRest uses a modular architecture that
 
 ### Mocking Adapter
 
-`getXXXHandler` is a shortcut top an object-oriented API:
+`getXXXHandler` is a shortcut to an object-oriented API:
 
 ```js
 export const getMswHandler = (options: MswAdapterOptions) => {
