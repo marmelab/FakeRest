@@ -47,9 +47,10 @@ export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     );
 };
 
-import { Edit, ReferenceInput, SimpleForm, TextInput } from 'react-admin';
+import { ReferenceInput, SimpleForm, TextInput } from 'react-admin';
 import authProvider from './authProvider';
 
+// The default value for the title field should cause a server validation error as it's not unique
 export const BookCreate = () => (
     <Create>
         <SimpleForm>

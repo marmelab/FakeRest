@@ -1,5 +1,5 @@
 import { setupWorker } from 'msw/browser';
-import { getMswHandler, withDelay } from '../src';
+import { getMswHandler } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 import { middlewares } from './middlewares';

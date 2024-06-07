@@ -1,5 +1,5 @@
 import fetchMock from 'fetch-mock';
-import { FetchMockServer, withDelay } from '../src';
+import { FetchMockServer } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 import { middlewares } from './middlewares';

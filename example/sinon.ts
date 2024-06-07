@@ -1,7 +1,7 @@
 import sinon from 'sinon';
 import simpleRestProvider from 'ra-data-simple-rest';
 import { HttpError, type Options } from 'react-admin';
-import { SinonServer, withDelay } from '../src';
+import { SinonServer } from '../src';
 import { data } from './data';
 import { middlewares } from './middlewares';
 
