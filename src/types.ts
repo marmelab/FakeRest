@@ -1,6 +1,3 @@
-import type { SinonFakeXMLHttpRequest } from 'sinon';
-import type { MockResponse } from 'fetch-mock';
-
 export type CollectionItem = { [key: string]: any };
 
 export type SortFunction = <T extends CollectionItem = CollectionItem>(
