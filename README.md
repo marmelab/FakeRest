@@ -4,47 +4,48 @@ Intercept AJAX calls to fake a REST server based on JSON data. Use it on top of 
 
 See it in action in the [react-admin](https://marmelab.com/react-admin/) [demo](https://marmelab.com/react-admin-demo) ([source code](https://github.com/marmelab/react-admin/tree/master/examples/demo)).
 
-## Installation
+## Usage
+
+FakeRest lets you create a handler function that you can pass to an API mocking library. FakeRest supports [MSW](https://mswjs.io/), [fetch-mock](https://www.wheresrhys.co.uk/fetch-mock/), and [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/). If you have the choice, we recommend using MSW.
 
 ### MSW
 
 We recommend you use [MSW](https://mswjs.io/) to mock your API. This will allow you to inspect requests as you usually do in the devtools network tab.
 
-First, install fakerest and MSW. Then initialize MSW:
+Install FakeRest and MSW, then initialize MSW:
 
 ```sh
 npm install fakerest msw@latest --save-dev
 npx msw init <PUBLIC_DIR> # eg: public
 ```
 
-Then configure it:
+Then configure a MSW worker:
 
 ```js
 // in ./src/fakeServer.js
 import { setupWorker } from "msw/browser";
 import { getMswHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-export const worker = setupWorker(getMswHandler({
+const handler = getMswHandler({
     baseUrl: 'http://localhost:3000',
-    data
-}));
+    data: {
+        'authors': [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
+        'books': [
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+        }
+    }
+});
+export const worker = setupWorker(handler);
 ```
 
 Finally call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
@@ -63,117 +64,48 @@ worker.start({
 });
 ```
 
-Another option is to use the `MswServer` class. This is useful if you must conditionally include data or add middlewares:
-
-```js
-// in ./src/fakeServer.js
-import { setupWorker } from "msw/browser";
-import { MswServer } from "fakerest";
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-const restServer = new MswServer({
-    baseUrl: 'http://localhost:3000',
-    data,
-});
-
-export const worker = setupWorker(restServer.getHandler());
-```
-
 FakeRest will now intercept every `fetch` requests to the REST server.
 
 ### Sinon
+
+Install FakeRest and [Sinon](https://sinonjs.org/releases/v18/fake-xhr-and-server/):
+
+```sh
+npm install fakerest sinon --save-dev
+```
+
+Then, configure a Sinon server:
 
 ```js
 // in ./src/fakeServer.js
 import sinon from 'sinon';
 import { getSinonHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-// use sinon.js to monkey-patch XmlHttpRequest
-const sinonServer = sinon.fakeServer.create();
-// this is required when doing asynchronous XmlHttpRequest
-sinonServer.autoRespond = true;
-
-sinonServer.respondWith(
-    getSinonHandler({
-        baseUrl: 'http://localhost:3000',
-        data,
-    })
-);
-```
-
-Another option is to use the `SinonServer` class. This is useful if you must conditionally include data or add middlewares:
-
-```js
-// in ./src/fakeServer.js
-import sinon from 'sinon';
-import { SinonServer } from "fakerest";
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-const restServer = new SinonServer({
+const handler = getSinonHandler({
     baseUrl: 'http://localhost:3000',
-    data,
+    data: {
+        'authors': [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
+        'books': [
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+        }
+    },
 });
 
 // use sinon.js to monkey-patch XmlHttpRequest
 const sinonServer = sinon.fakeServer.create();
 // this is required when doing asynchronous XmlHttpRequest
 sinonServer.autoRespond = true;
-
-sinonServer.respondWith(
-    restServer.getHandler({
-        baseUrl: 'http://localhost:3000',
-        data,
-    })
-);
+sinonServer.respondWith(handler);
 ```
 
 FakeRest will now intercept every `XmlHttpRequest` requests to the REST server.
@@ -193,56 +125,27 @@ You can then initialize the `FetchMockServer`:
 import fetchMock from 'fetch-mock';
 import { getFetchMockHandler } from "fakerest";
 
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-
-fetchMock.mock(
-    'begin:http://localhost:3000',
-    getFetchMockHandler({ baseUrl: 'http://localhost:3000', data })
-);
-```
-
-Another option is to use the `FetchMockServer` class. This is useful if you must conditionally include data or add middlewares:
-
-```js
-import fetchMock from 'fetch-mock';
-import { FetchMockServer } from 'fakerest';
-
-const data = {
-    'authors': [
-        { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
-        { id: 1, first_name: 'Jane', last_name: 'Austen' }
-    ],
-    'books': [
-        { id: 0, author_id: 0, title: 'Anna Karenina' },
-        { id: 1, author_id: 0, title: 'War and Peace' },
-        { id: 2, author_id: 1, title: 'Pride and Prejudice' },
-        { id: 3, author_id: 1, title: 'Sense and Sensibility' }
-    ],
-    'settings': {
-        language: 'english',
-        preferred_format: 'hardback',
-    }
-};
-const restServer = new FetchMockServer({
+const handler = getFetchMockHandler({
     baseUrl: 'http://localhost:3000',
-    data
+    data: {
+        'authors': [
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
+        'books': [
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
+        'settings': {
+            language: 'english',
+            preferred_format: 'hardback',
+        }
+    }
 });
-fetchMock.mock('begin:http://localhost:3000', restServer.getHandler());
+
+fetchMock.mock('begin:http://localhost:3000', handler);
 ```
 
 FakeRest will now intercept every `fetch` requests to the REST server.
