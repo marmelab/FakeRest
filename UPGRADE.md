@@ -1,49 +1,39 @@
 # Upgrading to 4.0.0
 
-## Renamed `Server` And `FetchServer`
+## Dropped bower support
 
-The `Server` class has been renamed to `SinonServer`.
+Fakerest no longer supports bower. You can still use it in your project by installing it via npm:
+
+```bash
+npm install fakerest
+```
+
+## Renamed `Server` to `SinonAdapter`
+
+The `Server` class has been renamed to `SinonAdapter` and now expects a configuration object instead of a URL.
 
 ```diff
 -import { Server } from 'fakerest';
-+import { SinonServer } from 'fakerest';
++import { SinonAdapter } from 'fakerest';
+import { data } from './data';
 
 -const server = new Server('http://myapi.com');
-+const server = new SinonServer({ baseUrl: 'http://myapi.com' });
+-server.init(data);
++const server = new SinonAdapter({ baseUrl: 'http://myapi.com', data });
 ```
 
-The `FetchServer` class has been renamed to `FetchMockServer`.
+## Renamed `FetchServer` to `FetchMockAdapter`
+
+The `FetchServer` class has been renamed to `FetchMockAdapter` and now expects a configuration object instead of a URL.
 
 ```diff
 -import { FetchServer } from 'fakerest';
-+import { FetchMockServer } from 'fakerest';
++import { FetchMockAdapter } from 'fakerest';
+import { data } from './data';
 
 -const server = new FetchServer('http://myapi.com');
-+const server = new FetchMockServer({ baseUrl: 'http://myapi.com' });
-```
-
-## Constructors Of `SinonServer` and `FetchMockServer` Take An Object
-
-For `SinonServer`:
-
-```diff
-import { SinonServer } from 'fakerest';
-import { data } from './data';
-
--const server = new SinonServer('http://myapi.com');
-+const server = new SinonServer({ baseUrl: 'http://myapi.com' });
-server.init(data);
-```
-
-For `FetchServer`:
-
-```diff
-import { FetchMockServer } from 'fakerest';
-import { data } from './data';
-
--const server = new FetchMockServer('http://myapi.com');
-+const server = new FetchMockServer({ baseUrl: 'http://myapi.com' });
-server.init(data);
+-server.init(data);
++const server = new FetchMockAdapter({ baseUrl: 'http://myapi.com', data });
 ```
 
 ## Constructor Of `Collection` Takes An Object
@@ -67,26 +57,24 @@ server.init(data);
 
 Fakerest used to have request and response interceptors. We replaced those with middlewares. They allow much more use cases.
 
-Migrate your request interceptors:
+Migrate your request interceptors to middlewares passed when building the handler:
 
 ```diff
--restServer.addRequestInterceptor(function(request) {
-+restServer.addMiddleware(async function(request, context, next) {
+- const myRequestInterceptor = function(request) {
++ const myMiddleware = async function(context, next) {
     var start = (request.params._start - 1) || 0;
     var end = request.params._end !== undefined ? (request.params._end - 1) : 19;
     request.params.range = [start, end];
--    return request; // always return the modified input
-+    return next(request, context);
+-   return request; // always return the modified input
++   return next(context);
+};
+
+-restServer.addRequestInterceptor(myRequestInterceptor);
++const handler = new getMswHandler({
++   baseUrl: 'http://my.custom.domain',
++   data,
++   middlewares: [myMiddleware],
 });
 ```
 
-Migrate your response interceptors:
-
-```diff
--restServer.addResponseInterceptor(function(response) {
-+restServer.addMiddleware(async function(request, context, next) {
-+    const response = await next(request, context);
-    response.body = { data: response.body, status: response.status };
-    return response;
-});
-```
+Migrate your response interceptors the same way.
