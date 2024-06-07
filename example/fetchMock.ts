@@ -1,11 +1,11 @@
 import fetchMock from 'fetch-mock';
-import { FetchMockServer } from '../src';
+import { FetchMockAdapter } from '../src';
 import { data } from './data';
 import { dataProvider as defaultDataProvider } from './dataProvider';
 import { middlewares } from './middlewares';
 
 export const initializeFetchMock = () => {
-    const restServer = new FetchMockServer({
+    const restServer = new FetchMockAdapter({
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,

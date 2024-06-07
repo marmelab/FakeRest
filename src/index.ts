@@ -1,14 +1,14 @@
 import {
     getSinonHandler,
     Server,
-    SinonServer,
-} from './adapters/SinonServer.js';
+    SinonAdapter,
+} from './adapters/SinonAdapter.js';
 import {
     getFetchMockHandler,
     FetchServer,
-    FetchMockServer,
-} from './adapters/FetchMockServer.js';
-import { getMswHandler, MswServer } from './adapters/MswServer.js';
+    FetchMockAdapter,
+} from './adapters/FetchMockAdapter.js';
+import { getMswHandler, MswAdapter } from './adapters/MswAdapter.js';
 import { Database } from './Database.js';
 import { SimpleRestServer } from './SimpleRestServer.js';
 import { Collection } from './Collection.js';
@@ -22,10 +22,10 @@ export {
     getFetchMockHandler,
     getMswHandler,
     Server,
-    SinonServer,
+    SinonAdapter,
     FetchServer,
-    FetchMockServer,
-    MswServer,
+    FetchMockAdapter,
+    MswAdapter,
     Collection,
     Single,
     withDelay,
@@ -38,10 +38,10 @@ export default {
     getFetchMockHandler,
     getMswHandler,
     Server,
-    SinonServer,
+    SinonAdapter,
     FetchServer,
-    FetchMockServer,
-    MswServer,
+    FetchMockAdapter,
+    MswAdapter,
     Collection,
     Single,
     withDelay,

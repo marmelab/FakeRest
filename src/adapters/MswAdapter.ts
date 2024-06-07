@@ -3,10 +3,10 @@ import { SimpleRestServer } from '../SimpleRestServer.js';
 import type { BaseServerOptions } from '../SimpleRestServer.js';
 import type { APIServer, NormalizedRequest } from '../types.js';
 
-export class MswServer {
+export class MswAdapter {
     server: APIServer;
 
-    constructor({ server, ...options }: MswServerOptions) {
+    constructor({ server, ...options }: MswAdapterOptions) {
         this.server = server || new SimpleRestServer(options);
     }
 
@@ -51,11 +51,11 @@ export class MswServer {
     }
 }
 
-export const getMswHandler = (options: MswServerOptions) => {
-    const server = new MswServer(options);
+export const getMswHandler = (options: MswAdapterOptions) => {
+    const server = new MswAdapter(options);
     return server.getHandler();
 };
 
-export type MswServerOptions = BaseServerOptions & {
+export type MswAdapterOptions = BaseServerOptions & {
     server?: APIServer;
 };

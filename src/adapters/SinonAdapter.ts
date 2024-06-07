@@ -6,7 +6,7 @@ import {
 import { parseQueryString } from '../parseQueryString.js';
 import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 
-export class SinonServer {
+export class SinonAdapter {
     loggingEnabled = false;
     server: APIServer;
 
@@ -14,7 +14,7 @@ export class SinonServer {
         loggingEnabled = false,
         server,
         ...options
-    }: SinonServerOptions = {}) {
+    }: SinonAdapterOptions = {}) {
         this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
@@ -144,15 +144,15 @@ export class SinonServer {
     }
 }
 
-export const getSinonHandler = (options: SinonServerOptions) => {
-    const server = new SinonServer(options);
+export const getSinonHandler = (options: SinonAdapterOptions) => {
+    const server = new SinonAdapter(options);
     return server.getHandler();
 };
 
 /**
  * @deprecated Use SinonServer instead
  */
-export const Server = SinonServer;
+export const Server = SinonAdapter;
 
 export type SinonFakeRestResponse = {
     status: number;
@@ -160,7 +160,7 @@ export type SinonFakeRestResponse = {
     headers: Record<string, string>;
 };
 
-export type SinonServerOptions = BaseServerOptions & {
+export type SinonAdapterOptions = BaseServerOptions & {
     server?: APIServer;
     loggingEnabled?: boolean;
 };

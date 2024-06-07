@@ -4,7 +4,7 @@ import type { BaseServerOptions } from '../SimpleRestServer.js';
 import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
 import type { MockResponseObject } from 'fetch-mock';
 
-export class FetchMockServer {
+export class FetchMockAdapter {
     loggingEnabled = false;
     server: APIServer;
 
@@ -12,7 +12,7 @@ export class FetchMockServer {
         loggingEnabled = false,
         server,
         ...options
-    }: FetchMockServerOptions = {}) {
+    }: FetchMockAdapterOptions = {}) {
         this.server = server || new SimpleRestServer(options);
         this.loggingEnabled = loggingEnabled;
     }
@@ -102,15 +102,15 @@ export class FetchMockServer {
     }
 }
 
-export const getFetchMockHandler = (options: FetchMockServerOptions) => {
-    const server = new FetchMockServer(options);
+export const getFetchMockHandler = (options: FetchMockAdapterOptions) => {
+    const server = new FetchMockAdapter(options);
     return server.getHandler();
 };
 
 /**
  * @deprecated Use FetchServer instead
  */
-export const FetchServer = FetchMockServer;
+export const FetchServer = FetchMockAdapter;
 
 export type FetchMockFakeRestRequest = Partial<Request> & {
     requestBody?: string;
@@ -120,7 +120,7 @@ export type FetchMockFakeRestRequest = Partial<Request> & {
     params?: { [key: string]: any };
 };
 
-export type FetchMockServerOptions = BaseServerOptions & {
+export type FetchMockAdapterOptions = BaseServerOptions & {
     server?: APIServer;
     loggingEnabled?: boolean;
 };

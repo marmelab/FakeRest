@@ -1,6 +1,6 @@
 import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
-import { SinonServer } from './SinonServer.js';
+import { SinonAdapter } from './SinonAdapter.js';
 import type { BaseResponse } from '../types.js';
 
 function getFakeXMLHTTPRequest(
@@ -23,7 +23,7 @@ function getFakeXMLHTTPRequest(
 describe('SinonServer', () => {
     describe('addMiddleware', () => {
         it('should allow request transformation', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -70,7 +70,7 @@ describe('SinonServer', () => {
         });
 
         it('should allow response transformation', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -107,7 +107,7 @@ describe('SinonServer', () => {
 
     describe('handle', () => {
         it('should respond a 404 to GET /whatever on non existing collection', async () => {
-            const server = new SinonServer();
+            const server = new SinonAdapter();
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest('GET', '/foo');
             if (request == null) throw new Error('request is null');
@@ -116,7 +116,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo by sending all items in collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -142,7 +142,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo?queryString by sending all items in collection foo satisfying query', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foos: [
                         { id: 0, name: 'c', arg: false },
@@ -173,7 +173,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo?queryString with pagination by sending the correct content-range header', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}] }, // 11 items
             });
             const handle = server.getHandler();
@@ -209,7 +209,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo on an empty collection with a []', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: [] },
             });
             const handle = server.getHandler();
@@ -225,7 +225,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to POST /foo by adding an item to collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -257,7 +257,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to POST /foo by adding an item to collection foo, even if the collection does not exist', async () => {
-            const server = new SinonServer();
+            const server = new SinonAdapter();
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest(
                 'POST',
@@ -280,7 +280,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo/:id by sending element of identifier id in collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -301,7 +301,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo/:id on a non-existing id with a 404', async () => {
-            const server = new SinonServer({ data: { foo: [] } });
+            const server = new SinonAdapter({ data: { foo: [] } });
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest('GET', '/foo/3');
             if (request == null) throw new Error('request is null');
@@ -310,7 +310,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PUT /foo/:id by updating element of identifier id in collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -340,7 +340,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PUT /foo/:id on a non-existing id with a 404', async () => {
-            const server = new SinonServer();
+            const server = new SinonAdapter();
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest(
                 'PUT',
@@ -353,7 +353,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PATCH /foo/:id by updating element of identifier id in collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -383,7 +383,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PATCH /foo/:id on a non-existing id with a 404', async () => {
-            const server = new SinonServer({ data: { foo: [] } });
+            const server = new SinonAdapter({ data: { foo: [] } });
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest(
                 'PATCH',
@@ -396,7 +396,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to DELETE /foo/:id by removing element of identifier id in collection foo', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: {
                     foo: [
                         { id: 1, name: 'foo' },
@@ -421,7 +421,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to DELETE /foo/:id on a non-existing id with a 404', async () => {
-            const server = new SinonServer({ data: { foo: [] } });
+            const server = new SinonAdapter({ data: { foo: [] } });
             const handle = server.getHandler();
             const request = getFakeXMLHTTPRequest('DELETE', '/foo/3');
             if (request == null) throw new Error('request is null');
@@ -430,7 +430,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to GET /foo/ with single item', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: { name: 'foo' } },
             });
             const handle = server.getHandler();
@@ -446,7 +446,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PUT /foo/ by updating the singleton record', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: { name: 'foo' } },
             });
             const handle = server.getHandler();
@@ -470,7 +470,7 @@ describe('SinonServer', () => {
         });
 
         it('should respond to PATCH /foo/ by updating the singleton record', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: { name: 'foo' } },
             });
             const handle = server.getHandler();
@@ -496,7 +496,7 @@ describe('SinonServer', () => {
 
     describe('setDefaultQuery', () => {
         it('should set the default query string', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}] }, // 10 items
                 defaultQuery: () => ({ range: [2, 4] }),
             });
@@ -514,7 +514,7 @@ describe('SinonServer', () => {
         });
 
         it('should not override any provided query string', async () => {
-            const server = new SinonServer({
+            const server = new SinonAdapter({
                 data: { foo: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}] }, // 10 items
                 defaultQuery: () => ({ range: [2, 4] }),
             });

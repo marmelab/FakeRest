@@ -1,12 +1,12 @@
 import sinon from 'sinon';
 import simpleRestProvider from 'ra-data-simple-rest';
 import { HttpError, type Options } from 'react-admin';
-import { SinonServer } from '../src';
+import { SinonAdapter } from '../src';
 import { data } from './data';
 import { middlewares } from './middlewares';
 
 export const initializeSinon = () => {
-    const restServer = new SinonServer({
+    const restServer = new SinonAdapter({
         baseUrl: 'http://localhost:3000',
         data,
         loggingEnabled: true,
