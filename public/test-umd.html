@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+
+    <script src="https://unpkg.com/msw/lib/iife/index.js"></script>
+    <script src="../dist/fakerest.umd.cjs"></script>
+    <script>
+        const data = {
+            authors: [
+                { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+                { id: 1, first_name: 'Jane', last_name: 'Austen' },
+            ],
+            books: [
+                { id: 0, author_id: 0, title: 'Anna Karenina' },
+                { id: 1, author_id: 0, title: 'War and Peace' },
+                { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+                { id: 3, author_id: 1, title: 'Sense and Sensibility' },
+            ],
+            settings: {
+                language: 'english',
+                preferred_format: 'hardback',
+            },
+        };
+        const handler = FakeRest.getMswHandler({
+            baseUrl: 'http://localhost:3000',
+            data,
+        });
+        const worker = MockServiceWorker.setupWorker(handler);
+        worker.start({
+            quiet: true, // Instruct MSW to not log requests in the console
+            onUnhandledRequest: 'bypass', // Instruct MSW to ignore requests we don't handle
+        }).then(() => {
+            console.log('MSW worker started');
+            fetch('http://localhost:3000/authors').then((response) => {
+                return response.json();
+            }).then((data) => {
+                console.log('Received authors:', data);
+            });
+        });
+    </script>
+</html>
