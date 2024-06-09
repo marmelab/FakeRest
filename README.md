@@ -29,6 +29,7 @@ Then configure an MSW worker:
 
 ```js
 // in ./src/fakeServer.js
+import { http } from 'msw';
 import { setupWorker } from "msw/browser";
 import { getMswHandler } from "fakerest";
 
@@ -51,7 +52,10 @@ const handler = getMswHandler({
  }
  }
 });
-export const worker = setupWorker(handler);
+export const worker = setupWorker(
+    // Make sure you use a RegExp to target all calls to the API
+    http.all(/http:\/\/localhost:3000/, handler)
+);
 ```
 
 Finally, call the `worker.start()` method before rendering your application. For instance, in a Vite React application:
