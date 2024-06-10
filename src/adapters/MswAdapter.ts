@@ -1,4 +1,3 @@
-import { http, HttpResponse } from 'msw';
 import { SimpleRestServer } from '../SimpleRestServer.js';
 import type { BaseServerOptions } from '../SimpleRestServer.js';
 import type { APIServer, NormalizedRequest } from '../types.js';
@@ -11,19 +10,14 @@ export class MswAdapter {
     }
 
     getHandler() {
-        return http.all(
-            // Using a regex ensures we match all URLs that start with the collection name
-            new RegExp(`${this.server.baseUrl}`),
-            async ({ request }) => {
-                const normalizedRequest =
-                    await this.getNormalizedRequest(request);
-                const response = await this.server.handle(normalizedRequest);
-                return HttpResponse.json(response.body, {
-                    status: response.status,
-                    headers: response.headers,
-                });
-            },
-        );
+        return async ({ request }: { request: Request }) => {
+            const normalizedRequest = await this.getNormalizedRequest(request);
+            const response = await this.server.handle(normalizedRequest);
+            return new Response(JSON.stringify(response.body), {
+                status: response.status,
+                headers: response.headers,
+            });
+        };
     }
 
     async getNormalizedRequest(request: Request): Promise<NormalizedRequest> {
