@@ -1,6 +1,6 @@
-import { SimpleRestServer } from '../SimpleRestServer.js';
-import type { BaseServerOptions } from '../SimpleRestServer.js';
-import type { APIServer, NormalizedRequest } from '../types.js';
+import { SimpleRestServer } from '../SimpleRestServer.ts';
+import type { BaseServerOptions } from '../SimpleRestServer.ts';
+import type { APIServer, NormalizedRequest } from '../types.ts';
 
 export class MswAdapter {
     server: APIServer;

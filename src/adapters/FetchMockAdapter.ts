@@ -1,7 +1,7 @@
-import { SimpleRestServer } from '../SimpleRestServer.js';
-import { parseQueryString } from '../parseQueryString.js';
-import type { BaseServerOptions } from '../SimpleRestServer.js';
-import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
+import { SimpleRestServer } from '../SimpleRestServer.ts';
+import { parseQueryString } from '../parseQueryString.ts';
+import type { BaseServerOptions } from '../SimpleRestServer.ts';
+import type { BaseResponse, APIServer, NormalizedRequest } from '../types.ts';
 import type { MockResponseObject } from 'fetch-mock';
 
 export class FetchMockAdapter {

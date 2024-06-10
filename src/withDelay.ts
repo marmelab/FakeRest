@@ -1,4 +1,4 @@
-import type { Middleware } from './SimpleRestServer.js';
+import type { Middleware } from './SimpleRestServer.ts';
 
 export const withDelay =
     (delayMs: number): Middleware =>

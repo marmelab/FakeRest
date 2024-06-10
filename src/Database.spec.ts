@@ -1,6 +1,6 @@
-import { Database } from './Database.js';
-import { Single } from './Single.js';
-import { Collection } from './Collection.js';
+import { Database } from './Database.ts';
+import { Single } from './Single.ts';
+import { Collection } from './Collection.ts';
 
 describe('Database', () => {
     describe('init', () => {

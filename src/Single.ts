@@ -1,5 +1,5 @@
-import type { Database } from './Database.js';
-import type { CollectionItem, Embed, Query } from './types.js';
+import type { Database } from './Database.ts';
+import type { CollectionItem, Embed, Query } from './types.ts';
 
 export class Single<T extends CollectionItem = CollectionItem> {
     obj: T | null = null;

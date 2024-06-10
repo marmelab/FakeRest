@@ -1,6 +1,6 @@
-import { Single } from './Single.js';
-import { Collection } from './Collection.js';
-import { Database } from './Database.js';
+import { Single } from './Single.ts';
+import { Collection } from './Collection.ts';
+import { Database } from './Database.ts';
 
 describe('Single', () => {
     describe('constructor', () => {

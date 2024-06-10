@@ -1,6 +1,6 @@
-import { Collection } from './Collection.js';
-import { Single } from './Single.js';
-import type { CollectionItem, Query, QueryFunction } from './types.js';
+import { Collection } from './Collection.ts';
+import { Single } from './Single.ts';
+import type { CollectionItem, Query, QueryFunction } from './types.ts';
 
 export class Database {
     identifierName = 'id';

@@ -1,7 +1,7 @@
 import sinon, { type SinonFakeXMLHttpRequest } from 'sinon';
 
-import { SinonAdapter } from './SinonAdapter.js';
-import type { BaseResponse } from '../types.js';
+import { SinonAdapter } from './SinonAdapter.ts';
+import type { BaseResponse } from '../types.ts';
 
 function getFakeXMLHTTPRequest(
     method: string,

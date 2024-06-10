@@ -1,6 +1,6 @@
 import get from 'lodash/get.js';
 import matches from 'lodash/matches.js';
-import type { Database } from './Database.js';
+import type { Database } from './Database.ts';
 import type {
     CollectionItem,
     Embed,

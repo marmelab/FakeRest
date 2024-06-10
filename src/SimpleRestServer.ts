@@ -1,6 +1,6 @@
-import type { Collection } from './Collection.js';
-import { Database, type DatabaseOptions } from './Database.js';
-import type { Single } from './Single.js';
+import type { Collection } from './Collection.ts';
+import { Database, type DatabaseOptions } from './Database.ts';
+import type { Single } from './Single.ts';
 import type {
     APIServer,
     BaseResponse,
@@ -8,7 +8,7 @@ import type {
     CollectionItem,
     QueryFunction,
     NormalizedRequest,
-} from './types.js';
+} from './types.ts';
 
 export class SimpleRestServer implements APIServer {
     baseUrl = '';

@@ -2,9 +2,9 @@ import type { SinonFakeXMLHttpRequest } from 'sinon';
 import {
     SimpleRestServer,
     type BaseServerOptions,
-} from '../SimpleRestServer.js';
-import { parseQueryString } from '../parseQueryString.js';
-import type { BaseResponse, APIServer, NormalizedRequest } from '../types.js';
+} from '../SimpleRestServer.ts';
+import { parseQueryString } from '../parseQueryString.ts';
+import type { BaseResponse, APIServer, NormalizedRequest } from '../types.ts';
 
 export class SinonAdapter {
     loggingEnabled = false;

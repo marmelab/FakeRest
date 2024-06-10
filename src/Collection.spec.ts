@@ -1,6 +1,6 @@
-import { Collection } from './Collection.js';
-import { Database } from './Database.js';
-import type { CollectionItem } from './types.js';
+import { Collection } from './Collection.ts';
+import { Database } from './Database.ts';
+import type { CollectionItem } from './types.ts';
 
 describe('Collection', () => {
     describe('constructor', () => {
