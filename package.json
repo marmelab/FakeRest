@@ -1,6 +1,6 @@
 {
   "name": "fakerest",
-  "version": "4.0.0-beta.1",
+  "version": "4.0.0-beta.2",
   "repository": "https://github.com/marmelab/FakeRest",
   "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
   "scripts": {
@@ -14,7 +14,7 @@
   "type": "module",
   "main": "dist/fakerest.min.umd.cjs",
   "module": "./dist/fakerest.min.js",
-  "types": "./dist/FakeRest.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/fakerest.min.js",
