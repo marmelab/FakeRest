@@ -308,47 +308,47 @@ The `embed` param sets the related objects or collections to be embedded in the 
 
 Operators are specified as suffixes on each filtered field. For instance, applying the `_lte` operator on the `price` field for the `books` resource is done like this:
 
-    GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
+        GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
 
 - `_eq`: check for equality on simple values:
 
-    GET /books?filter={"price_eq":20} // return books where the price is equal to 20
+        GET /books?filter={"price_eq":20} // return books where the price is equal to 20
 
 - `_neq`: check for inequality on simple values
 
-    GET /books?filter={"price_neq":20} // return books where the price is not equal to 20
+        GET /books?filter={"price_neq":20} // return books where the price is not equal to 20
 
 - `_eq_any`: check for equality on any passed values
 
-    GET /books?filter={"price_eq_any":[20, 30]} // return books where the price is equal to 20 or 30
+        GET /books?filter={"price_eq_any":[20, 30]} // return books where the price is equal to 20 or 30
 
 - `_neq_any`: check for inequality on any passed values
 
-    GET /books?filter={"price_neq_any":[20, 30]} // return books where the price is not equal to 20 nor 30
+        GET /books?filter={"price_neq_any":[20, 30]} // return books where the price is not equal to 20 nor 30
 
 - `_inc_any`: check for items that include any of the passed values
 
-    GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors include either 'William Gibson' or 'Pat Cadigan' or both
+        GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors include either 'William Gibson' or 'Pat Cadigan' or both
 
 - `_q`: check for items that contain the provided text
 
-    GET /books?filter={"author_q":['Gibson']} // return books where the author includes 'Gibson' not considering the other fields
+        GET /books?filter={"author_q":['Gibson']} // return books where the author includes 'Gibson' not considering the other fields
 
 - `_lt`: check for items that have a value lower than the provided value
 
-    GET /books?filter={"price_lte":100} // return books that have a price lower that 100
+        GET /books?filter={"price_lte":100} // return books that have a price lower that 100
 
 - `_lte`: check for items that have a value lower than or equal to the provided value
 
-    GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
+        GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
 
 - `_gt`: check for items that have a value greater than the provided value
 
-    GET /books?filter={"price_gte":100} // return books that have a price greater that 100
+        GET /books?filter={"price_gte":100} // return books that have a price greater that 100
 
 - `_gte`: check for items that have a value greater than or equal to the provided value
 
-    GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
+        GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
 
 ### Single Elements
 
