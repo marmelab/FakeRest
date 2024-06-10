@@ -37,20 +37,20 @@ const handler = getMswHandler({
     baseUrl: 'http://localhost:3000',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 export const worker = setupWorker(
     // Make sure you use a RegExp to target all calls to the API
@@ -94,20 +94,20 @@ const handler = getFetchMockHandler({
     baseUrl: 'http://localhost:3000',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 
 fetchMock.mock('begin:http://localhost:3000', handler);
@@ -133,20 +133,20 @@ const handler = getSinonHandler({
     baseUrl: 'http://localhost:3000',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- },
+        }
+    },
 });
 
 // use sinon.js to monkey-patch XmlHttpRequest
@@ -166,213 +166,212 @@ FakeRest uses a simple REST syntax described below.
 
 `GET /[name]` returns an array of records in the `name` collection. It accepts 4 query parameters: `filter`, `sort`, `range`, and `embed`. It responds with a status 200 if there is no pagination, or 206 if the list of items is paginated. The response mentions the total count in the `Content-Range` header.
 
- GET /books?filter={"author_id":1}&embed=["author"]&sort=["title","desc"]&range=[0-9]
+    GET /books?filter={"author_id":1}&embed=["author"]&sort=["title","desc"]&range=[0-9]
 
- HTTP 1.1 200 OK
- Content-Range: items 0-1/2
- Content-Type: application/json
- [
- { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
- ]
+    HTTP 1.1 200 OK
+    Content-Range: items 0-1/2
+    Content-Type: application/json
+    [
+        { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
+        { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+    ]
 
 The `filter` param must be a serialized object literal describing the criteria to apply to the search query. See the [supported filters](#supported-filters) for more details.
 
- GET /books?filter={"author_id":1} // return books where author_id is equal to 1
- HTTP 1.1 200 OK
- Content-Range: items 0-1/2
- Content-Type: application/json
- [
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
- { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
- ]
+    GET /books?filter={"author_id":1} // return books where author_id is equal to 1
+    HTTP 1.1 200 OK
+    Content-Range: items 0-1/2
+    Content-Type: application/json
+    [
+        { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+        { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+    ]
 
- // array values are possible
- GET /books?filter={"id":[2,3]} // return books where id is in [2,3]
- HTTP 1.1 200 OK
- Content-Range: items 0-1/2
- Content-Type: application/json
- [
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
- { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
- ]
+    // array values are possible
+    GET /books?filter={"id":[2,3]} // return books where id is in [2,3]
+    HTTP 1.1 200 OK
+    Content-Range: items 0-1/2
+    Content-Type: application/json
+    [
+        { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+        { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+    ]
 
- // use the special "q" filter to make a full-text search on all text fields
- GET /books?filter={"q":"and"} // return books where any of the book properties contains the string 'and'
+    // use the special "q" filter to make a full-text search on all text fields
+    GET /books?filter={"q":"and"} // return books where any of the book properties contains the string 'and'
 
- HTTP 1.1 200 OK
- Content-Range: items 0-2/3
- Content-Type: application/json
- [
- { "id": 1, "author_id": 0, "title": "War and Peace" },
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
- { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
- ]
+    HTTP 1.1 200 OK
+    Content-Range: items 0-2/3
+    Content-Type: application/json
+    [
+        { "id": 1, "author_id": 0, "title": "War and Peace" },
+        { "id": 2, "author_id": 1, "title": "Pride and Prejudice" },
+        { "id": 3, "author_id": 1, "title": "Sense and Sensibility" }
+    ]
 
- // use _gt, _gte, _lte, _lt, or _neq suffix on filter names to make range queries
- GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
- GET /books?filter={"price_gt":20} // return books where the price is greater than 20
+    // use _gt, _gte, _lte, _lt, or _neq suffix on filter names to make range queries
+    GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
+    GET /books?filter={"price_gt":20} // return books where the price is greater than 20
 
- // when the filter object contains more than one property, the criteria combine with an AND logic
- GET /books?filter={"published_at_gte":"2015-06-12","published_at_lte":"2015-06-15"} // return books published between two dates
+    // when the filter object contains more than one property, the criteria combine with an AND logic
+    GET /books?filter={"published_at_gte":"2015-06-12","published_at_lte":"2015-06-15"} // return books published between two dates
 
 The `sort` param must be a serialized array literal defining first the property used for sorting, then the sorting direction.
 
- GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
- GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
+    GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
+    GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
 
 The `range` param defines the number of results by specifying the rank of the first and last results. The first result is #0.
 
- GET /books?range=[0-9] // return the first 10 books
- GET /books?range=[10-19] // return the 10 next books
+    GET /books?range=[0-9] // return the first 10 books
+    GET /books?range=[10-19] // return the 10 next books
 
 The `embed` param sets the related objects or collections to be embedded in the response.
 
- // embed author in books
- GET /books?embed=["author"]
- HTTP 1.1 200 OK
- Content-Range: items 0-3/4
- Content-Type: application/json
- [
- { "id": 0, "author_id": 0, "title": "Anna Karenina", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
- { "id": 1, "author_id": 0, "title": "War and Peace", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
- { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
- ]
+    // embed author in books
+    GET /books?embed=["author"]
+    HTTP 1.1 200 OK
+    Content-Range: items 0-3/4
+    Content-Type: application/json
+    [
+        { "id": 0, "author_id": 0, "title": "Anna Karenina", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
+        { "id": 1, "author_id": 0, "title": "War and Peace", "author": { "id": 0, "first_name": "Leo", "last_name": "Tolstoi" } },
+        { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } },
+        { "id": 3, "author_id": 1, "title": "Sense and Sensibility", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+    ]
 
- // embed books in author
- GET /authors?embed=["books"]
- HTTP 1.1 200 OK
- Content-Range: items 0-1/2
- Content-Type: application/json
- [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi', books: [{ id: 0, author_id: 0, title: 'Anna Karenina' }, { id: 1, author_id: 0, title: 'War and Peace' }] },
- { id: 1, first_name: 'Jane', last_name: 'Austen', books: [{ id: 2, author_id: 1, title: 'Pride and Prejudice' }, { id: 3, author_id: 1, title: 'Sense and Sensibility' }] }
- ]
+    // embed books in author
+    GET /authors?embed=["books"]
+    HTTP 1.1 200 OK
+    Content-Range: items 0-1/2
+    Content-Type: application/json
+    [
+        { id: 0, first_name: 'Leo', last_name: 'Tolstoi', books: [{ id: 0, author_id: 0, title: 'Anna Karenina' }, { id: 1, author_id: 0, title: 'War and Peace' }] },
+        { id: 1, first_name: 'Jane', last_name: 'Austen', books: [{ id: 2, author_id: 1, title: 'Pride and Prejudice' }, { id: 3, author_id: 1, title: 'Sense and Sensibility' }] }
+    ]
 
- // you can embed several objects
- GET /authors?embed=["books","country"]
+    // you can embed several objects
+    GET /authors?embed=["books","country"]
 
 ### Get A Single Record
 
 `GET /[name]/:id` returns a JSON object, and a status 200, unless the resource doesn't exist.
 
- GET /books/2
+    GET /books/2
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
 The `embed` param sets the related objects or collections to be embedded in the response.
 
- GET /books/2?embed=['author']
+    GET /books/2?embed=['author']
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
 
 ### Create A Record
 
 `POST /[name]` returns a status 201 with a `Location` header for the newly created resource, and the new resource in the body.
 
- POST /books
- { "author_id": 1, "title": "Emma" }
+    POST /books
+    { "author_id": 1, "title": "Emma" }
 
- HTTP 1.1 201 Created
- Location: /books/4
- Content-Type: application/json
- { "author_id": 1, "title": "Emma", "id": 4 }
+    HTTP 1.1 201 Created
+    Location: /books/4
+    Content-Type: application/json
+    { "author_id": 1, "title": "Emma", "id": 4 }
 
-
-### Update A  Record
+### Update A Record
 
 `PUT /[name]/:id` returns the modified JSON object, and a status 200, unless the resource doesn't exist.
 
- PUT /books/2
- { "author_id": 1, "title": "Pride and Prejudice" }
+    PUT /books/2
+    { "author_id": 1, "title": "Pride and Prejudice" }
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
 ### Delete A Single Record
 
 `DELETE /[name]/:id` returns the deleted JSON object, and a status 200, unless the resource doesn't exist.
 
- DELETE /books/2
+    DELETE /books/2
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice" }
 
 ### Supported Filters
 
 Operators are specified as suffixes on each filtered field. For instance, applying the `_lte` operator on the `price` field for the `books` resource is done like this:
 
- GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
+    GET /books?filter={"price_lte":20} // return books where the price is less than or equal to 20
 
 - `_eq`: check for equality on simple values:
 
- GET /books?filter={"price_eq":20} // return books where the price is equal to 20
+    GET /books?filter={"price_eq":20} // return books where the price is equal to 20
 
 - `_neq`: check for inequality on simple values
 
- GET /books?filter={"price_neq":20} // return books where the price is not equal to 20
+    GET /books?filter={"price_neq":20} // return books where the price is not equal to 20
 
 - `_eq_any`: check for equality on any passed values
 
- GET /books?filter={"price_eq_any":[20, 30]} // return books where the price is equal to 20 or 30
+    GET /books?filter={"price_eq_any":[20, 30]} // return books where the price is equal to 20 or 30
 
 - `_neq_any`: check for inequality on any passed values
 
- GET /books?filter={"price_neq_any":[20, 30]} // return books where the price is not equal to 20 nor 30
+    GET /books?filter={"price_neq_any":[20, 30]} // return books where the price is not equal to 20 nor 30
 
 - `_inc_any`: check for items that include any of the passed values
 
- GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors include either 'William Gibson' or 'Pat Cadigan' or both
+    GET /books?filter={"authors_inc_any":['William Gibson', 'Pat Cadigan']} // return books where authors include either 'William Gibson' or 'Pat Cadigan' or both
 
 - `_q`: check for items that contain the provided text
 
- GET /books?filter={"author_q":['Gibson']} // return books where the author includes 'Gibson' not considering the other fields
+    GET /books?filter={"author_q":['Gibson']} // return books where the author includes 'Gibson' not considering the other fields
 
 - `_lt`: check for items that have a value lower than the provided value
 
- GET /books?filter={"price_lte":100} // return books that have a price lower that 100
+    GET /books?filter={"price_lte":100} // return books that have a price lower that 100
 
 - `_lte`: check for items that have a value lower than or equal to the provided value
 
- GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
+    GET /books?filter={"price_lte":100} // return books that have a price lower or equal to 100
 
 - `_gt`: check for items that have a value greater than the provided value
 
- GET /books?filter={"price_gte":100} // return books that have a price greater that 100
+    GET /books?filter={"price_gte":100} // return books that have a price greater that 100
 
 - `_gte`: check for items that have a value greater than or equal to the provided value
 
- GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
+    GET /books?filter={"price_gte":100} // return books that have a price greater or equal to 100
 
 ### Single Elements
 
 FakeRest allows you to define a single element, such as a user profile or global settings, that can be fetched, updated, or deleted.
 
- GET /settings
+    GET /settings
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "language": "english", "preferred_format": "hardback" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "language": "english", "preferred_format": "hardback" }
 
- PUT /settings
- { "language": "french", "preferred_format": "paperback" }
+    PUT /settings
+    { "language": "french", "preferred_format": "paperback" }
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "language": "french", "preferred_format": "paperback" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "language": "french", "preferred_format": "paperback" }
 
- DELETE /settings
+    DELETE /settings
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "language": "french", "preferred_format": "paperback" }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "language": "french", "preferred_format": "paperback" }
 
 ## Middlewares
 
@@ -397,13 +396,13 @@ const handler = getMswHandler({
                 return {
                     status: 401,
                     headers: {},
- };
- }
+                };
+            }
 
             return next(context);
- },
+        },
         withDelay(300),
- ],
+    ],
 });
 ```
 
@@ -435,10 +434,10 @@ const handler = getMswHandler({
         async (context, next) => {
             if (context.headers.Authorization === undefined) {
                 return { status: 401, headers: {} };
- }
+            }
             return next(context);
- }
- ]
+        }
+    ]
 });
 ```
 
@@ -456,21 +455,21 @@ const handler = getMswHandler({
                 context.collection === "books" &&
                 request.method === "POST" &&
  !context.requestBody?.title
- ) {
+            ) {
                 return {
                     status: 400,
                     headers: {},
                     body: {
                         errors: {
                             title: 'An article with this title already exists. The title must be unique.',
- },
- },
- };
- }
+                        },
+                    },
+                };
+            }
 
             return next(context);
- }
- ]
+        }
+    ]
 });
 ```
 
@@ -487,15 +486,15 @@ const handler = getMswHandler({
             if (
                 context.collection === 'books' &&
                 context.method === 'POST'
- ) {
+            ) {
                 const response = await next(context);
                 response.body.updatedAt = new Date().toISOString();
                 return response;
- }
+            }
 
             return next(context);
- }
- ]
+        }
+    ]
 });
 ```
 
@@ -512,10 +511,10 @@ const handler = getMswHandler({
             return new Promise((resolve) => {
                 setTimeout(() => {
                     resolve(next(context));
- }, 500);
- });
- }
- ]
+                }, 500);
+            });
+        }
+    ]
 });
 ```
 
@@ -529,7 +528,7 @@ const handler = getMswHandler({
     data,
     middlewares: [
         withDelay(500), // delay in ms
- ]
+    ]
 });
 ```
 
@@ -606,7 +605,7 @@ const handler = getMswHandler({
         if (resourceName == 'authors') return { embed: ['books'] }
         if (resourceName == 'books') return { filter: { published: true } }
         return {};
- }
+    }
 });
 ```
 
@@ -640,20 +639,20 @@ const adapter = new MswAdapter({
     baseUrl: 'http://my.custom.domain',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 window.fakerest = adapter;
 const handler = adapter.getHandler();
@@ -672,20 +671,20 @@ const server = new SimpleRestServer({
     baseUrl: 'http://my.custom.domain',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 const adapter = new MswAdapter({ server });
 const handler = adapter.getHandler();
@@ -728,20 +727,20 @@ You can specify the database used by a server by setting its `database` property
 const database = new Database({
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+        ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 const server = new SimpleRestServer({ baseUrl: 'http://my.custom.domain', database });
 ```
@@ -761,20 +760,20 @@ const handler = getMswHandler({
     baseUrl: 'http://localhost:3000',
     data: {
         'authors': [
- { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
- { id: 1, first_name: 'Jane', last_name: 'Austen' }
- ],
+            { id: 0, first_name: 'Leo', last_name: 'Tolstoi' },
+            { id: 1, first_name: 'Jane', last_name: 'Austen' }
+            ],
         'books': [
- { id: 0, author_id: 0, title: 'Anna Karenina' },
- { id: 1, author_id: 0, title: 'War and Peace' },
- { id: 2, author_id: 1, title: 'Pride and Prejudice' },
- { id: 3, author_id: 1, title: 'Sense and Sensibility' }
- ],
+            { id: 0, author_id: 0, title: 'Anna Karenina' },
+            { id: 1, author_id: 0, title: 'War and Peace' },
+            { id: 2, author_id: 1, title: 'Pride and Prejudice' },
+            { id: 3, author_id: 1, title: 'Sense and Sensibility' }
+        ],
         'settings': {
             language: 'english',
             preferred_format: 'hardback',
- }
- }
+        }
+    }
 });
 ```
 
@@ -786,11 +785,11 @@ A single represents an API endpoint that returns a single entity. It's useful fo
 
 FakeRest supports embedding other resources in a main resource query result. For instance, embedding the author of a book.
 
- GET /books/2?embed=['author']
+    GET /books/2?embed=['author']
 
- HTTP 1.1 200 OK
- Content-Type: application/json
- { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
+    HTTP 1.1 200 OK
+    Content-Type: application/json
+    { "id": 2, "author_id": 1, "title": "Pride and Prejudice", "author": { "id": 1, "first_name": "Jane", "last_name": "Austen" } }
 
 Embeds are defined by the query, they require no setup in the database.
 
