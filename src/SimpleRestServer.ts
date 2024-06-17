@@ -54,7 +54,9 @@ export class SimpleRestServer implements APIServer {
         }
 
         const matches = normalizedRequest.url?.match(
-            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
+            new RegExp(
+                `^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w+|\\d+))?(\\?.*)?$`,
+            ),
         );
         if (matches) {
             const name = matches[1];
@@ -178,7 +180,9 @@ export class SimpleRestServer implements APIServer {
 
         // handle collections
         const matches = context.url?.match(
-            new RegExp(`^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w))?(\\?.*)?$`),
+            new RegExp(
+                `^${this.baseUrl}\\/([^\\/?]+)(\\/(\\w+|\\d+))?(\\?.*)?$`,
+            ),
         );
         if (!matches) {
             return { status: 404, headers: {} };
@@ -259,7 +263,7 @@ export class SimpleRestServer implements APIServer {
             if (!this.database.getCollection(name)) {
                 return { status: 404, headers: {} };
             }
-            const id = Number.parseInt(matches[3]);
+            const id = matches[3];
             if (context.method === 'GET') {
                 try {
                     return {
