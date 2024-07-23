@@ -441,7 +441,7 @@ function filterItems<T extends CollectionItem = CollectionItem>(
         // turn filter properties to functions
         const filterFunctions = Object.keys(filter).map((key) => {
             if (key === 'q' && typeof filter.q === 'string') {
-                const regex = new RegExp(filter.q, 'i');
+                const regex = buildRegexSearch(filter.q);
 
                 const filterWithQuery = <
                     T2 extends CollectionItem = CollectionItem,
@@ -555,4 +555,23 @@ function rangeItems<T extends CollectionItem = CollectionItem>(
         );
     }
     throw new Error('Unsupported range type');
+}
+
+function buildRegexSearch(input: string) {
+    // Trim the input to remove leading and trailing whitespace
+    const trimmedInput = input.trim();
+
+    // Escape special characters in the input to prevent regex injection
+    const escapedInput = trimmedInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Split the input into words
+    const words = escapedInput.split(' ');
+
+    // Create a regex pattern to match any of the words
+    const pattern = words.map((word) => `(${word})`).join('|');
+
+    // Create a new RegExp object with the pattern, case insensitive
+    const regex = new RegExp(pattern, 'i');
+
+    return regex;
 }

@@ -403,6 +403,14 @@ describe('Collection', () => {
                     { id: 2, a: 'foo', b: 'bar' },
                     { id: 3, a: { b: 'bar' } },
                 ]);
+                expect(
+                    collection.getAll({ filter: { q: 'hello bar' } }),
+                ).toEqual([
+                    { id: 0, a: 'Hello', b: 'world' },
+                    { id: 1, a: 'helloworld', b: 'bunny' },
+                    { id: 2, a: 'foo', b: 'bar' },
+                    { id: 3, a: { b: 'bar' } },
+                ]);
             });
 
             it('should filter by range using _gte, _gt, _lte, and _lt', () => {

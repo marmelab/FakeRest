@@ -9,7 +9,15 @@ import {
     ShowGuesser,
     required,
     AutocompleteInput,
+    ReferenceInput,
+    SimpleForm,
+    TextInput,
+    Datagrid,
+    List,
+    TextField,
+    SearchInput,
 } from 'react-admin';
+import authProvider from './authProvider';
 import { QueryClient } from 'react-query';
 
 const queryClient = new QueryClient({
@@ -36,7 +44,7 @@ export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
             />
             <Resource
                 name="authors"
-                list={ListGuesser}
+                list={AuthorList}
                 edit={EditGuesser}
                 show={ShowGuesser}
                 recordRepresentation={(record) =>
@@ -47,11 +55,18 @@ export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     );
 };
 
-import { ReferenceInput, SimpleForm, TextInput } from 'react-admin';
-import authProvider from './authProvider';
+const AuthorList = () => (
+    <List filters={[<SearchInput source="q" alwaysOn key="q" />]}>
+        <Datagrid rowClick="edit">
+            <TextField source="id" />
+            <TextField source="first_name" />
+            <TextField source="last_name" />
+        </Datagrid>
+    </List>
+);
 
 // The default value for the title field should cause a server validation error as it's not unique
-export const BookCreate = () => (
+const BookCreate = () => (
     <Create>
         <SimpleForm>
             <ReferenceInput source="author_id" reference="authors">
