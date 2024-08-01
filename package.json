@@ -18,7 +18,8 @@
   "exports": {
     ".": {
       "import": "./dist/fakerest.min.js",
-      "require": "./dist/fakerest.umd.cjs"
+      "require": "./dist/fakerest.umd.cjs",
+      "types": "./dist/index.d.ts"
     }
   },
   "author": "François Zaninotto <fzaninotto@gmail.com>",
