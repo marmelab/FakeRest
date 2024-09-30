@@ -196,7 +196,9 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     }
 
     addOne(item: T) {
-        const identifier = item[this.identifierName];
+        // serialize item to mimic network transport and avoid modifying the original object
+        const newItem = JSON.parse(JSON.stringify(item)) as T;
+        const identifier = newItem[this.identifierName];
         if (identifier != null) {
             if (this.getIndex(identifier) !== -1) {
                 throw new Error(
@@ -208,10 +210,10 @@ export class Collection<T extends CollectionItem = CollectionItem> {
             }
         } else {
             // @ts-expect-error - For some reason, TS does not accept writing a generic types with the index signature
-            item[this.identifierName] = this.getNewId();
+            newItem[this.identifierName] = this.getNewId();
         }
-        this.items.push(item);
-        return Object.assign({}, item); // clone item to avoid returning the original;
+        this.items.push(newItem);
+        return newItem;
     }
 
     updateOne(identifier: number | string, item: T) {
@@ -219,10 +221,14 @@ export class Collection<T extends CollectionItem = CollectionItem> {
         if (index === -1) {
             throw new Error(`No item with identifier ${identifier}`);
         }
-        for (const key in item) {
-            this.items[index][key] = item[key];
-        }
-        return Object.assign({}, this.items[index]); // clone item to avoid returning the original
+        // serialize item to mimic network transport and avoid modifying the original object
+        const changes = JSON.parse(JSON.stringify(item)) as T;
+        const newItem = {
+            ...this.items[index],
+            ...changes,
+        };
+        this.items[index] = newItem;
+        return newItem;
     }
 
     removeOne(identifier: number | string) {

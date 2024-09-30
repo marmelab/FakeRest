@@ -989,6 +989,18 @@ describe('Collection', () => {
             expect(collection.getOne(0)).toEqual({ id: 0, name: 'bar' });
             expect(collection.getOne(1)).toEqual({ id: 1, name: 'baz' });
         });
+
+        it('should not erase fields when the changeset contains undefined values', () => {
+            const collection = new Collection<CollectionItem>({
+                items: [{ id: 0, name: 'foo', title: 'bar' }],
+            });
+            collection.updateOne(0, { name: 'FOO', title: undefined });
+            expect(collection.getOne(0)).toEqual({
+                id: 0,
+                name: 'FOO',
+                title: 'bar',
+            });
+        });
     });
 
     describe('removeOne', () => {
