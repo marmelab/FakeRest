@@ -1,3 +1,4 @@
+import cloneDeep from 'lodash/cloneDeep.js';
 import type { Database } from './Database.ts';
 import type { CollectionItem, Embed, Query } from './types.ts';
 
@@ -12,7 +13,7 @@ export class Single<T extends CollectionItem = CollectionItem> {
                 "Can't initialize a Single with anything except an object",
             );
         }
-        this.obj = obj;
+        this.obj = cloneDeep(obj);
     }
 
     /**
