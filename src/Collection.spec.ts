@@ -989,6 +989,18 @@ describe('Collection', () => {
             expect(collection.getOne(0)).toEqual({ id: 0, name: 'bar' });
             expect(collection.getOne(1)).toEqual({ id: 1, name: 'baz' });
         });
+
+        it('should update the original item', () => {
+            const items = [{ name: 'foo' }, { name: 'baz' }];
+            const collection = new Collection<CollectionItem>({
+                items,
+            });
+            collection.updateOne(0, { id: 0, name: 'bar' });
+            expect(collection.getOne(0)).toEqual({ id: 0, name: 'bar' });
+            expect(collection.getOne(1)).toEqual({ id: 1, name: 'baz' });
+            expect(items[0]).toEqual({ name: 'foo' });
+            expect(items[1]).toEqual({ name: 'baz' });
+        });
     });
 
     describe('removeOne', () => {

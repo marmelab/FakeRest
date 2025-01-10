@@ -144,5 +144,13 @@ describe('Single', () => {
             single.updateOnly({ name: 'bar' });
             expect(single.getOnly()).toEqual({ name: 'bar' });
         });
+
+        it('should not update the original item', () => {
+            const data = { name: 'foo' };
+            const single = new Single(data);
+            single.updateOnly({ name: 'bar' });
+            expect(single.getOnly()).toEqual({ name: 'bar' });
+            expect(data).toEqual({ name: 'foo' });
+        });
     });
 });

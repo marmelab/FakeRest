@@ -1,5 +1,6 @@
 import get from 'lodash/get.js';
 import matches from 'lodash/matches.js';
+import cloneDeep from 'lodash/cloneDeep.js';
 import type { Database } from './Database.ts';
 import type {
     CollectionItem,
@@ -196,7 +197,8 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     }
 
     addOne(item: T) {
-        const identifier = item[this.identifierName];
+        const clone = cloneDeep(item);
+        const identifier = clone[this.identifierName];
         if (identifier != null) {
             if (this.getIndex(identifier) !== -1) {
                 throw new Error(
@@ -208,10 +210,10 @@ export class Collection<T extends CollectionItem = CollectionItem> {
             }
         } else {
             // @ts-expect-error - For some reason, TS does not accept writing a generic types with the index signature
-            item[this.identifierName] = this.getNewId();
+            clone[this.identifierName] = this.getNewId();
         }
-        this.items.push(item);
-        return Object.assign({}, item); // clone item to avoid returning the original;
+        this.items.push(clone);
+        return clone; // clone item to avoid returning the original;
     }
 
     updateOne(identifier: number | string, item: T) {
