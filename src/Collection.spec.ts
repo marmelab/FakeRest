@@ -990,7 +990,7 @@ describe('Collection', () => {
             expect(collection.getOne(1)).toEqual({ id: 1, name: 'baz' });
         });
 
-        it('should update the original item', () => {
+        it('should not update the original item', () => {
             const items = [{ name: 'foo' }, { name: 'baz' }];
             const collection = new Collection<CollectionItem>({
                 items,
