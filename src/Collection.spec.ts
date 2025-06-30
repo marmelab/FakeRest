@@ -235,6 +235,20 @@ describe('Collection', () => {
                 );
             });
 
+            it('should filter null values properly', () => {
+                const collection = new Collection({
+                    items: [
+                        { name: 'a', is: null },
+                        { name: 'b', is: false },
+                        { name: 'c', is: true },
+                    ],
+                });
+                const expectedNull = [{ name: 'a', id: 0, is: null }];
+                expect(collection.getAll({ filter: { is: null } })).toEqual(
+                    expectedNull,
+                );
+            });
+
             it('should filter array values properly', () => {
                 const collection = new Collection({
                     items: [

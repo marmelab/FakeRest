@@ -411,6 +411,12 @@ const getSimpleFilter = (key: string, value: any) => {
         };
     }
 
+    if (value == null) {
+        // null or undefined filter
+        return <T extends CollectionItem = CollectionItem>(item: T) =>
+            get(item, key) == null;
+    }
+
     if (typeof value === 'object') {
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             matches(value)(get(item, key));
