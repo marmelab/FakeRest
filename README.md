@@ -216,10 +216,20 @@ The `filter` param must be a serialized object literal describing the criteria t
     // when the filter object contains more than one property, the criteria combine with an AND logic
     GET /books?filter={"published_at_gte":"2015-06-12","published_at_lte":"2015-06-15"} // return books published between two dates
 
+You can also filter by relationship fields when using embed:
+
+    GET /books?embed=["author"]&filter={"author.name":"Leo Tolstoi"} // return books by Leo Tolstoi
+    GET /books?embed=["author"]&filter={"author.age_gte":50} // return books by authors aged 50 or more
+
 The `sort` param must be a serialized array literal defining first the property used for sorting, then the sorting direction.
 
     GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
     GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
+
+You can also sort by relationship fields when using embed:
+
+    GET /books?embed=["author"]&sort=["author.name","asc"]  // return books sorted by author name
+    GET /books?embed=["author"]&sort=["author.name","desc"] // return books sorted by author name in reverse order
 
 The `range` param defines the number of results by specifying the rank of the first and last results. The first result is #0.
 

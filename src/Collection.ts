@@ -155,18 +155,26 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     getAll(query?: Query) {
         let items = this.items.slice(0); // clone the array to avoid updating the core one
         if (query) {
+            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
+
+            // Embed relationships first if requested
+            if (query.embed && this.database) {
+                items = items.map(this._itemEmbedder(query.embed));
+            }
+
+            // Apply filter
             if (query.filter) {
                 items = filterItems(items, query.filter);
             }
+
+            // Apply sort
             if (query.sort) {
                 items = sortItems(items, query.sort);
             }
+
+            // Apply range
             if (query.range) {
                 items = rangeItems(items, query.range);
-            }
-            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
-            if (query.embed && this.database) {
-                items = items.map(this._itemEmbedder(query.embed)); // embed reference
             }
         }
         return items;
@@ -527,10 +535,12 @@ function sortItems<T extends CollectionItem = CollectionItem>(
     }
     if (typeof sort === 'string') {
         return items.sort((a, b) => {
-            if (a[sort] > b[sort]) {
+            const aValue = get(a, sort);
+            const bValue = get(b, sort);
+            if (aValue > bValue) {
                 return 1;
             }
-            if (a[sort] < b[sort]) {
+            if (aValue < bValue) {
                 return -1;
             }
             return 0;
@@ -540,10 +550,12 @@ function sortItems<T extends CollectionItem = CollectionItem>(
         const key = sort[0];
         const direction = sort[1].toLowerCase() === 'asc' ? 1 : -1;
         return items.sort((a: T, b: T) => {
-            if (a[key] > b[key]) {
+            const aValue = get(a, key);
+            const bValue = get(b, key);
+            if (aValue > bValue) {
                 return direction;
             }
-            if (a[key] < b[key]) {
+            if (aValue < bValue) {
                 return -1 * direction;
             }
             return 0;
