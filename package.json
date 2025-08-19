@@ -1,62 +1,62 @@
 {
-  "name": "fakerest",
-  "version": "4.1.3",
-  "repository": "https://github.com/marmelab/FakeRest",
-  "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build && vite build -c vite.config.min.ts",
-    "format": "biome format --write src",
-    "lint": "biome lint --apply src",
-    "test": "vitest",
-    "prepare": "husky"
-  },
-  "type": "module",
-  "main": "dist/fakerest.min.umd.cjs",
-  "module": "./dist/fakerest.min.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/fakerest.min.js",
-      "require": "./dist/fakerest.umd.cjs",
-      "types": "./dist/index.d.ts"
+    "name": "fakerest",
+    "version": "4.2.0",
+    "repository": "https://github.com/marmelab/FakeRest",
+    "description": "Patch XMLHttpRequest to fake a REST server based on JSON data. ",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build && vite build -c vite.config.min.ts",
+        "format": "biome format --write src",
+        "lint": "biome lint --apply src",
+        "test": "vitest",
+        "prepare": "husky"
+    },
+    "type": "module",
+    "main": "dist/fakerest.min.umd.cjs",
+    "module": "./dist/fakerest.min.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/fakerest.min.js",
+            "require": "./dist/fakerest.umd.cjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "author": "François Zaninotto <fzaninotto@gmail.com>",
+    "license": "MIT",
+    "devDependencies": {
+        "@biomejs/biome": "1.7.0",
+        "@types/lodash": "^4.17.0",
+        "@types/sinon": "^17.0.3",
+        "@vitejs/plugin-react": "^4.2.1",
+        "fetch-mock": "^9.11.0",
+        "happy-dom": "^15.10.2",
+        "husky": "^9.0.11",
+        "lint-staged": "^15.2.2",
+        "msw": "^2.2.14",
+        "ra-data-simple-rest": "^4.16.15",
+        "react": "^17.0.2",
+        "react-admin": "^4.16.15",
+        "react-dom": "^17.0.2",
+        "sinon": "~18.0.0",
+        "typescript": "^5.4.5",
+        "vite": "^5.2.9",
+        "vite-plugin-dts": "^3.8.3",
+        "vitest": "^1.5.0"
+    },
+    "dependencies": {
+        "lodash": "^4.17.21"
+    },
+    "browserslist": "> 0.25%, not dead",
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx}": [
+            "biome lint --apply",
+            "biome format --write"
+        ]
+    },
+    "msw": {
+        "workerDirectory": [
+            "public"
+        ]
     }
-  },
-  "author": "François Zaninotto <fzaninotto@gmail.com>",
-  "license": "MIT",
-  "devDependencies": {
-    "@biomejs/biome": "1.7.0",
-    "@types/lodash": "^4.17.0",
-    "@types/sinon": "^17.0.3",
-    "@vitejs/plugin-react": "^4.2.1",
-    "fetch-mock": "^9.11.0",
-    "happy-dom": "^15.10.2",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "msw": "^2.2.14",
-    "ra-data-simple-rest": "^4.16.15",
-    "react": "^17.0.2",
-    "react-admin": "^4.16.15",
-    "react-dom": "^17.0.2",
-    "sinon": "~18.0.0",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.9",
-    "vite-plugin-dts": "^3.8.3",
-    "vitest": "^1.5.0"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
-  },
-  "browserslist": "> 0.25%, not dead",
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "biome lint --apply",
-      "biome format --write"
-    ]
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
-  }
 }
