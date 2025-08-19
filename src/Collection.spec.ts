@@ -284,6 +284,154 @@ describe('Collection', () => {
                 ).toEqual(expected);
             });
 
+            it('should filter by relationship field', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Pride and Prejudice', author_id: 1 },
+                        { title: 'War and Peace', author_id: 0 },
+                        { title: 'Anna Karenina', author_id: 0 },
+                        { title: 'Sense and Sensibility', author_id: 1 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Leo Tolstoi' },
+                        { id: 1, name: 'Jane Austen' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    filter: { 'author.name': 'Leo Tolstoi' },
+                }) as any[];
+
+                expect(result.length).toEqual(2);
+                expect(result[0].title).toEqual('War and Peace');
+                expect(result[1].title).toEqual('Anna Karenina');
+                expect(result[0].author.name).toEqual('Leo Tolstoi');
+                expect(result[1].author.name).toEqual('Leo Tolstoi');
+            });
+
+            it('should filter by relationship field with multiple filters', () => {
+                const books = new Collection({
+                    items: [
+                        {
+                            title: 'Pride and Prejudice',
+                            author_id: 1,
+                            published: 1813,
+                        },
+                        {
+                            title: 'War and Peace',
+                            author_id: 0,
+                            published: 1869,
+                        },
+                        {
+                            title: 'Anna Karenina',
+                            author_id: 0,
+                            published: 1877,
+                        },
+                        {
+                            title: 'Sense and Sensibility',
+                            author_id: 1,
+                            published: 1811,
+                        },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Leo Tolstoi' },
+                        { id: 1, name: 'Jane Austen' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    filter: {
+                        'author.name': 'Jane Austen',
+                        published_gte: 1813,
+                    },
+                }) as any[];
+
+                expect(result.length).toEqual(1);
+                expect(result[0].title).toEqual('Pride and Prejudice');
+                expect(result[0].author.name).toEqual('Jane Austen');
+            });
+
+            it('should filter by relationship field with operators', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Book A', author_id: 0 },
+                        { title: 'Book B', author_id: 1 },
+                        { title: 'Book C', author_id: 2 },
+                        { title: 'Book D', author_id: 3 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Author A', age: 30 },
+                        { id: 1, name: 'Author B', age: 40 },
+                        { id: 2, name: 'Author C', age: 50 },
+                        { id: 3, name: 'Author D', age: 60 },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    filter: { 'author.age_gte': 50 },
+                }) as any[];
+
+                expect(result.length).toEqual(2);
+                expect(result[0].title).toEqual('Book C');
+                expect(result[1].title).toEqual('Book D');
+                expect(result[0].author.age).toEqual(50);
+                expect(result[1].author.age).toEqual(60);
+            });
+
+            it('should filter and sort by relationship fields together', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Book 1', author_id: 0, year: 2020 },
+                        { title: 'Book 2', author_id: 1, year: 2021 },
+                        { title: 'Book 3', author_id: 2, year: 2019 },
+                        { title: 'Book 4', author_id: 3, year: 2022 },
+                        { title: 'Book 5', author_id: 1, year: 2023 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Zoe', country: 'USA' },
+                        { id: 1, name: 'Alice', country: 'UK' },
+                        { id: 2, name: 'Bob', country: 'USA' },
+                        { id: 3, name: 'Charlie', country: 'Canada' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                // Filter by author country and sort by author name
+                const result = books.getAll({
+                    embed: ['author'],
+                    filter: { 'author.country': 'USA' },
+                    sort: ['author.name', 'asc'],
+                }) as any[];
+
+                expect(result.length).toEqual(2);
+                expect(result[0].author.name).toEqual('Bob');
+                expect(result[1].author.name).toEqual('Zoe');
+                expect(result[0].title).toEqual('Book 3');
+                expect(result[1].title).toEqual('Book 1');
+            });
+
             it('should filter values with objects', () => {
                 const collection = new Collection({
                     items: [

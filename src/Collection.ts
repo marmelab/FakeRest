@@ -155,32 +155,24 @@ export class Collection<T extends CollectionItem = CollectionItem> {
     getAll(query?: Query) {
         let items = this.items.slice(0); // clone the array to avoid updating the core one
         if (query) {
+            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
+
+            // Embed relationships first if requested
+            if (query.embed && this.database) {
+                items = items.map(this._itemEmbedder(query.embed));
+            }
+
+            // Apply filter
             if (query.filter) {
                 items = filterItems(items, query.filter);
             }
-            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
-            // Embed before sorting if we're sorting by a relationship field
-            if (query.embed && this.database && query.sort) {
-                const sortKey = Array.isArray(query.sort)
-                    ? query.sort[0]
-                    : typeof query.sort === 'string'
-                      ? query.sort
-                      : null;
-                if (sortKey?.includes('.')) {
-                    items = items.map(this._itemEmbedder(query.embed)); // embed reference before sorting
-                    items = sortItems(items, query.sort);
-                } else {
-                    items = sortItems(items, query.sort);
-                    items = items.map(this._itemEmbedder(query.embed)); // embed reference after sorting
-                }
-            } else {
-                if (query.sort) {
-                    items = sortItems(items, query.sort);
-                }
-                if (query.embed && this.database) {
-                    items = items.map(this._itemEmbedder(query.embed)); // embed reference
-                }
+
+            // Apply sort
+            if (query.sort) {
+                items = sortItems(items, query.sort);
             }
+
+            // Apply range
             if (query.range) {
                 items = rangeItems(items, query.range);
             }
