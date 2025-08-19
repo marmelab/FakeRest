@@ -221,6 +221,11 @@ The `sort` param must be a serialized array literal defining first the property 
     GET /author?sort=["date_of_birth","asc"]  // return authors, the oldest first
     GET /author?sort=["date_of_birth","desc"]  // return authors, the youngest first
 
+You can also sort by relationship fields when using embed:
+
+    GET /books?embed=["author"]&sort=["author.name","asc"]  // return books sorted by author name
+    GET /books?embed=["author"]&sort=["author.name","desc"] // return books sorted by author name in reverse order
+
 The `range` param defines the number of results by specifying the rank of the first and last results. The first result is #0.
 
     GET /books?range=[0-9] // return the first 10 books

@@ -158,15 +158,31 @@ export class Collection<T extends CollectionItem = CollectionItem> {
             if (query.filter) {
                 items = filterItems(items, query.filter);
             }
-            if (query.sort) {
-                items = sortItems(items, query.sort);
+            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
+            // Embed before sorting if we're sorting by a relationship field
+            if (query.embed && this.database && query.sort) {
+                const sortKey = Array.isArray(query.sort)
+                    ? query.sort[0]
+                    : typeof query.sort === 'string'
+                      ? query.sort
+                      : null;
+                if (sortKey?.includes('.')) {
+                    items = items.map(this._itemEmbedder(query.embed)); // embed reference before sorting
+                    items = sortItems(items, query.sort);
+                } else {
+                    items = sortItems(items, query.sort);
+                    items = items.map(this._itemEmbedder(query.embed)); // embed reference after sorting
+                }
+            } else {
+                if (query.sort) {
+                    items = sortItems(items, query.sort);
+                }
+                if (query.embed && this.database) {
+                    items = items.map(this._itemEmbedder(query.embed)); // embed reference
+                }
             }
             if (query.range) {
                 items = rangeItems(items, query.range);
-            }
-            items = items.map((item) => Object.assign({}, item)); // clone item to avoid returning the original
-            if (query.embed && this.database) {
-                items = items.map(this._itemEmbedder(query.embed)); // embed reference
             }
         }
         return items;
@@ -527,10 +543,12 @@ function sortItems<T extends CollectionItem = CollectionItem>(
     }
     if (typeof sort === 'string') {
         return items.sort((a, b) => {
-            if (a[sort] > b[sort]) {
+            const aValue = get(a, sort);
+            const bValue = get(b, sort);
+            if (aValue > bValue) {
                 return 1;
             }
-            if (a[sort] < b[sort]) {
+            if (aValue < bValue) {
                 return -1;
             }
             return 0;
@@ -540,10 +558,12 @@ function sortItems<T extends CollectionItem = CollectionItem>(
         const key = sort[0];
         const direction = sort[1].toLowerCase() === 'asc' ? 1 : -1;
         return items.sort((a: T, b: T) => {
-            if (a[key] > b[key]) {
+            const aValue = get(a, key);
+            const bValue = get(b, key);
+            if (aValue > bValue) {
                 return direction;
             }
-            if (a[key] < b[key]) {
+            if (aValue < bValue) {
                 return -1 * direction;
             }
             return 0;

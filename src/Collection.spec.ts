@@ -76,6 +76,96 @@ describe('Collection', () => {
                 }).toThrow(new Error('Unsupported sort type'));
             });
 
+            it('should sort by nested relationship field', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Pride and Prejudice', author_id: 1 },
+                        { title: 'War and Peace', author_id: 0 },
+                        { title: 'Anna Karenina', author_id: 0 },
+                        { title: 'Sense and Sensibility', author_id: 1 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Leo Tolstoi' },
+                        { id: 1, name: 'Jane Austen' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    sort: ['author.name', 'asc'],
+                }) as any[];
+
+                expect(result[0].author.name).toEqual('Jane Austen');
+                expect(result[1].author.name).toEqual('Jane Austen');
+                expect(result[2].author.name).toEqual('Leo Tolstoi');
+                expect(result[3].author.name).toEqual('Leo Tolstoi');
+            });
+
+            it('should sort by nested relationship field in descending order', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Pride and Prejudice', author_id: 1 },
+                        { title: 'War and Peace', author_id: 0 },
+                        { title: 'Anna Karenina', author_id: 0 },
+                        { title: 'Sense and Sensibility', author_id: 1 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Leo Tolstoi' },
+                        { id: 1, name: 'Jane Austen' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    sort: ['author.name', 'desc'],
+                }) as any[];
+
+                expect(result[0].author.name).toEqual('Leo Tolstoi');
+                expect(result[1].author.name).toEqual('Leo Tolstoi');
+                expect(result[2].author.name).toEqual('Jane Austen');
+                expect(result[3].author.name).toEqual('Jane Austen');
+            });
+
+            it('should sort by nested relationship field with string sort', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Book 1', author_id: 0 },
+                        { title: 'Book 2', author_id: 1 },
+                        { title: 'Book 3', author_id: 2 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Author C', country: 'USA' },
+                        { id: 1, name: 'Author A', country: 'England' },
+                        { id: 2, name: 'Author B', country: 'France' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                // Get books with embedded authors and sort by author.country
+                const result = books.getAll({
+                    embed: ['author'],
+                    sort: 'author.country',
+                }) as any[];
+
+                expect(result[0].author.country).toEqual('England');
+                expect(result[1].author.country).toEqual('France');
+                expect(result[2].author.country).toEqual('USA');
+            });
+
             it('should sort by sort function', () => {
                 const collection = new Collection({
                     items: [{ name: 'c' }, { name: 'a' }, { name: 'b' }],
