@@ -1,6 +1,8 @@
 import React from 'react';
-import ReactDom from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { App } from './App';
+
+const root = createRoot(document.getElementById('root'));
 
 switch (import.meta.env.VITE_MOCK) {
     case 'fetch-mock':
@@ -10,10 +12,7 @@ switch (import.meta.env.VITE_MOCK) {
                 return dataProvider;
             })
             .then((dataProvider) => {
-                ReactDom.render(
-                    <App dataProvider={dataProvider} />,
-                    document.getElementById('root'),
-                );
+                root.render(<App dataProvider={dataProvider} />);
             });
         break;
     case 'sinon':
@@ -23,10 +22,7 @@ switch (import.meta.env.VITE_MOCK) {
                 return dataProvider;
             })
             .then((dataProvider) => {
-                ReactDom.render(
-                    <App dataProvider={dataProvider} />,
-                    document.getElementById('root'),
-                );
+                root.render(<App dataProvider={dataProvider} />);
             });
         break;
     default:
@@ -35,9 +31,6 @@ switch (import.meta.env.VITE_MOCK) {
                 return initializeMsw().then(() => dataProvider);
             })
             .then((dataProvider) => {
-                ReactDom.render(
-                    <App dataProvider={dataProvider} />,
-                    document.getElementById('root'),
-                );
+                root.render(<App dataProvider={dataProvider} />);
             });
 }

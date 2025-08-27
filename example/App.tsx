@@ -12,13 +12,15 @@ import {
     ReferenceInput,
     SimpleForm,
     TextInput,
+    SearchInput,
     Datagrid,
     List,
+    ReferenceField,
     TextField,
-    SearchInput,
 } from 'react-admin';
+
 import authProvider from './authProvider';
-import { QueryClient } from 'react-query';
+import { QueryClient } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -27,6 +29,20 @@ const queryClient = new QueryClient({
         },
     },
 });
+
+export const BookList = () => (
+    <List queryOptions={{ meta: { embed: ['author'] } }}>
+        <Datagrid rowClick="edit">
+            <TextField source="id" />
+            <ReferenceField
+                source="author_id"
+                reference="authors"
+                sortBy="author.last_name"
+            />
+            <TextField source="title" />
+        </Datagrid>
+    </List>
+);
 
 export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     return (
@@ -37,7 +53,7 @@ export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
         >
             <Resource
                 name="books"
-                list={ListGuesser}
+                list={BookList}
                 create={BookCreate}
                 edit={EditGuesser}
                 show={ShowGuesser}
