@@ -1,18 +1,19 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "./dist",
-    "noEmit": true,
-    "declaration": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "module": "node16",
-    "moduleResolution": "node16",
-    "moduleDetection": "force",
-    "target": "ES2022", // Node.js 18
-    "types": ["vitest/globals"],
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": true
+      "rootDir": "src",
+      "outDir": "./dist",
+      "noEmit": true,
+      "declaration": true,
+      "strict": true,
+      "esModuleInterop": true,
+      "module": "node16",
+      "moduleResolution": "node16",
+      "moduleDetection": "force",
+      "target": "ES2022", // Node.js 18
+      "types": ["vitest/globals"],
+      "jsx": "react-jsx",
+      "allowImportingTsExtensions": true,
+      "skipLibCheck": true
   },
   "include": ["src"],
   "exclude": ["node_modules/**"]
