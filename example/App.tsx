@@ -85,9 +85,9 @@ const BookCreate = () => (
 const bookFilters = [
     <SearchInput source="q" alwaysOn key="q" />,
     <TextInput
-        label="Author"
-        source="author.last_name_q"
-        key="author.last_name_q"
+        label="Author Last Name (exact)"
+        source="author.last_name"
+        key="author.last_name"
     />,
 ];
 

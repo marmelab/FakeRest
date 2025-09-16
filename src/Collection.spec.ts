@@ -315,6 +315,37 @@ describe('Collection', () => {
                 expect(result[1].author.name).toEqual('Leo Tolstoi');
             });
 
+            it('should filter by relationship field with deep path', () => {
+                const books = new Collection({
+                    items: [
+                        { title: 'Pride and Prejudice', author_id: 1 },
+                        { title: 'War and Peace', author_id: 0 },
+                        { title: 'Anna Karenina', author_id: 0 },
+                        { title: 'Sense and Sensibility', author_id: 1 },
+                    ],
+                });
+                const authors = new Collection({
+                    items: [
+                        { id: 0, name: 'Leo Tolstoi' },
+                        { id: 1, name: 'Jane Austen' },
+                    ],
+                });
+                const database = new Database();
+                database.addCollection('books', books);
+                database.addCollection('authors', authors);
+
+                const result = books.getAll({
+                    embed: ['author'],
+                    filter: { author: { name: 'Leo Tolstoi' } },
+                }) as any[];
+
+                expect(result.length).toEqual(2);
+                expect(result[0].title).toEqual('War and Peace');
+                expect(result[1].title).toEqual('Anna Karenina');
+                expect(result[0].author.name).toEqual('Leo Tolstoi');
+                expect(result[1].author.name).toEqual('Leo Tolstoi');
+            });
+
             it('should filter by relationship field with multiple filters', () => {
                 const books = new Collection({
                     items: [
