@@ -4,7 +4,6 @@ import {
     Create,
     type DataProvider,
     EditGuesser,
-    ListGuesser,
     Resource,
     ShowGuesser,
     required,
@@ -15,8 +14,8 @@ import {
     SearchInput,
     Datagrid,
     List,
-    ReferenceField,
     TextField,
+    FunctionField,
 } from 'react-admin';
 
 import authProvider from './authProvider';
@@ -29,20 +28,6 @@ const queryClient = new QueryClient({
         },
     },
 });
-
-export const BookList = () => (
-    <List queryOptions={{ meta: { embed: ['author'] } }}>
-        <Datagrid rowClick="edit">
-            <TextField source="id" />
-            <ReferenceField
-                source="author_id"
-                reference="authors"
-                sortBy="author.last_name"
-            />
-            <TextField source="title" />
-        </Datagrid>
-    </List>
-);
 
 export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
     return (
@@ -73,7 +58,7 @@ export const App = ({ dataProvider }: { dataProvider: DataProvider }) => {
 
 const AuthorList = () => (
     <List filters={[<SearchInput source="q" alwaysOn key="q" />]}>
-        <Datagrid rowClick="edit">
+        <Datagrid>
             <TextField source="id" />
             <TextField source="first_name" />
             <TextField source="last_name" />
@@ -95,4 +80,31 @@ const BookCreate = () => (
             />
         </SimpleForm>
     </Create>
+);
+
+const bookFilters = [
+    <SearchInput source="q" alwaysOn key="q" />,
+    <TextInput
+        label="Author"
+        source="author.last_name_q"
+        key="author.last_name_q"
+    />,
+];
+
+const BookList = () => (
+    <List queryOptions={{ meta: { embed: ['author'] } }} filters={bookFilters}>
+        <Datagrid>
+            <TextField source="id" />
+            <FunctionField
+                label="Author"
+                sortBy="author.last_name"
+                render={(record) =>
+                    record.author
+                        ? `${record.author.first_name} ${record.author.last_name}`
+                        : ''
+                }
+            />
+            <TextField source="title" />
+        </Datagrid>
+    </List>
 );
