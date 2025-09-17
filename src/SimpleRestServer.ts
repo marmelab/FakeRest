@@ -200,7 +200,9 @@ export class SimpleRestServer implements APIServer {
                 }
                 const count = this.database.getCount(
                     name,
-                    params.filter ? { filter: params.filter } : {},
+                    params.filter || params.embed
+                        ? { filter: params.filter, embed: params.embed }
+                        : {},
                 );
                 if (count > 0) {
                     const items = this.database.getAll(name, params);
