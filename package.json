@@ -28,7 +28,7 @@
         "@biomejs/biome": "1.7.0",
         "@types/lodash": "^4.17.0",
         "@types/sinon": "^17.0.3",
-        "@vitejs/plugin-react": "^5.1.2",
+        "@vitejs/plugin-react": "^6.0.0",
         "fetch-mock": "^9.11.0",
         "happy-dom": "^20.0.0",
         "husky": "^9.0.11",
@@ -40,9 +40,9 @@
         "react-dom": "^18.0.0",
         "sinon": "~18.0.0",
         "typescript": "^5.4.5",
-        "vite": "^7.3.0",
-        "vite-plugin-dts": "^4.5.4",
-        "vitest": "^4.0.15"
+        "vite": "^8.0.16",
+        "unplugin-dts": "^1.0.2",
+        "vitest": "^4.1.7"
     },
     "dependencies": {
         "lodash": "^4.17.21"
