@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
+import dts from 'unplugin-dts/vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
