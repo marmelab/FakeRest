@@ -286,7 +286,7 @@ const getArrayOfObjectsPaths = <T extends CollectionItem = CollectionItem>(
     );
 
 const getSimpleFilter = (key: string, value: any) => {
-    if (key.indexOf('_q') !== -1) {
+    if (key.endsWith('_q')) {
         // text search
         const realKey = key.replace(/(_q)$/, '');
         const regex = new RegExp(value.toString(), 'i');
@@ -294,31 +294,31 @@ const getSimpleFilter = (key: string, value: any) => {
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             get(item, realKey)?.toString().match(regex) !== null;
     }
-    if (key.indexOf('_lte') !== -1) {
+    if (key.endsWith('_lte')) {
         // less than or equal
         const realKey = key.replace(/(_lte)$/, '');
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             get(item, realKey) <= value;
     }
-    if (key.indexOf('_gte') !== -1) {
+    if (key.endsWith('_gte')) {
         // less than or equal
         const realKey = key.replace(/(_gte)$/, '');
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             get(item, realKey) >= value;
     }
-    if (key.indexOf('_lt') !== -1) {
+    if (key.endsWith('_lt')) {
         // less than or equal
         const realKey = key.replace(/(_lt)$/, '');
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             get(item, realKey) < value;
     }
-    if (key.indexOf('_gt') !== -1) {
+    if (key.endsWith('_gt')) {
         // less than or equal
         const realKey = key.replace(/(_gt)$/, '');
         return <T extends CollectionItem = CollectionItem>(item: T) =>
             get(item, realKey) > value;
     }
-    if (key.indexOf('_neq_any') !== -1) {
+    if (key.endsWith('_neq_any')) {
         // not equal to any
         const realKey = key.replace(/(_neq_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
@@ -327,7 +327,7 @@ const getSimpleFilter = (key: string, value: any) => {
             // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
         ) => finalValue.every((val) => get(item, realKey) != val);
     }
-    if (key.indexOf('_neq') !== -1) {
+    if (key.endsWith('_neq')) {
         // not equal
         const realKey = key.replace(/(_neq)$/, '');
         return <T extends CollectionItem = CollectionItem>(
@@ -335,7 +335,7 @@ const getSimpleFilter = (key: string, value: any) => {
             // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
         ) => get(item, realKey) != value;
     }
-    if (key.indexOf('_eq_any') !== -1) {
+    if (key.endsWith('_eq_any')) {
         // equal any
         const realKey = key.replace(/(_eq_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
@@ -344,7 +344,7 @@ const getSimpleFilter = (key: string, value: any) => {
             // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
         ) => finalValue.some((val) => get(item, realKey) == val);
     }
-    if (key.indexOf('_eq') !== -1) {
+    if (key.endsWith('_eq')) {
         // equal
         const realKey = key.replace(/(_eq)$/, '');
         return <T extends CollectionItem = CollectionItem>(
@@ -352,7 +352,7 @@ const getSimpleFilter = (key: string, value: any) => {
             // biome-ignore lint/suspicious/noDoubleEquals: we want implicit type coercion
         ) => get(item, realKey) == value;
     }
-    if (key.indexOf('_inc_any') !== -1) {
+    if (key.endsWith('_inc_any')) {
         // include any
         const realKey = key.replace(/(_inc_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
@@ -368,7 +368,7 @@ const getSimpleFilter = (key: string, value: any) => {
                 return false;
             });
     }
-    if (key.indexOf('_inc') !== -1) {
+    if (key.endsWith('_inc')) {
         // includes all
         const realKey = key.replace(/(_inc)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];
@@ -384,7 +384,7 @@ const getSimpleFilter = (key: string, value: any) => {
                 return false;
             });
     }
-    if (key.indexOf('_ninc_any') !== -1) {
+    if (key.endsWith('_ninc_any')) {
         // does not include any
         const realKey = key.replace(/(_ninc_any)$/, '');
         const finalValue = Array.isArray(value) ? value : [value];

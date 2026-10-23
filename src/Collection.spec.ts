@@ -802,6 +802,53 @@ describe('Collection', () => {
                 ]);
             });
 
+            it('should only treat operators as a suffix of the filter key', () => {
+                const collection = new Collection({
+                    items: [
+                        {
+                            total_quantity: 5,
+                            is_included: true,
+                            item_gtin: '1',
+                        },
+                        {
+                            total_quantity: 15,
+                            is_included: false,
+                            item_gtin: '7',
+                        },
+                    ],
+                });
+                expect(
+                    collection.getAll({ filter: { total_quantity: 5 } }),
+                ).toEqual([
+                    {
+                        id: 0,
+                        total_quantity: 5,
+                        is_included: true,
+                        item_gtin: '1',
+                    },
+                ]);
+                expect(
+                    collection.getAll({ filter: { is_included: false } }),
+                ).toEqual([
+                    {
+                        id: 1,
+                        total_quantity: 15,
+                        is_included: false,
+                        item_gtin: '7',
+                    },
+                ]);
+                expect(
+                    collection.getAll({ filter: { item_gtin: '7' } }),
+                ).toEqual([
+                    {
+                        id: 1,
+                        total_quantity: 15,
+                        is_included: false,
+                        item_gtin: '7',
+                    },
+                ]);
+            });
+
             it('should filter by array', () => {
                 const collection = new Collection({
                     items: [
