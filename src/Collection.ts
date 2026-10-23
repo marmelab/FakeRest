@@ -289,10 +289,16 @@ const getSimpleFilter = (key: string, value: any) => {
     if (key.endsWith('_q')) {
         // text search
         const realKey = key.replace(/(_q)$/, '');
-        const regex = new RegExp(value.toString(), 'i');
+        // the value is plain text, not a regular expression
+        const regex = new RegExp(
+            value.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+            'i',
+        );
 
-        return <T extends CollectionItem = CollectionItem>(item: T) =>
-            get(item, realKey)?.toString().match(regex) !== null;
+        return <T extends CollectionItem = CollectionItem>(item: T) => {
+            const itemValue = get(item, realKey);
+            return itemValue != null && regex.test(itemValue.toString());
+        };
     }
     if (key.endsWith('_lte')) {
         // less than or equal
