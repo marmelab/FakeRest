@@ -534,35 +534,35 @@ function sortItems<T extends CollectionItem = CollectionItem>(
         return items.sort(sort);
     }
     if (typeof sort === 'string') {
-        return items.sort((a, b) => {
-            const aValue = get(a, sort);
-            const bValue = get(b, sort);
-            if (aValue > bValue) {
-                return 1;
-            }
-            if (aValue < bValue) {
-                return -1;
-            }
-            return 0;
-        });
+        return items.sort((a, b) => compareValues(get(a, sort), get(b, sort)));
     }
     if (Array.isArray(sort)) {
         const key = sort[0];
         const direction = sort[1].toLowerCase() === 'asc' ? 1 : -1;
-        return items.sort((a: T, b: T) => {
-            const aValue = get(a, key);
-            const bValue = get(b, key);
-            if (aValue > bValue) {
-                return direction;
-            }
-            if (aValue < bValue) {
-                return -1 * direction;
-            }
-            return 0;
-        });
+        return items.sort(
+            (a: T, b: T) => direction * compareValues(get(a, key), get(b, key)),
+        );
     }
     throw new Error('Unsupported sort type');
 }
+
+// null and undefined are not comparable with < and >, so they are sorted as
+// the highest values to keep the order consistent
+const compareValues = (aValue: any, bValue: any) => {
+    if (aValue == null || bValue == null) {
+        if (aValue == null && bValue == null) {
+            return 0;
+        }
+        return aValue == null ? 1 : -1;
+    }
+    if (aValue > bValue) {
+        return 1;
+    }
+    if (aValue < bValue) {
+        return -1;
+    }
+    return 0;
+};
 
 function rangeItems<T extends CollectionItem = CollectionItem>(
     items: T[],

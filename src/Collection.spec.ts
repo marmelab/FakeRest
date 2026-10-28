@@ -166,6 +166,36 @@ describe('Collection', () => {
                 expect(result[2].author.country).toEqual('USA');
             });
 
+            it('should sort items without a value as the highest values', () => {
+                const collection = new Collection<{ name?: string | null }>({
+                    items: [
+                        { name: 'c' },
+                        { name: null },
+                        { name: 'a' },
+                        {},
+                        { name: 'b' },
+                    ],
+                });
+                const ascending = [
+                    { id: 2, name: 'a' },
+                    { id: 4, name: 'b' },
+                    { id: 0, name: 'c' },
+                    { id: 1, name: null },
+                    { id: 3 },
+                ];
+                expect(collection.getAll({ sort: ['name', 'asc'] })).toEqual(
+                    ascending,
+                );
+                expect(collection.getAll({ sort: 'name' })).toEqual(ascending);
+                expect(collection.getAll({ sort: ['name', 'desc'] })).toEqual([
+                    { id: 1, name: null },
+                    { id: 3 },
+                    { id: 0, name: 'c' },
+                    { id: 4, name: 'b' },
+                    { id: 2, name: 'a' },
+                ]);
+            });
+
             it('should sort by sort function', () => {
                 const collection = new Collection({
                     items: [{ name: 'c' }, { name: 'a' }, { name: 'b' }],
