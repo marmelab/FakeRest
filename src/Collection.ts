@@ -585,7 +585,7 @@ function buildRegexSearch(input: string) {
     const escapedInput = trimmedInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     // Split the input into words
-    const words = escapedInput.split(' ');
+    const words = escapedInput.split(/\s+/);
 
     // Create a regex pattern to match any of the words
     const pattern = words.map((word) => `(${word})`).join('|');

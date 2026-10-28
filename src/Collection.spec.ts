@@ -726,6 +726,21 @@ describe('Collection', () => {
                 ]);
             });
 
+            it('should ignore repeated whitespace between q words', () => {
+                const collection = new Collection({
+                    items: [{ a: 'hello' }, { a: 'bar' }, { a: 'other' }],
+                });
+                expect(
+                    collection.getAll({ filter: { q: 'hello  bar' } }),
+                ).toEqual([
+                    { id: 0, a: 'hello' },
+                    { id: 1, a: 'bar' },
+                ]);
+                expect(
+                    collection.getAll({ filter: { q: 'nothing \t matches' } }),
+                ).toEqual([]);
+            });
+
             it('should filter by range using _gte, _gt, _lte, and _lt', () => {
                 const collection = new Collection({
                     items: [{ v: 1 }, { v: 2 }, { v: 3 }],
