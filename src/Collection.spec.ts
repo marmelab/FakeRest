@@ -847,6 +847,29 @@ describe('Collection', () => {
                 ]);
             });
 
+            it('should treat the _q value as plain text', () => {
+                const collection = new Collection({
+                    items: [{ v: 'C++ tips' }, { v: 'axb' }, { v: 'a.b' }],
+                });
+                expect(collection.getAll({ filter: { v_q: 'c++' } })).toEqual([
+                    { id: 0, v: 'C++ tips' },
+                ]);
+                expect(collection.getAll({ filter: { v_q: 'a.b' } })).toEqual([
+                    { id: 2, v: 'a.b' },
+                ]);
+                expect(collection.getAll({ filter: { v_q: '(' } })).toEqual([]);
+            });
+
+            it('should not match items without a value when using _q', () => {
+                const collection = new Collection({
+                    items: [{ v: 'abc' }, {}, { v: null }],
+                });
+                expect(collection.getAll({ filter: { v_q: 'x' } })).toEqual([]);
+                expect(collection.getAll({ filter: { v_q: 'b' } })).toEqual([
+                    { id: 0, v: 'abc' },
+                ]);
+            });
+
             it('should only treat operators as a suffix of the filter key', () => {
                 const collection = new Collection({
                     items: [
